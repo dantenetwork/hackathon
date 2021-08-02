@@ -31,10 +31,23 @@ struct deal {
 	    (cid)(state)(slashed)(size)(price)(duration)(sender)(provider_required));
 };
 
-CONTRACT dante_market : public Contract {
+struct deal_provider {
+   public:
+	string cid;                         // deal cid of IPFS network
+	string enclave_public_key;          // SGX enclave public key
+	uint64_t last_submitted_block_num;  // last storage proof provider submitted
+	uint64_t last_claimed_block_num;    // last deal reward provider claimed
+	string primary_key() const { return cid; }
+	string by_enclave_public_key() const { return enclave_public_key; }
+
+	PLATON_SERIALIZE(
+	    deal_provider,
+	    (cid)(enclave_public_key)(last_submitted_block_num)(last_claimed_block_num));
+};
+
+CONTRACT market : public Contract {
    protected:
-	db::Map<"deal_providers"_n, u128, vector<Address>> deal_providers;  // deal provider list
-	StorageType<"token_contract"_n, Address> token_contract;            // dante token contract
+	StorageType<"token_contract"_n, Address> token_contract;  // dante token contract
 
 	// deal table
 	// UniqueIndex: cid
@@ -46,6 +59,13 @@ CONTRACT dante_market : public Contract {
 	    IndexedBy<"state"_n, IndexMemberFun<deal, uint8_t, &deal::by_state, IndexType::NormalIndex>>,
 	    IndexedBy<"sender"_n, IndexMemberFun<deal, Address, &deal::by_sender, IndexType::NormalIndex>>>
 	    deal_table;
+
+	// deal provider table
+	MultiIndex<
+	    "deal_provider"_n, deal,
+	    IndexedBy<"cid"_n, IndexMemberFun<deal_provider, string, &deal_provider::primary_key, IndexType::NormalIndex>>,
+	    IndexedBy<"enclave_public_key"_n, IndexMemberFun<deal_provider, string, &deal_provider::by_enclave_public_key, IndexType::NormalIndex>>>
+	    deal_provider_table;
 
    public:
 	ACTION void init(const Address &token_contract_address);
@@ -73,7 +93,10 @@ CONTRACT dante_market : public Contract {
 
 	// Get opened deals
 	CONST vector<string> get_opened_deal(const uint8_t &skip);
+
+	// update provider proof
+	CONST bool update_provider_proof(const string &by_enclave_public_key, const vector<string> &cid);
 };
 
-PLATON_DISPATCH(dante_market, (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal))
+PLATON_DISPATCH(market, (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal))
 }  // namespace hackathon

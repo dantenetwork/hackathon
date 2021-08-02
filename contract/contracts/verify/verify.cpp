@@ -40,11 +40,6 @@ string dante_verify::get_token_contract() {
 void dante_verify::register_miner(const string &enclave_public_key, const Address &reward_address) {
 	platon_assert(!miner_map.contains(enclave_public_key), "the enclave_public_key is already exists.");
 
-	// transfer kLockedAmount DAT from miner to contract
-	Address sender = platon_caller();
-	Address self = platon_address();
-	auto result = platon_call_with_return_value<bool>(token_contract.self(), uint32_t(0), uint32_t(0), "transferFrom", sender, self, kLockedAmount);
-	platon_assert(result.first && result.second, "platon_call transferFrom failed");
 	// add miner
 	miner info;
 	info.enclave_public_key = enclave_public_key;
@@ -70,13 +65,6 @@ void dante_verify::update_miner(const string &enclave_public_key, const Address 
 void dante_verify::unregister_miner(const string &enclave_public_key, const string &enclave_signature) {
 	require_auth(enclave_public_key, enclave_signature);
 	platon_assert(miner_map.contains(enclave_public_key), "the enclave_public_key is not exists.");
-
-	// transfer kLockedAmount DAT from contract to miner
-	Address self = platon_address();
-	Address sender = platon_caller();
-	auto result = platon_call_with_return_value<bool>(token_contract.self(), uint32_t(0), uint32_t(0), "transfer", sender, kLockedAmount);
-	platon_assert(result.first && result.second, "platon_call transfer failed");
-
 	miner_map.erase(enclave_public_key);
 }
 
