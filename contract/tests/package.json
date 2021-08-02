@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "web3": "PlatONnetwork/client-sdk-js#0.15.1-develop"
+  }
+}
