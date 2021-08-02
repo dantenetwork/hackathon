@@ -3,7 +3,7 @@
 
 namespace hackathon {
 
-void dante_market::init(const Address& token_contract_address) {
+void market::init(const Address& token_contract_address) {
 	// set owner
 	platon::set_owner();
 
@@ -12,31 +12,31 @@ void dante_market::init(const Address& token_contract_address) {
 }
 
 // Change contract owner
-bool dante_market::set_owner(const Address& account) {
+bool market::set_owner(const Address& account) {
 	platon_assert(platon::is_owner(), "Only owner can change owner.");
 	platon::set_owner(account.toString());
 	return true;
 }
 
 // Query contract owner
-string dante_market::get_owner() {
+string market::get_owner() {
 	return platon::owner().toString();
 }
 
 // Change token contract address
-bool dante_market::set_token_contract(const Address& address) {
+bool market::set_token_contract(const Address& address) {
 	platon_assert(platon::is_owner(), "Only owner can change token contract.");
 	token_contract.self() = address;
 	return true;
 }
 
 // Query token contract
-string dante_market::get_token_contract() {
+string market::get_token_contract() {
 	return token_contract.self().toString();
 }
 
 // add deal
-void dante_market::add_deal(const string& cid, const u128& size, const u128& price, const u128& duration, const uint8_t& provider_required) {
+void market::add_deal(const string& cid, const u128& size, const u128& price, const u128& duration, const uint8_t& provider_required) {
 	DEBUG("Hello");
 	u128 deal_price = hackathon::safeMul(price, duration);
 	u128 total_price = hackathon::safeMul(deal_price, provider_required);
@@ -67,7 +67,7 @@ void dante_market::add_deal(const string& cid, const u128& size, const u128& pri
 }
 
 // get deal by cid
-deal dante_market::get_deal_by_cid(const string& cid) {
+deal market::get_deal_by_cid(const string& cid) {
 	auto itr = deal_table.find<"cid"_n>(cid);
 	deal ret;
 	if (itr != deal_table.cend()) {
@@ -84,7 +84,7 @@ deal dante_market::get_deal_by_cid(const string& cid) {
 }
 
 // get deal by sender, skip = how many deals should be skipped
-vector<string> dante_market::get_deal_by_sender(const Address& sender, const uint8_t& skip) {
+vector<string> market::get_deal_by_sender(const Address& sender, const uint8_t& skip) {
 	vector<string> ret;
 	auto vect_iter = deal_table.get_index<"sender"_n>();
 	uint8_t index = 0;   // the index of current deal in iterator
@@ -102,7 +102,7 @@ vector<string> dante_market::get_deal_by_sender(const Address& sender, const uin
 }
 
 // get opened deals, skip = how many deals should be skipped
-vector<string> dante_market::get_opened_deal(const uint8_t& skip) {
+vector<string> market::get_opened_deal(const uint8_t& skip) {
 	vector<string> ret;
 	auto vect_iter = deal_table.get_index<"state"_n>();
 	uint8_t index = 0;   // the index of current deal in iterator
@@ -117,5 +117,10 @@ vector<string> dante_market::get_opened_deal(const uint8_t& skip) {
 		}
 	}
 	return ret;
+}
+
+// update provider proof
+bool market::update_provider_proof(const string& by_enclave_public_key, const vector<string>& cid) {
+	return true;
 }
 }  // namespace hackathon
