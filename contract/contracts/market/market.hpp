@@ -13,97 +13,122 @@ using std::vector;
 namespace hackathon {
 
 struct deal {
-   public:
-	string cid;                 // deal cid of IPFS network
-	uint8_t state = 0;          // current deal state, 0 = deal opened, 1= filled, 2 = closed, default as 0
-	bool slashed = false;       // is slashed, default as false
-	u128 size;                  // deal files size
-	u128 price;                 // deal price per block
-	u128 duration;              // deal duration (blocks)
-	Address sender;             // deal sender
-	uint8_t provider_required;  // the amount of storage providers required
-	string primary_key() const { return cid; }
-	uint8_t by_state() const { return state; }
-	Address by_sender() const { return sender; }
+ public:
+  string cid;            // deal cid of IPFS network
+  uint8_t state = 0;     // current deal state, 0 = deal opened, 1= filled, 2 =
+                         // closed, default as 0
+  bool slashed = false;  // is slashed, default as false
+  u128 size;             // deal files size
+  u128 price;            // deal price per block
+  u128 duration;         // deal duration (blocks)
+  Address sender;        // deal sender
+  uint8_t provider_required;  // the amount of storage providers required
+  string primary_key() const { return cid; }
+  uint8_t by_state() const { return state; }
+  Address by_sender() const { return sender; }
 
-	PLATON_SERIALIZE(
-	    deal,
-	    (cid)(state)(slashed)(size)(price)(duration)(sender)(provider_required));
+  PLATON_SERIALIZE(
+      deal,
+      (cid)(state)(slashed)(size)(price)(duration)(sender)(provider_required));
 };
 
 struct deal_provider {
-   public:
-	string cid;                         // deal cid of IPFS network
-	string enclave_public_key;          // SGX enclave public key
-	uint64_t last_submitted_block_num;  // last storage proof provider submitted
-	uint64_t last_claimed_block_num;    // last deal reward provider claimed
-	string primary_key() const { return cid; }
-	string by_enclave_public_key() const { return enclave_public_key; }
+ public:
+  string id;                  // id = cid + enclave_public_key
+  string cid;                 // deal cid of IPFS network
+  string enclave_public_key;  // SGX enclave public key
+  uint64_t
+      last_provider_proof_block_num;  // last storage proof provider submitted
+  uint64_t last_claimed_block_num;    // last deal reward provider claimed
+  string primary_key() const { return id; }
+  string by_cid() const { return cid; }
+  string by_enclave_public_key() const { return enclave_public_key; }
 
-	PLATON_SERIALIZE(
-	    deal_provider,
-	    (cid)(enclave_public_key)(last_submitted_block_num)(last_claimed_block_num));
+  PLATON_SERIALIZE(
+      deal_provider,
+      (id)(cid)(enclave_public_key)(last_provider_proof_block_num)(last_claimed_block_num));
 };
 
 CONTRACT market : public Contract {
-   protected:
-	StorageType<"token_contract"_n, Address> token_contract;  // dante token contract
-  StorageType<"verify_contract"_n, Address> verify_contract;  // dante verify contract
+ protected:
+  StorageType<"token_contract"_n, Address>
+      token_contract;  // dante token contract
+  StorageType<"verify_contract"_n, Address>
+      verify_contract;  // dante verify contract
 
-	// deal table
-	// UniqueIndex: cid
-	// NormalIndex: state
-	// NormalIndex: sender
-	MultiIndex<
-	    "deal"_n, deal,
-	    IndexedBy<"cid"_n, IndexMemberFun<deal, string, &deal::primary_key, IndexType::UniqueIndex>>,
-	    IndexedBy<"state"_n, IndexMemberFun<deal, uint8_t, &deal::by_state, IndexType::NormalIndex>>,
-	    IndexedBy<"sender"_n, IndexMemberFun<deal, Address, &deal::by_sender, IndexType::NormalIndex>>>
-	    deal_table;
+  // deal table
+  // UniqueIndex: cid
+  // NormalIndex: state
+  // NormalIndex: sender
+  MultiIndex<
+      "deal"_n, deal,
+      IndexedBy<"cid"_n, IndexMemberFun<deal, string, &deal::primary_key,
+                                        IndexType::UniqueIndex>>,
+      IndexedBy<"state"_n, IndexMemberFun<deal, uint8_t, &deal::by_state,
+                                          IndexType::NormalIndex>>,
+      IndexedBy<"sender"_n, IndexMemberFun<deal, Address, &deal::by_sender,
+                                           IndexType::NormalIndex>>>
+      deal_table;
 
-	// deal provider table
-	MultiIndex<
-	    "deal_provider"_n, deal,
-	    IndexedBy<"cid"_n, IndexMemberFun<deal_provider, string, &deal_provider::primary_key, IndexType::NormalIndex>>,
-	    IndexedBy<"enclave_public_key"_n, IndexMemberFun<deal_provider, string, &deal_provider::by_enclave_public_key, IndexType::NormalIndex>>>
-	    deal_provider_table;
+  // deal provider table
+  // UniqueIndex: id
+  // NormalIndex: cid
+  // NormalIndex: enclave_public_key
+  MultiIndex<"deal_provider"_n, deal_provider,
+             IndexedBy<"id"_n, IndexMemberFun<deal_provider, string,
+                                              &deal_provider::primary_key,
+                                              IndexType::UniqueIndex>>,
+             IndexedBy<"cid"_n, IndexMemberFun<deal_provider, string,
+                                               &deal_provider::by_cid,
+                                               IndexType::NormalIndex>>,
+             IndexedBy<"enclave_public_key"_n,
+                       IndexMemberFun<deal_provider, string,
+                                      &deal_provider::by_enclave_public_key,
+                                      IndexType::NormalIndex>>>
+      deal_provider_table;
 
-   public:
-	ACTION void init(const Address &token_contract_address,const Address &verify_contract_address);
+ public:
+  ACTION void init(const Address &token_contract_address,
+                   const Address &verify_contract_address);
 
-	// Change contract owner
-	ACTION bool set_owner(const Address &account);
+  // Change contract owner
+  ACTION bool set_owner(const Address &account);
 
-	// Query contract owner
-	CONST string get_owner();
+  // Query contract owner
+  CONST string get_owner();
 
-	// Change token contract
-	ACTION bool set_token_contract(const Address &address);
+  // Change token contract
+  ACTION bool set_token_contract(const Address &address);
 
-	// Query token contract
-	CONST string get_token_contract();
+  // Query token contract
+  CONST string get_token_contract();
 
   // Change verify contract
-	ACTION bool set_verify_contract(const Address &address);
+  ACTION bool set_verify_contract(const Address &address);
 
-	// Query verify contract
-	CONST string get_verify_contract();
+  // Query verify contract
+  CONST string get_verify_contract();
 
-	// Add deal
-	ACTION void add_deal(const string &cid, const u128 &size, const u128 &price, const u128 &duration, const uint8_t &provider_required);
+  // Add deal
+  ACTION void add_deal(const string &cid, const u128 &size, const u128 &price,
+                       const u128 &duration, const uint8_t &provider_required);
 
-	// Get deal by cid
-	CONST deal get_deal_by_cid(const string &get_deal_by_cid);
+  // Get deal by cid
+  CONST deal get_deal_by_cid(const string &get_deal_by_cid);
 
-	// Get deal by sender
-	CONST vector<string> get_deal_by_sender(const Address &sender, const uint8_t &skip);
+  // Get deal by sender
+  CONST vector<string> get_deal_by_sender(const Address &sender,
+                                          const uint8_t &skip);
 
-	// Get opened deals
-	CONST vector<string> get_opened_deal(const uint8_t &skip);
+  // Get opened deals
+  CONST vector<string> get_opened_deal(const uint8_t &skip);
 
-	// update provider proof
-	CONST bool update_provider_proof(const string &by_enclave_public_key, const vector<string> &cid);
+  // update provider proof
+  CONST bool update_provider_proof(const string &enclave_public_key,
+                                   const string &cid);
 };
 
-PLATON_DISPATCH(market, (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal))
+PLATON_DISPATCH(
+    market,
+    (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal))
 }  // namespace hackathon
