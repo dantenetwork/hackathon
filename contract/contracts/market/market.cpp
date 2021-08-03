@@ -3,12 +3,13 @@
 
 namespace hackathon {
 
-void market::init(const Address& token_contract_address) {
+void market::init(const Address& token_contract_address,const Address& verify_contract_address) {
 	// set owner
 	platon::set_owner();
 
 	// set token contract
 	token_contract.self() = token_contract_address;
+  verify_contract.self() = verify_contract_address;
 }
 
 // Change contract owner
@@ -35,6 +36,18 @@ string market::get_token_contract() {
 	return token_contract.self().toString();
 }
 
+// Query verify contract
+string market::get_verify_contract(){
+  return verify_contract.self().toString();
+}
+
+// Change verify contract
+bool market::set_verify_contract(const Address &address){
+  platon_assert(platon::is_owner(), "Only owner can change verify contract.");
+	verify_contract.self() = address;
+	return true;
+}
+
 // add deal
 void market::add_deal(const string& cid, const u128& size, const u128& price, const u128& duration, const uint8_t& provider_required) {
 	DEBUG("Hello");
@@ -44,16 +57,16 @@ void market::add_deal(const string& cid, const u128& size, const u128& price, co
 	DEBUG(deal_price);
 	DEBUG(total_price);
 
+  Address sender = platon_caller();
 	Address self = platon_address();
-	Address sender = platon_caller();
-	platon_assert(platon_balance(sender).Get() >= deal_price, "sender balance is not enough");
+	// platon_assert(platon_balance(sender).Get() >= deal_price, "sender balance is not enough");
 
-	// transfer deal DAT from sender to contract
-	auto result = platon_call_with_return_value<bool>(token_contract.self(), uint32_t(0), uint32_t(0), "transferFrom", sender, self, total_price);
-	DEBUG(result.first);
-	DEBUG(result.second);
+	// // transfer deal DAT from sender to contract
+	// auto result = platon_call_with_return_value<bool>(token_contract.self(), uint32_t(0), uint32_t(0), "transferFrom", sender, self, total_price);
+	// DEBUG(result.first);
+	// DEBUG(result.second);
 
-	platon_assert(result.first && result.second, "platon_call transferFrom failed");
+	// platon_assert(result.first && result.second, "platon_call transferFrom failed");
 
 	// add deal
 	deal_table.emplace([&](auto& deal) {
@@ -61,7 +74,7 @@ void market::add_deal(const string& cid, const u128& size, const u128& price, co
 		deal.size = size;
 		deal.price = price;
 		deal.duration = duration;
-		deal.sender = platon_caller();
+		deal.sender = sender;
 		deal.provider_required = provider_required;
 	});
 }

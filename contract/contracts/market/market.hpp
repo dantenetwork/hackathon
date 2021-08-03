@@ -48,6 +48,7 @@ struct deal_provider {
 CONTRACT market : public Contract {
    protected:
 	StorageType<"token_contract"_n, Address> token_contract;  // dante token contract
+  StorageType<"verify_contract"_n, Address> verify_contract;  // dante verify contract
 
 	// deal table
 	// UniqueIndex: cid
@@ -68,7 +69,7 @@ CONTRACT market : public Contract {
 	    deal_provider_table;
 
    public:
-	ACTION void init(const Address &token_contract_address);
+	ACTION void init(const Address &token_contract_address,const Address &verify_contract_address);
 
 	// Change contract owner
 	ACTION bool set_owner(const Address &account);
@@ -81,6 +82,12 @@ CONTRACT market : public Contract {
 
 	// Query token contract
 	CONST string get_token_contract();
+
+  // Change verify contract
+	ACTION bool set_verify_contract(const Address &address);
+
+	// Query verify contract
+	CONST string get_verify_contract();
 
 	// Add deal
 	ACTION void add_deal(const string &cid, const u128 &size, const u128 &price, const u128 &duration, const uint8_t &provider_required);

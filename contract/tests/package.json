@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "web3": "PlatONnetwork/client-sdk-js#0.15.1-develop"
+    "chai": "^4.3.4",
+    "web3": "github:PlatONnetwork/client-sdk-js#0.15.1-develop"
   }
 }
