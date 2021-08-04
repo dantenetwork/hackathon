@@ -15,7 +15,7 @@ void market::init(const Address &token_contract_address,
 
 // Change contract owner
 bool market::set_owner(const Address &account) {
-  platon_assert(platon::is_owner(), "Only owner can change owner.");
+  platon_assert(platon::is_owner(), "Only owner can change owner");
   platon::set_owner(account.toString());
   return true;
 }
@@ -25,7 +25,7 @@ string market::get_owner() { return platon::owner().toString(); }
 
 // Change token contract address
 bool market::set_token_contract(const Address &address) {
-  platon_assert(platon::is_owner(), "Only owner can change token contract.");
+  platon_assert(platon::is_owner(), "Only owner can change token contract");
   token_contract.self() = address;
   return true;
 }
@@ -40,7 +40,7 @@ string market::get_verify_contract() {
 
 // Change verify contract
 bool market::set_verify_contract(const Address &address) {
-  platon_assert(platon::is_owner(), "Only owner can change verify contract.");
+  platon_assert(platon::is_owner(), "Only owner can change verify contract");
   verify_contract.self() = address;
   return true;
 }
