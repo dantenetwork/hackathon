@@ -22,14 +22,17 @@ struct deal {
   u128 price;            // deal price per block
   u128 duration;         // deal duration (blocks)
   Address sender;        // deal sender
-  uint8_t provider_required;  // the amount of storage providers required
+  uint8_t provider_required;     // the amount of storage providers required
+  u128 total_reward;             // deal total rewards
+  u128 reward_balance;           // reward balance after provider claimed
+  vector<string> provider_list;  // provider list
   string primary_key() const { return cid; }
   uint8_t by_state() const { return state; }
   Address by_sender() const { return sender; }
 
   PLATON_SERIALIZE(
       deal,
-      (cid)(state)(slashed)(size)(price)(duration)(sender)(provider_required));
+      (cid)(state)(slashed)(size)(price)(duration)(sender)(provider_required)(total_reward)(reward_balance)(provider_list));
 };
 
 struct deal_capacity {

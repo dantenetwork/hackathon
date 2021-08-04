@@ -50,10 +50,10 @@ void market::add_deal(const string &cid, const u128 &size, const u128 &price,
                       const u128 &duration, const uint8_t &provider_required) {
   DEBUG("Hello");
   u128 deal_price = hackathon::safeMul(price, duration);
-  u128 total_price = hackathon::safeMul(deal_price, provider_required);
+  u128 total_reward = hackathon::safeMul(deal_price, provider_required);
   DEBUG(price);
   DEBUG(deal_price);
-  DEBUG(total_price);
+  DEBUG(total_reward);
 
   Address sender = platon_caller();
   Address self = platon_address();
@@ -77,6 +77,8 @@ void market::add_deal(const string &cid, const u128 &size, const u128 &price,
     deal.duration = duration;
     deal.sender = sender;
     deal.provider_required = provider_required;
+    deal.total_reward = total_reward;
+    deal.reward_balance = total_reward;
   });
 }
 
@@ -185,9 +187,17 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
   vector<deal_capacity>::iterator it;
   for (it = deal_capacity_vector.begin(); it != deal_capacity_vector.end();
        ++it) {
-    auto deal = deal_table.find<"cid"_n>(it->cid);
-    u128 price = deal->price;
-    reward += safeMul(price, reward_blocks);
+    auto current_deal = deal_table.find<"cid"_n>(it->cid);
+    u128 price = current_deal->price;
+
+    // calculate current deal reward
+    u128 current_deal_reward = safeMul(price, reward_blocks);
+    reward += current_deal_reward;
+
+    // update reward balance
+    deal_table.modify(current_deal, [&](auto &deal) {
+      deal.reward_balance -= current_deal_reward;
+    });
   }
 
   // TODO transfer tokens to provider reward address
@@ -197,6 +207,7 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
   deal_provider_map[enclave_public_key] = provider;
 
   DEBUG(reward);
+
   return true;
 }
 }  // namespace hackathon
