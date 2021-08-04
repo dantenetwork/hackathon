@@ -160,4 +160,43 @@ bool market::update_provider_proof(const string &enclave_public_key,
 
   return true;
 }
+
+// claim deal reward
+bool market::claim_deal_reward(const string &enclave_public_key) {
+  // checkt enclave_public_key is exists
+  if (!deal_provider_map.contains(enclave_public_key)) {
+    return false;
+  }
+
+  // get target provider info
+  deal_provider provider = deal_provider_map[enclave_public_key];
+  vector<deal_capacity> deal_capacity_vector = provider.deals;
+
+  // blocks gap between last_provider_proof_block_num and last_claimed_block_num
+  uint64_t reward_blocks =
+      provider.last_provider_proof_block_num - provider.last_claimed_block_num;
+  if (reward_blocks <= 0) {
+    return false;
+  }
+
+  u128 reward = 0;
+
+  // check each deal's price, calculate the reward
+  vector<deal_capacity>::iterator it;
+  for (it = deal_capacity_vector.begin(); it != deal_capacity_vector.end();
+       ++it) {
+    auto deal = deal_table.find<"cid"_n>(it->cid);
+    u128 price = deal->price;
+    reward += safeMul(price, reward_blocks);
+  }
+
+  // TODO transfer tokens to provider reward address
+
+  // update last_claimed_block_num
+  provider.last_claimed_block_num = platon_block_number();
+  deal_provider_map[enclave_public_key] = provider;
+
+  DEBUG(reward);
+  return true;
+}
 }  // namespace hackathon

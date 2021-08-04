@@ -45,7 +45,7 @@ struct deal_provider {
   uint64_t
       last_provider_proof_block_num;  // last storage proof provider submitted
   uint64_t last_claimed_block_num;    // last deal reward provider claimed
-  vector<deal_capacity> deals;        // deals cid which provider stored
+  vector<deal_capacity> deals;        // deals which provider stored
 
   PLATON_SERIALIZE(
       deal_provider,
@@ -115,9 +115,12 @@ CONTRACT market : public Contract {
   // update provider proof
   CONST bool update_provider_proof(const string &enclave_public_key,
                                    vector<deal_capacity> deals);
+
+  // claim deal reward
+  CONST bool claim_deal_reward(const string &enclave_public_key);
 };
 
 PLATON_DISPATCH(
     market,
-    (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal))
+    (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal)(update_provider_proof)(claim_deal_reward))
 }  // namespace hackathon
