@@ -10,6 +10,12 @@ using std::vector;
 
 namespace hackathon {
 
+/**
+ * The `verify` smart contract is provided by `dante network team` as a sample
+ * platon wasm contract, and it defines the structures and actions needed for
+ * platon-hackathon's core functionality.
+ */
+
 const u128 kTokenUnit = 1000000000000000000;  // DAT token decimal
 const u128 kLockedAmount =
     Energon(100 * kTokenUnit)
@@ -48,95 +54,162 @@ struct miner_info {
   string peer_id;       // peer id of miner from IPFS network
   string country_code;  // country code
                         // (https://en.wikipedia.org/wiki/ISO_3166-1_numeric)
-  string url;           // url for miner website
-  // Address primary_key() const { return sender; }
+  string url;           // the website url of storage provider
 
   PLATON_SERIALIZE(miner_info, (sender)(name)(peer_id)(country_code)(url))
 };
 
 CONTRACT verify : public Contract {
  protected:
-  StorageType<"token_contract"_n, Address>
-      token_contract;  // dante token contract
+  // dante token contract
+  StorageType<"token_contract"_n, Address> token_contract;
 
-  StorageType<"total_capacity"_n, u128> total_capacity;  // total capacity
+  // network total capacity
+  StorageType<"total_capacity"_n, u128> total_capacity;
 
-  StorageType<"market_contract"_n, Address>
-      market_contract;  // dante market contract
+  // dante market contract
+  StorageType<"market_contract"_n, Address> market_contract;
 
-  platon::db::Map<"miner"_n, string, miner> miner_map;  // miner table
+  // miner table
+  platon::db::Map<"miner"_n, string, miner> miner_map;
 
-  platon::db::Map<"storage_proof"_n, string, storage_proof>
-      storage_proof_map;  // proof_of_capacity table
+  // proof_of_capacity table
+  platon::db::Map<"storage_proof"_n, string, storage_proof> storage_proof_map;
 
-  platon::db::Map<"miner_info"_n, Address, miner_info>
-      miner_info_map;  // miner_info map
+  // miner_info map
+  platon::db::Map<"miner_info"_n, Address, miner_info> miner_info_map;
 
  public:
+  /**
+   * Contract init
+   * @param token_contract_address - DAT PRC20 token contract address
+   * @param market_contract_address - DAT market contract address
+   */
   ACTION void init(const Address &token_contract_address,
                    const Address &market_contract_address);
 
-  // Change contract owner
-  ACTION bool set_owner(const Address &token_contract_address);
+  /**
+   * Change contract owner
+   * @param account - Change DAT PRC20 token contract address
+   */
+  ACTION bool set_owner(const Address &account);
 
-  // Query contract owner
+  /**
+   * Query contract owner
+   */
   CONST string get_owner();
 
-  // Change token contract
+  /**
+   * Change token contract
+   * @param address - Change DAT PRC20 token contract address
+   */
   ACTION bool set_token_contract(const Address &address);
 
-  // Query token contract
+  /**
+   * Query token contract address
+   */
   CONST string get_token_contract();
 
-  // Change market contract
+  /**
+   * Change market contract
+   * @param address - Change DAT market contract address
+   */
   ACTION bool set_market_contract(const Address &address);
 
-  // Query market contract
+  /**
+   * Query market contract
+   */
   CONST string get_market_contract();
 
-  // Add miner by enclave_public_key
+  /**
+   * Add miner by enclave_public_key
+   * @param enclave_public_key - SGX enclave public key
+   * @param reward_address - miner address which receive rewards
+   */
   ACTION void register_miner(const string &enclave_public_key,
                              const Address &reward_address);
 
-  // Modify miner info by enclave_public_key
+  /**
+   * Modify miner info by enclave_public_key
+   * @param enclave_public_key - SGX enclave public key
+   * @param reward_address - miner address which receive rewards
+   * @param enclave_signature - SGX signature
+   */
   ACTION void update_miner(const string &enclave_public_key,
                            const Address &reward_address,
                            const string &enclave_signature);
 
-  // Erase miner by enclave_public_key
+  /**
+   * Erase miner by enclave_public_key
+   * @param enclave_public_key - SGX enclave public key
+   * @param enclave_signature - SGX signature
+   */
   ACTION void unregister_miner(const string &enclave_public_key,
                                const string &enclave_signature);
 
+  /**
+   * Verify SGX signature
+   * @param message - origin message of signature
+   * @param enclave_signature - SGX signature
+   */
   bool require_auth(const string &message, const string &enclave_signature);
 
   // Test signature
   ACTION void test(const string &message, const string &enclave_signature);
 
-  // Submit enclave new deal proof
+  /**
+   * Submit enclave new deal proof
+   * @param enclave_public_key - SGX enclave public key
+   * @param enclave_timestamp - SGX timestamp
+   * @param stored_files - file list which storage provider stored
+   * @param enclave_signature - SGX signature
+   */
   ACTION void submit_new_deal_proof(
       const string &enclave_public_key, const string &enclave_timestamp,
       const vector<cid_file> stored_files, const string &enclave_signature);
 
-  // Submit enclave storage proof
+  /**
+   * Submit enclave storage proof
+   * @param enclave_public_key - SGX enclave public key
+   * @param enclave_timestamp - SGX timestamp
+   * @param enclave_plot_size - storage provider plot size
+   * @param stored_files - file list which storage provider stored
+   * @param enclave_signature - SGX signature
+   */
   ACTION void submit_storage_proof(
       const string &enclave_public_key, const string &enclave_timestamp,
       const u128 &enclave_plot_size, const vector<cid_file> stored_files,
       const string &enclave_signature);
 
-  // Query last enclave proof
+  /**
+   * Query last enclave proof
+   */
   CONST storage_proof get_storage_proof(const string &enclave_public_key);
 
-  // Query miner info by enclave_public_key
+  /**
+   * Query miner info by enclave_public_key
+   */
   CONST miner get_miner(const string &enclave_public_key);
 
-  // Query total capacity
+  /**
+   * Query total capacity
+   */
   CONST u128 get_total_capacity();
 
-  // Submit miner info
+  /**
+   * Submit miner info
+   * @param name - miner name
+   * @param peer_id - peer id of miner from IPFS network
+   * @param country_code - country
+   * code(https://en.wikipedia.org/wiki/ISO_3166-1_numeric)
+   * @param url - the website url of storage provider
+   */
   ACTION void submit_miner_info(const string &name, const string &peer_id,
                                 const string &country_code, const string &url);
 
-  // Get miner info by sender
+  /**
+   * Get miner info by sender
+   */
   CONST miner_info get_miner_info(const Address &sender);
 };
 

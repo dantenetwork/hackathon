@@ -12,6 +12,12 @@ using std::vector;
 
 namespace hackathon {
 
+/**
+ * The `market` smart contract is provided by `dante network team` as a sample
+ * platon wasm contract, and it defines the structures and actions needed for
+ * platon-hackathon's core functionality.
+ */
+
 struct deal {
  public:
   string cid;            // deal cid of IPFS network
@@ -56,11 +62,12 @@ struct storage_provider {
 };
 
 CONTRACT market : public Contract {
- protected:
-  StorageType<"token_contract"_n, Address>
-      token_contract;  // dante token contract
-  StorageType<"verify_contract"_n, Address>
-      verify_contract;  // dante verify contract
+ public:
+  // dante token contract
+  StorageType<"token_contract"_n, Address> token_contract;
+
+  // dante verify contract
+  StorageType<"verify_contract"_n, Address> verify_contract;
 
   // deal table
   // UniqueIndex: cid
@@ -81,56 +88,106 @@ CONTRACT market : public Contract {
       storage_provider_map;
 
  public:
+  /**
+   * Contract init
+   * @param token_contract_address - DAT PRC20 token contract address
+   * @param market_contract_address - DAT market contract address
+   */
   ACTION void init(const Address &token_contract_address,
                    const Address &verify_contract_address);
 
-  // Change contract owner
+  /**
+   * Change contract owner
+   * @param account - Change DAT PRC20 token contract address
+   */
   ACTION bool set_owner(const Address &account);
 
-  // Query contract owner
+  /**
+   * Query contract owner
+   */
   CONST string get_owner();
 
-  // Change token contract
+  /**
+   * Change token contract
+   * @param address - Change DAT PRC20 token contract address
+   */
   ACTION bool set_token_contract(const Address &address);
 
-  // Query token contract
+  /**
+   * Query token contract address
+   */
   CONST string get_token_contract();
 
-  // Change verify contract
+  /**
+   * Change verify contract
+   * @param address - Change DAT verify contract address
+   */
   ACTION bool set_verify_contract(const Address &address);
 
-  // Query verify contract
+  /**
+   * Query verify contract
+   */
   CONST string get_verify_contract();
 
-  // Add deal
+  /**
+   * Add deal
+   * @param cid - deal cid of IPFS network
+   * @param size - deal files size
+   * @param price - deal price per block
+   * @param duration - deal duration (blocks)
+   * @param storage_provider_required - // the amount of storage providers
+   * required
+   */
   ACTION void add_deal(const string &cid, const u128 &size, const u128 &price,
                        const u128 &duration,
                        const uint8_t &storage_provider_required);
 
-  // Get deal by cid
-  CONST deal get_deal_by_cid(const string &get_deal_by_cid);
+  /**
+   * Get deal by cid
+   * @param cid - deal cid of IPFS network
+   */
+  CONST deal get_deal_by_cid(const string &cid);
 
-  // Get deal by sender
+  /**
+   * Get deal by sender
+   * @param sender - the account address which pushed add_deal transaction
+   * @param skip - how many deals should be skipped
+   */
   CONST vector<string> get_deal_by_sender(const Address &sender,
                                           const uint8_t &skip);
 
-  // Get opened deals
+  /**
+   * Get opened deals
+   * @param skip - how many deals should be skipped
+   */
   CONST vector<string> get_opened_deal(const uint8_t &skip);
 
-  // add storage provider's enclave_public_key into storage_provider_list of
-  // deal_table
-  CONST bool add_storage_provider(const string &enclave_public_key,
-                                  const vector<cid_file> &deals);
+  /**
+   * storage provider accept deal and signature is verified by verify_contract
+   * add enclave_public_key into storage_provider_list of deal_table
+   * @param enclave_public_key - SGX enclave public key
+   * @param deals - deals which storage provider stored
+   */
+  CONST bool accept_deal(const string &enclave_public_key,
+                         const vector<cid_file> &deals);
 
-  // update storage provider proof
+  /**
+   * storage provider update storage proof and signature is verified by
+   * verify_contract
+   * @param enclave_public_key - SGX enclave public key
+   * @param deals - deals which storage provider stored
+   */
   CONST bool update_storage_proof(const string &enclave_public_key,
                                   const vector<cid_file> &deals);
 
-  // claim deal reward
+  /**
+   * claim deal reward
+   * @param enclave_public_key - SGX enclave public key
+   */
   CONST bool claim_deal_reward(const string &enclave_public_key);
 };
 
 PLATON_DISPATCH(
     market,
-    (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal)(update_storage_proof)(claim_deal_reward))
+    (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal)(accept_deal)(update_storage_proof)(claim_deal_reward))
 }  // namespace hackathon

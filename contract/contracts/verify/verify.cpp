@@ -134,6 +134,8 @@ void verify::submit_storage_proof(const string &enclave_public_key,
                                   const vector<cid_file> stored_files,
                                   const string &enclave_signature) {
   require_auth(enclave_public_key, enclave_signature);
+
+  // update storage provider proof
   storage_proof proof;
   proof.enclave_timestamp = enclave_timestamp;
   proof.enclave_plot_size = enclave_plot_size;

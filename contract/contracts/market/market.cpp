@@ -2,7 +2,6 @@
 #include "market.hpp"
 
 namespace hackathon {
-
 void market::init(const Address &token_contract_address,
                   const Address &verify_contract_address) {
   // set owner
@@ -153,8 +152,8 @@ vector<string> market::get_opened_deal(const uint8_t &skip) {
 
 // add storage provider's enclave_public_key into storage_provider_list of
 // deal_table
-bool market::add_storage_provider(const string &enclave_public_key,
-                                  const vector<cid_file> &deals) {
+bool market::accept_deal(const string &enclave_public_key,
+                         const vector<cid_file> &deals) {
   // only verify contract allows call this function
   platon_assert(platon_caller() == verify_contract.self(),
                 "platon_caller is not equal with verify contract address");
