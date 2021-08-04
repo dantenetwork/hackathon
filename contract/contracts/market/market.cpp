@@ -185,20 +185,25 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
   u128 reward = 0;
 
   // check each deal's price, calculate the reward
-
   vector<string>::iterator it;
+
   for (it = deal_vector.begin(); it != deal_vector.end(); ++it) {
     auto current_deal = deal_table.find<"cid"_n>(*it);
     u128 price = current_deal->price;
+    vector<string> provider_list = current_deal->storage_provider_list;
 
-    // calculate current deal reward
-    u128 current_deal_reward = safeMul(price, reward_blocks);
-    reward += current_deal_reward;
+    // check deal's storage_provider_list contains enclave_public_key
+    if (std::find(provider_list.begin(), provider_list.end(),
+                  enclave_public_key) != provider_list.end()) {
+      // calculate current deal reward
+      u128 current_deal_reward = safeMul(price, reward_blocks);
+      reward += current_deal_reward;
 
-    // update reward balance
-    deal_table.modify(current_deal, [&](auto &deal) {
-      deal.reward_balance -= current_deal_reward;
-    });
+      // update reward balance
+      deal_table.modify(current_deal, [&](auto &deal) {
+        deal.reward_balance -= current_deal_reward;
+      });
+    }
   }
 
   // TODO transfer tokens to storage provider reward address
