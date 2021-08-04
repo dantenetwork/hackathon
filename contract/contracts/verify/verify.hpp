@@ -6,6 +6,7 @@ using namespace platon;
 using namespace platon::db;
 using std::map;
 using std::string;
+using std::vector;
 
 namespace hackathon {
 
@@ -24,17 +25,21 @@ struct miner {
   PLATON_SERIALIZE(miner, (enclave_public_key)(reward_address)(sender))
 };
 
-struct proof_of_capacity {
+struct cid_file {
  public:
-  string enclave_public_key;  // SGX enclave public key
-  string enclave_timestamp;   // SGX enclave timestamp
-  u128 enclave_capacity;      // SGX enclave committed capacity
-  string enclave_signature;   // SGX enclave signature
-  // string primary_key() const { return enclave_public_key; }
+  string cid;  // deal cid
+  u128 size;   // file size of deal
+  PLATON_SERIALIZE(cid_file, (cid)(size));
+};
 
-  PLATON_SERIALIZE(
-      proof_of_capacity,
-      (enclave_public_key)(enclave_timestamp)(enclave_capacity)(enclave_signature))
+struct storage_proof {
+ public:
+  string enclave_timestamp;  // SGX enclave timestamp
+  u128 enclave_plot_size;    // SGX enclave committed plot size
+  string enclave_signature;  // SGX enclave signature
+
+  PLATON_SERIALIZE(storage_proof,
+                   (enclave_timestamp)(enclave_plot_size)(enclave_signature))
 };
 
 struct miner_info {
@@ -49,20 +54,27 @@ struct miner_info {
   PLATON_SERIALIZE(miner_info, (sender)(name)(peer_id)(country_code)(url))
 };
 
-CONTRACT dante_verify : public Contract {
+CONTRACT verify : public Contract {
  protected:
   StorageType<"token_contract"_n, Address>
-      token_contract;                                    // dante token contract
+      token_contract;  // dante token contract
+
   StorageType<"total_capacity"_n, u128> total_capacity;  // total capacity
 
+  StorageType<"market_contract"_n, Address>
+      market_contract;  // dante market contract
+
   platon::db::Map<"miner"_n, string, miner> miner_map;  // miner table
-  platon::db::Map<"proof_of_capacity"_n, string, proof_of_capacity>
-      proof_of_capacity_map;  // proof_of_capacity table
+
+  platon::db::Map<"storage_proof"_n, string, storage_proof>
+      storage_proof_map;  // proof_of_capacity table
+
   platon::db::Map<"miner_info"_n, Address, miner_info>
       miner_info_map;  // miner_info map
 
  public:
-  ACTION void init(const Address &address);
+  ACTION void init(const Address &token_contract_address,
+                   const Address &market_contract_address);
 
   // Change contract owner
   ACTION bool set_owner(const Address &token_contract_address);
@@ -75,6 +87,12 @@ CONTRACT dante_verify : public Contract {
 
   // Query token contract
   CONST string get_token_contract();
+
+  // Change market contract
+  ACTION bool set_market_contract(const Address &address);
+
+  // Query market contract
+  CONST string get_market_contract();
 
   // Add miner by enclave_public_key
   ACTION void register_miner(const string &enclave_public_key,
@@ -94,13 +112,19 @@ CONTRACT dante_verify : public Contract {
   // Test signature
   ACTION void test(const string &message, const string &enclave_signature);
 
-  // Submit enclave proof
-  ACTION void submit_proof(
+  // Submit enclave new deal proof
+  ACTION void submit_new_deal_proof(
       const string &enclave_public_key, const string &enclave_timestamp,
-      const u128 &enclave_capacity, const string &enclave_signature);
+      const vector<cid_file> stored_files, const string &enclave_signature);
+
+  // Submit enclave storage proof
+  ACTION void submit_storage_proof(
+      const string &enclave_public_key, const string &enclave_timestamp,
+      const u128 &enclave_plot_size, const vector<cid_file> stored_files,
+      const string &enclave_signature);
 
   // Query last enclave proof
-  CONST proof_of_capacity get_submit_proof(const string &enclave_public_key);
+  CONST storage_proof get_storage_proof(const string &enclave_public_key);
 
   // Query miner info by enclave_public_key
   CONST miner get_miner(const string &enclave_public_key);
@@ -117,6 +141,5 @@ CONTRACT dante_verify : public Contract {
 };
 
 PLATON_DISPATCH(
-    dante_verify,
-    (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(register_miner)(update_miner)(unregister_miner)(test)(submit_proof)(get_submit_proof)(get_miner)(get_total_capacity)(submit_miner_info)(get_miner_info))
+    verify, (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(set_market_contract)(get_market_contract)(register_miner)(update_miner)(unregister_miner)(test)(submit_new_deal_proof)(submit_storage_proof)(get_storage_proof)(get_miner)(get_total_capacity)(submit_miner_info)(get_miner_info))
 }  // namespace hackathon

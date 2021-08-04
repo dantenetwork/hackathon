@@ -3,40 +3,55 @@
 
 namespace hackathon {
 
-void dante_verify::init(const Address &token_contract_address) {
+void verify::init(const Address &token_contract_address,
+                  const Address &market_contract_address) {
   // set owner
   platon::set_owner();
 
   // set token contract
   token_contract.self() = token_contract_address;
+
+  // set market contract
+  market_contract.self() = market_contract_address;
+
   total_capacity.self() = 0;
 }
 
 // Change contract owner
-bool dante_verify::set_owner(const Address &account) {
+bool verify::set_owner(const Address &account) {
   platon_assert(platon::is_owner(), "Only owner can change owner");
   platon::set_owner(account.toString());
   return true;
 }
 
 // Query contract owner
-string dante_verify::get_owner() { return platon::owner().toString(); }
+string verify::get_owner() { return platon::owner().toString(); }
 
 // Change token contract address
-bool dante_verify::set_token_contract(const Address &address) {
+bool verify::set_token_contract(const Address &address) {
   platon_assert(platon::is_owner(), "Only owner can change token contract");
   token_contract.self() = address;
   return true;
 }
 
 // Query token contract
-string dante_verify::get_token_contract() {
-  return token_contract.self().toString();
+string verify::get_token_contract() { return token_contract.self().toString(); }
+
+// Change market contract address
+bool verify::set_market_contract(const Address &address) {
+  platon_assert(platon::is_owner(), "Only owner can change token contract");
+  market_contract.self() = address;
+  return true;
+}
+
+// Query market contract
+string verify::get_market_contract() {
+  return market_contract.self().toString();
 }
 
 // Add miner by enclave_public_key
-void dante_verify::register_miner(const string &enclave_public_key,
-                                  const Address &reward_address) {
+void verify::register_miner(const string &enclave_public_key,
+                            const Address &reward_address) {
   platon_assert(!miner_map.contains(enclave_public_key),
                 "the enclave_public_key is already exists");
 
@@ -49,9 +64,9 @@ void dante_verify::register_miner(const string &enclave_public_key,
 }
 
 // Modify miner info by enclave_public_key
-void dante_verify::update_miner(const string &enclave_public_key,
-                                const Address &reward_address,
-                                const string &enclave_signature) {
+void verify::update_miner(const string &enclave_public_key,
+                          const Address &reward_address,
+                          const string &enclave_signature) {
   require_auth(enclave_public_key, enclave_signature);
   platon_assert(miner_map.contains(enclave_public_key),
                 "the enclave_public_key is not exists");
@@ -65,22 +80,21 @@ void dante_verify::update_miner(const string &enclave_public_key,
 }
 
 // Erase miner by enclave_machine_id
-void dante_verify::unregister_miner(const string &enclave_public_key,
-                                    const string &enclave_signature) {
+void verify::unregister_miner(const string &enclave_public_key,
+                              const string &enclave_signature) {
   require_auth(enclave_public_key, enclave_signature);
   platon_assert(miner_map.contains(enclave_public_key),
                 "the enclave_public_key is not exists");
   miner_map.erase(enclave_public_key);
 }
 
-bool dante_verify::require_auth(const string &message,
-                                const string &enclave_signature) {
+bool verify::require_auth(const string &message,
+                          const string &enclave_signature) {
   return true;
 }
 
 // Test signature
-void dante_verify::test(const string &message,
-                        const string &enclave_signature) {
+void verify::test(const string &message, const string &enclave_signature) {
   DEBUG(message);
   DEBUG(enclave_signature);
 
@@ -94,38 +108,66 @@ void dante_verify::test(const string &message,
   DEBUG(recovered_address.toString());
 }
 
-// Submit enclave proof
-void dante_verify::submit_proof(const string &enclave_public_key,
-                                const string &enclave_timestamp,
-                                const u128 &enclave_capacity,
-                                const string &enclave_signature) {
+// Submit enclave new deal proof
+void verify::submit_new_deal_proof(const string &enclave_public_key,
+                                   const string &enclave_timestamp,
+                                   const vector<cid_file> stored_files,
+                                   const string &enclave_signature) {
   require_auth(enclave_public_key, enclave_signature);
-  proof_of_capacity proof;
-  proof.enclave_public_key = enclave_public_key;
+
+  // call add_storage_provider of market.cpp
+  Address sender = platon_caller();
+  auto result = platon_call_with_return_value<bool>(
+      market_contract.self(), uint32_t(0), uint32_t(0), "add_storage_provider",
+      enclave_public_key, stored_files);
+  DEBUG(result.first);
+  DEBUG(result.second);
+
+  platon_assert(result.first && result.second,
+                "platon_call add_storage_provider failed");
+}
+
+// Submit enclave proof
+void verify::submit_storage_proof(const string &enclave_public_key,
+                                  const string &enclave_timestamp,
+                                  const u128 &enclave_plot_size,
+                                  const vector<cid_file> stored_files,
+                                  const string &enclave_signature) {
+  require_auth(enclave_public_key, enclave_signature);
+  storage_proof proof;
   proof.enclave_timestamp = enclave_timestamp;
-  proof.enclave_capacity = enclave_capacity;
+  proof.enclave_plot_size = enclave_plot_size;
   proof.enclave_signature = enclave_signature;
-  proof_of_capacity_map[enclave_public_key] = proof;
+  storage_proof_map[enclave_public_key] = proof;
+
+  // call update_storage_proof of market.cpp
+  Address sender = platon_caller();
+  auto result = platon_call_with_return_value<bool>(
+      market_contract.self(), uint32_t(0), uint32_t(0), "update_storage_proof",
+      enclave_public_key, stored_files);
+  DEBUG(result.first);
+  DEBUG(result.second);
+
+  platon_assert(result.first && result.second,
+                "platon_call update_storage_proof failed");
 }
 
 // Query last enclave proof
-proof_of_capacity dante_verify::get_submit_proof(
-    const string &enclave_public_key) {
-  return proof_of_capacity_map[enclave_public_key];
+storage_proof verify::get_storage_proof(const string &enclave_public_key) {
+  return storage_proof_map[enclave_public_key];
 }
 
 // Query miner info by enclave_machine_id
-miner dante_verify::get_miner(const string &enclave_public_key) {
+miner verify::get_miner(const string &enclave_public_key) {
   return miner_map[enclave_public_key];
 }
 
 // Query total capacity
-u128 dante_verify::get_total_capacity() { return total_capacity.self(); }
+u128 verify::get_total_capacity() { return total_capacity.self(); }
 
 // Submit miner info
-void dante_verify::submit_miner_info(const string &name, const string &peer_id,
-                                     const string &country_code,
-                                     const string &url) {
+void verify::submit_miner_info(const string &name, const string &peer_id,
+                               const string &country_code, const string &url) {
   Address sender = platon_caller();
 
   miner_info info;
@@ -139,7 +181,7 @@ void dante_verify::submit_miner_info(const string &name, const string &peer_id,
 }
 
 // Get miner info by sender
-miner_info dante_verify::get_miner_info(const Address &sender) {
+miner_info verify::get_miner_info(const Address &sender) {
   return miner_info_map[sender];
 }
 }  // namespace hackathon
