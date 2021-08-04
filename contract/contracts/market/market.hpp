@@ -110,6 +110,10 @@ CONTRACT market : public Contract {
   // Get opened deals
   CONST vector<string> get_opened_deal(const uint8_t &skip);
 
+  // add storage provider into deal table
+  CONST bool add_storage_provider(const string &enclave_public_key,
+                                  const string &cid, const u128 &size);
+
   // update storage provider proof
   CONST bool update_storage_proof(const string &enclave_public_key,
                                   vector<string> deals);

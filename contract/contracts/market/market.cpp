@@ -85,17 +85,17 @@ void market::add_deal(const string &cid, const u128 &size, const u128 &price,
 
 // get deal by cid
 deal market::get_deal_by_cid(const string &cid) {
-  auto itr = deal_table.find<"cid"_n>(cid);
+  auto current_deal = deal_table.find<"cid"_n>(cid);
   deal ret;
-  if (itr != deal_table.cend()) {
-    ret.cid = itr->cid;
-    ret.state = itr->state;
-    ret.slashed = itr->slashed;
-    ret.size = itr->size;
-    ret.price = itr->price;
-    ret.duration = itr->duration;
-    ret.sender = itr->sender;
-    ret.storage_provider_required = itr->storage_provider_required;
+  if (current_deal != deal_table.cend()) {
+    ret.cid = current_deal->cid;
+    ret.state = current_deal->state;
+    ret.slashed = current_deal->slashed;
+    ret.size = current_deal->size;
+    ret.price = current_deal->price;
+    ret.duration = current_deal->duration;
+    ret.sender = current_deal->sender;
+    ret.storage_provider_required = current_deal->storage_provider_required;
   }
   return ret;
 }
@@ -137,6 +137,38 @@ vector<string> market::get_opened_deal(const uint8_t &skip) {
     }
   }
   return ret;
+}
+
+// add storage provider into deal table
+bool market::add_storage_provider(const string &enclave_public_key,
+                                  const string &cid, const u128 &size) {
+  platon_assert(platon_caller() == verify_contract.self(),
+                "platon_caller is not equal with verify contract address");
+
+  auto current_deal = deal_table.find<"cid"_n>(cid);
+
+  // check cid is exists && storage_provider_list amount is less than
+  // storage_provider_required
+  if (current_deal != deal_table.cend() ||
+      current_deal->storage_provider_list.size() ==
+          current_deal->storage_provider_required) {
+    return false;
+  }
+
+  // if deal's size is larger than SGX uploaded file size
+  if (current_deal->size > size) {
+    return false;
+  }
+
+  // add enclave_public_key into deal's storage_provider_list
+  vector<string> provider_list = current_deal->storage_provider_list;
+  provider_list.push_back(enclave_public_key);
+
+  deal_table.modify(current_deal, [&](auto &deal) {
+    deal.storage_provider_list = provider_list;
+  });
+
+  return true;
 }
 
 // update storage provider proof
