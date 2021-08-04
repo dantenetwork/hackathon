@@ -152,8 +152,8 @@ vector<string> market::get_opened_deal(const uint8_t &skip) {
 
 // add storage provider's enclave_public_key into storage_provider_list of
 // deal_table
-bool market::accept_deal(const string &enclave_public_key,
-                         const vector<cid_file> &deals) {
+bool market::fill_deal(const string &enclave_public_key,
+                       const vector<cid_file> &deals) {
   // only verify contract allows call this function
   platon_assert(platon_caller() == verify_contract.self(),
                 "platon_caller is not equal with verify contract address");
