@@ -154,37 +154,42 @@ vector<string> market::get_opened_deal(const uint8_t &skip) {
 // add storage provider's enclave_public_key into storage_provider_list of
 // deal_table
 bool market::add_storage_provider(const string &enclave_public_key,
-                                  const string &cid, const u128 &size) {
+                                  const vector<cid_file> &deals) {
   // only verify contract allows call this function
   platon_assert(platon_caller() == verify_contract.self(),
                 "platon_caller is not equal with verify contract address");
 
-  auto current_deal = deal_table.find<"cid"_n>(cid);
+  vector<cid_file>::const_iterator it;
 
-  // check cid is exists && deal state = 0
-  if (current_deal != deal_table.cend() || current_deal->state != 0) {
-    return false;
-  }
+  // iterate vector iterator
+  for (it = deals.begin(); it != deals.end(); ++it) {
+    auto current_deal = deal_table.find<"cid"_n>(it->cid);
 
-  // storage provider reported file size is larger than size of deal
-  if (current_deal->size > size) {
-    deal_table.modify(current_deal, [&](auto &deal) { deal.state = 3; });
-    return false;
-  }
+    // check cid is exists && deal state = 0
+    if (current_deal != deal_table.cend() || current_deal->state != 0) {
+      return false;
+    }
 
-  // add enclave_public_key into deal's storage_provider_list
-  vector<string> provider_list = current_deal->storage_provider_list;
-  provider_list.push_back(enclave_public_key);
-  // update deal table
-  deal_table.modify(current_deal, [&](auto &deal) {
-    deal.storage_provider_list = provider_list;
-  });
+    // storage provider reported file size is larger than size of deal
+    if (current_deal->size > it->size) {
+      deal_table.modify(current_deal, [&](auto &deal) { deal.state = 3; });
+      return false;
+    }
 
-  // set state to 1 (filled) if storage_provider_list size is match with
-  // required
-  if (current_deal->storage_provider_list.size() ==
-      current_deal->storage_provider_required) {
-    deal_table.modify(current_deal, [&](auto &deal) { deal.state = 1; });
+    // add enclave_public_key into deal's storage_provider_list
+    vector<string> provider_list = current_deal->storage_provider_list;
+    provider_list.push_back(enclave_public_key);
+    // update deal table
+    deal_table.modify(current_deal, [&](auto &deal) {
+      deal.storage_provider_list = provider_list;
+    });
+
+    // set state to 1 (filled) if storage_provider_list size is match with
+    // required
+    if (current_deal->storage_provider_list.size() ==
+        current_deal->storage_provider_required) {
+      deal_table.modify(current_deal, [&](auto &deal) { deal.state = 1; });
+    }
   }
 
   return true;
@@ -192,7 +197,7 @@ bool market::add_storage_provider(const string &enclave_public_key,
 
 // update storage provider proof
 bool market::update_storage_proof(const string &enclave_public_key,
-                                  vector<cid_file> deals) {
+                                  const vector<cid_file> &deals) {
   // only verify contract allows call this function
   platon_assert(platon_caller() == verify_contract.self(),
                 "platon_caller is not equal with verify contract address");

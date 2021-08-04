@@ -120,11 +120,11 @@ CONTRACT market : public Contract {
   // add storage provider's enclave_public_key into storage_provider_list of
   // deal_table
   CONST bool add_storage_provider(const string &enclave_public_key,
-                                  const string &cid, const u128 &size);
+                                  const vector<cid_file> &deals);
 
   // update storage provider proof
   CONST bool update_storage_proof(const string &enclave_public_key,
-                                  vector<cid_file> deals);
+                                  const vector<cid_file> &deals);
 
   // claim deal reward
   CONST bool claim_deal_reward(const string &enclave_public_key);
