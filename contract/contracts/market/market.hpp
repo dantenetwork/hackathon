@@ -22,34 +22,31 @@ struct deal {
   u128 price;            // deal price per block
   u128 duration;         // deal duration (blocks)
   Address sender;        // deal sender
-  uint8_t provider_required;  // the amount of storage providers required
+  uint8_t
+      storage_provider_required;  // the amount of storage providers required
+  u128 total_reward;              // deal total rewards
+  u128 reward_balance;  // reward balance after storage provider claimed
+  vector<string> storage_provider_list;  // storage provider list
   string primary_key() const { return cid; }
   uint8_t by_state() const { return state; }
   Address by_sender() const { return sender; }
 
   PLATON_SERIALIZE(
       deal,
-      (cid)(state)(slashed)(size)(price)(duration)(sender)(provider_required));
+      (cid)(state)(slashed)(size)(price)(duration)(sender)(storage_provider_required)(total_reward)(reward_balance)(storage_provider_list));
 };
 
-struct deal_capacity {
+struct storage_provider {
  public:
-  string cid;     // deal cid
-  u128 capacity;  // deal capacity
-
-  PLATON_SERIALIZE(deal_capacity, (cid)(capacity));
-};
-
-struct deal_provider {
- public:
+  uint64_t last_storage_proof_block_num;  // last storage proof that provider
+                                          // submitted
   uint64_t
-      last_provider_proof_block_num;  // last storage proof provider submitted
-  uint64_t last_claimed_block_num;    // last deal reward provider claimed
-  vector<deal_capacity> deals;        // deals cid which provider stored
+      last_claimed_block_num;  // the block number that last deal reward claimed
+  vector<string> deals;        // deals which provider stored
 
   PLATON_SERIALIZE(
-      deal_provider,
-      (last_provider_proof_block_num)(last_claimed_block_num)(deals));
+      storage_provider,
+      (last_storage_proof_block_num)(last_claimed_block_num)(deals));
 };
 
 CONTRACT market : public Contract {
@@ -73,8 +70,8 @@ CONTRACT market : public Contract {
                                            IndexType::NormalIndex>>>
       deal_table;
 
-  platon::db::Map<"enclave_public_key"_n, string, deal_provider>
-      deal_provider_map;
+  platon::db::Map<"enclave_public_key"_n, string, storage_provider>
+      storage_provider_map;
 
  public:
   ACTION void init(const Address &token_contract_address,
@@ -100,7 +97,8 @@ CONTRACT market : public Contract {
 
   // Add deal
   ACTION void add_deal(const string &cid, const u128 &size, const u128 &price,
-                       const u128 &duration, const uint8_t &provider_required);
+                       const u128 &duration,
+                       const uint8_t &storage_provider_required);
 
   // Get deal by cid
   CONST deal get_deal_by_cid(const string &get_deal_by_cid);
@@ -112,12 +110,19 @@ CONTRACT market : public Contract {
   // Get opened deals
   CONST vector<string> get_opened_deal(const uint8_t &skip);
 
-  // update provider proof
-  CONST bool update_provider_proof(const string &enclave_public_key,
-                                   vector<deal_capacity> deals);
+  // add storage provider into deal table
+  CONST bool add_storage_provider(const string &enclave_public_key,
+                                  const string &cid, const u128 &size);
+
+  // update storage provider proof
+  CONST bool update_storage_proof(const string &enclave_public_key,
+                                  vector<string> deals);
+
+  // claim deal reward
+  CONST bool claim_deal_reward(const string &enclave_public_key);
 };
 
 PLATON_DISPATCH(
     market,
-    (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal))
+    (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal)(update_storage_proof)(claim_deal_reward))
 }  // namespace hackathon

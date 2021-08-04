@@ -47,13 +47,14 @@ bool market::set_verify_contract(const Address &address) {
 
 // add deal
 void market::add_deal(const string &cid, const u128 &size, const u128 &price,
-                      const u128 &duration, const uint8_t &provider_required) {
+                      const u128 &duration,
+                      const uint8_t &storage_provider_required) {
   DEBUG("Hello");
   u128 deal_price = hackathon::safeMul(price, duration);
-  u128 total_price = hackathon::safeMul(deal_price, provider_required);
+  u128 total_reward = hackathon::safeMul(deal_price, storage_provider_required);
   DEBUG(price);
   DEBUG(deal_price);
-  DEBUG(total_price);
+  DEBUG(total_reward);
 
   Address sender = platon_caller();
   Address self = platon_address();
@@ -76,23 +77,25 @@ void market::add_deal(const string &cid, const u128 &size, const u128 &price,
     deal.price = price;
     deal.duration = duration;
     deal.sender = sender;
-    deal.provider_required = provider_required;
+    deal.storage_provider_required = storage_provider_required;
+    deal.total_reward = total_reward;
+    deal.reward_balance = total_reward;
   });
 }
 
 // get deal by cid
 deal market::get_deal_by_cid(const string &cid) {
-  auto itr = deal_table.find<"cid"_n>(cid);
+  auto current_deal = deal_table.find<"cid"_n>(cid);
   deal ret;
-  if (itr != deal_table.cend()) {
-    ret.cid = itr->cid;
-    ret.state = itr->state;
-    ret.slashed = itr->slashed;
-    ret.size = itr->size;
-    ret.price = itr->price;
-    ret.duration = itr->duration;
-    ret.sender = itr->sender;
-    ret.provider_required = itr->provider_required;
+  if (current_deal != deal_table.cend()) {
+    ret.cid = current_deal->cid;
+    ret.state = current_deal->state;
+    ret.slashed = current_deal->slashed;
+    ret.size = current_deal->size;
+    ret.price = current_deal->price;
+    ret.duration = current_deal->duration;
+    ret.sender = current_deal->sender;
+    ret.storage_provider_required = current_deal->storage_provider_required;
   }
   return ret;
 }
@@ -136,27 +139,112 @@ vector<string> market::get_opened_deal(const uint8_t &skip) {
   return ret;
 }
 
-// update provider proof
-bool market::update_provider_proof(const string &enclave_public_key,
-                                   vector<deal_capacity> deals) {
+// add storage provider into deal table
+bool market::add_storage_provider(const string &enclave_public_key,
+                                  const string &cid, const u128 &size) {
   platon_assert(platon_caller() == verify_contract.self(),
                 "platon_caller is not equal with verify contract address");
 
-  deal_provider provider;
+  auto current_deal = deal_table.find<"cid"_n>(cid);
+
+  // check cid is exists && storage_provider_list amount is less than
+  // storage_provider_required
+  if (current_deal != deal_table.cend() ||
+      current_deal->storage_provider_list.size() ==
+          current_deal->storage_provider_required) {
+    return false;
+  }
+
+  // if deal's size is larger than SGX uploaded file size
+  if (current_deal->size > size) {
+    return false;
+  }
+
+  // add enclave_public_key into deal's storage_provider_list
+  vector<string> provider_list = current_deal->storage_provider_list;
+  provider_list.push_back(enclave_public_key);
+
+  deal_table.modify(current_deal, [&](auto &deal) {
+    deal.storage_provider_list = provider_list;
+  });
+
+  return true;
+}
+
+// update storage provider proof
+bool market::update_storage_proof(const string &enclave_public_key,
+                                  vector<string> deals) {
+  platon_assert(platon_caller() == verify_contract.self(),
+                "platon_caller is not equal with verify contract address");
+
+  storage_provider provider;
   uint64_t current_block_num = platon_block_number();
 
-  if (deal_provider_map.contains(enclave_public_key)) {
-    // provider info already exists
-    provider = deal_provider_map[enclave_public_key];
-    provider.last_provider_proof_block_num = current_block_num;
+  if (storage_provider_map.contains(enclave_public_key)) {
+    // storage provider info already exists
+    provider = storage_provider_map[enclave_public_key];
+    provider.last_storage_proof_block_num = current_block_num;
     provider.deals = deals;
   } else {
-    // add new provider info
-    provider.last_provider_proof_block_num = current_block_num;
+    // add new storage provider info
+    provider.last_storage_proof_block_num = current_block_num;
     provider.last_claimed_block_num = current_block_num;
     provider.deals = deals;
-    deal_provider_map.insert(enclave_public_key, provider);
+    storage_provider_map.insert(enclave_public_key, provider);
   }
+
+  return true;
+}
+
+// claim deal reward
+bool market::claim_deal_reward(const string &enclave_public_key) {
+  // checkt enclave_public_key is exists
+  if (!storage_provider_map.contains(enclave_public_key)) {
+    return false;
+  }
+
+  // get target provider info
+  storage_provider provider = storage_provider_map[enclave_public_key];
+  vector<string> deal_vector = provider.deals;
+
+  // blocks gap between last_storage_proof_block_num and last_claimed_block_num
+  uint64_t reward_blocks =
+      provider.last_storage_proof_block_num - provider.last_claimed_block_num;
+  if (reward_blocks <= 0) {
+    return false;
+  }
+
+  u128 reward = 0;
+
+  // check each deal's price, calculate the reward
+  vector<string>::iterator it;
+
+  for (it = deal_vector.begin(); it != deal_vector.end(); ++it) {
+    auto current_deal = deal_table.find<"cid"_n>(*it);
+    u128 price = current_deal->price;
+    vector<string> provider_list = current_deal->storage_provider_list;
+
+    // check deal's storage_provider_list contains enclave_public_key
+    if (std::find(provider_list.begin(), provider_list.end(),
+                  enclave_public_key) != provider_list.end()) {
+      // calculate current deal reward
+      u128 current_deal_reward = safeMul(price, reward_blocks);
+      reward += current_deal_reward;
+
+      // update reward balance
+      deal_table.modify(current_deal, [&](auto &deal) {
+        deal.reward_balance -= current_deal_reward;
+      });
+    }
+  }
+
+  // TODO transfer tokens to storage provider reward address
+
+  // update last_claimed_block_num
+  provider.last_claimed_block_num = platon_block_number();
+  storage_provider_map[enclave_public_key] = provider;
+
+  DEBUG(reward);
 
   return true;
 }
