@@ -16,7 +16,8 @@ struct deal {
  public:
   string cid;            // deal cid of IPFS network
   uint8_t state = 0;     // current deal state, 0 = deal opened, 1= filled, 2 =
-                         // closed, default as 0
+                         // closed, 3 = invalid (storage provider reported file
+                         // size is larger than size of deal) , default as 0
   bool slashed = false;  // is slashed, default as false
   u128 size;             // deal files size
   u128 price;            // deal price per block
@@ -36,17 +37,22 @@ struct deal {
       (cid)(state)(slashed)(size)(price)(duration)(sender)(storage_provider_required)(total_reward)(reward_balance)(storage_provider_list));
 };
 
+struct cid_file {
+ public:
+  string cid;  // deal cid
+  u128 size;   // file size of deal
+  PLATON_SERIALIZE(cid_file, (cid)(size));
+};
+
 struct storage_provider {
  public:
-  uint64_t last_storage_proof_block_num;  // last storage proof that provider
-                                          // submitted
+  uint64_t last_proof_block_num;  // last storage proof that provider submitted
   uint64_t
       last_claimed_block_num;  // the block number that last deal reward claimed
-  vector<string> deals;        // deals which provider stored
+  vector<cid_file> deals;      // deals which provider stored
 
-  PLATON_SERIALIZE(
-      storage_provider,
-      (last_storage_proof_block_num)(last_claimed_block_num)(deals));
+  PLATON_SERIALIZE(storage_provider,
+                   (last_proof_block_num)(last_claimed_block_num)(deals));
 };
 
 CONTRACT market : public Contract {
@@ -70,6 +76,7 @@ CONTRACT market : public Contract {
                                            IndexType::NormalIndex>>>
       deal_table;
 
+  // storage provider map
   platon::db::Map<"enclave_public_key"_n, string, storage_provider>
       storage_provider_map;
 
@@ -110,13 +117,14 @@ CONTRACT market : public Contract {
   // Get opened deals
   CONST vector<string> get_opened_deal(const uint8_t &skip);
 
-  // add storage provider into deal table
+  // add storage provider's enclave_public_key into storage_provider_list of
+  // deal_table
   CONST bool add_storage_provider(const string &enclave_public_key,
-                                  const string &cid, const u128 &size);
+                                  const vector<cid_file> &deals);
 
   // update storage provider proof
   CONST bool update_storage_proof(const string &enclave_public_key,
-                                  vector<string> deals);
+                                  const vector<cid_file> &deals);
 
   // claim deal reward
   CONST bool claim_deal_reward(const string &enclave_public_key);

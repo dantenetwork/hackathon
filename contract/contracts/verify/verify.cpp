@@ -14,7 +14,7 @@ void dante_verify::init(const Address &token_contract_address) {
 
 // Change contract owner
 bool dante_verify::set_owner(const Address &account) {
-  platon_assert(platon::is_owner(), "Only owner can change owner.");
+  platon_assert(platon::is_owner(), "Only owner can change owner");
   platon::set_owner(account.toString());
   return true;
 }
@@ -24,7 +24,7 @@ string dante_verify::get_owner() { return platon::owner().toString(); }
 
 // Change token contract address
 bool dante_verify::set_token_contract(const Address &address) {
-  platon_assert(platon::is_owner(), "Only owner can change token contract.");
+  platon_assert(platon::is_owner(), "Only owner can change token contract");
   token_contract.self() = address;
   return true;
 }
@@ -38,7 +38,7 @@ string dante_verify::get_token_contract() {
 void dante_verify::register_miner(const string &enclave_public_key,
                                   const Address &reward_address) {
   platon_assert(!miner_map.contains(enclave_public_key),
-                "the enclave_public_key is already exists.");
+                "the enclave_public_key is already exists");
 
   // add miner
   miner info;
@@ -54,7 +54,7 @@ void dante_verify::update_miner(const string &enclave_public_key,
                                 const string &enclave_signature) {
   require_auth(enclave_public_key, enclave_signature);
   platon_assert(miner_map.contains(enclave_public_key),
-                "the enclave_public_key is not exists.");
+                "the enclave_public_key is not exists");
 
   // update miner
   miner info;
@@ -69,7 +69,7 @@ void dante_verify::unregister_miner(const string &enclave_public_key,
                                     const string &enclave_signature) {
   require_auth(enclave_public_key, enclave_signature);
   platon_assert(miner_map.contains(enclave_public_key),
-                "the enclave_public_key is not exists.");
+                "the enclave_public_key is not exists");
   miner_map.erase(enclave_public_key);
 }
 
