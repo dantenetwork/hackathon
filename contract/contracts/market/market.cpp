@@ -47,10 +47,11 @@ bool market::set_verify_contract(const Address &address) {
 
 // add deal
 void market::add_deal(const string &cid, const u128 &size, const u128 &price,
-                      const u128 &duration, const uint8_t &provider_required) {
+                      const u128 &duration,
+                      const uint8_t &storage_provider_required) {
   DEBUG("Hello");
   u128 deal_price = hackathon::safeMul(price, duration);
-  u128 total_reward = hackathon::safeMul(deal_price, provider_required);
+  u128 total_reward = hackathon::safeMul(deal_price, storage_provider_required);
   DEBUG(price);
   DEBUG(deal_price);
   DEBUG(total_reward);
@@ -76,7 +77,7 @@ void market::add_deal(const string &cid, const u128 &size, const u128 &price,
     deal.price = price;
     deal.duration = duration;
     deal.sender = sender;
-    deal.provider_required = provider_required;
+    deal.storage_provider_required = storage_provider_required;
     deal.total_reward = total_reward;
     deal.reward_balance = total_reward;
   });
@@ -94,7 +95,7 @@ deal market::get_deal_by_cid(const string &cid) {
     ret.price = itr->price;
     ret.duration = itr->duration;
     ret.sender = itr->sender;
-    ret.provider_required = itr->provider_required;
+    ret.storage_provider_required = itr->storage_provider_required;
   }
   return ret;
 }
@@ -138,26 +139,26 @@ vector<string> market::get_opened_deal(const uint8_t &skip) {
   return ret;
 }
 
-// update provider proof
-bool market::update_provider_proof(const string &enclave_public_key,
-                                   vector<deal_capacity> deals) {
+// update storage provider proof
+bool market::update_storage_proof(const string &enclave_public_key,
+                                  vector<string> deals) {
   platon_assert(platon_caller() == verify_contract.self(),
                 "platon_caller is not equal with verify contract address");
 
-  deal_provider provider;
+  storage_provider provider;
   uint64_t current_block_num = platon_block_number();
 
-  if (deal_provider_map.contains(enclave_public_key)) {
-    // provider info already exists
-    provider = deal_provider_map[enclave_public_key];
-    provider.last_provider_proof_block_num = current_block_num;
+  if (storage_provider_map.contains(enclave_public_key)) {
+    // storage provider info already exists
+    provider = storage_provider_map[enclave_public_key];
+    provider.last_storage_proof_block_num = current_block_num;
     provider.deals = deals;
   } else {
-    // add new provider info
-    provider.last_provider_proof_block_num = current_block_num;
+    // add new storage provider info
+    provider.last_storage_proof_block_num = current_block_num;
     provider.last_claimed_block_num = current_block_num;
     provider.deals = deals;
-    deal_provider_map.insert(enclave_public_key, provider);
+    storage_provider_map.insert(enclave_public_key, provider);
   }
 
   return true;
@@ -166,17 +167,17 @@ bool market::update_provider_proof(const string &enclave_public_key,
 // claim deal reward
 bool market::claim_deal_reward(const string &enclave_public_key) {
   // checkt enclave_public_key is exists
-  if (!deal_provider_map.contains(enclave_public_key)) {
+  if (!storage_provider_map.contains(enclave_public_key)) {
     return false;
   }
 
   // get target provider info
-  deal_provider provider = deal_provider_map[enclave_public_key];
-  vector<deal_capacity> deal_capacity_vector = provider.deals;
+  storage_provider provider = storage_provider_map[enclave_public_key];
+  vector<string> deal_vector = provider.deals;
 
-  // blocks gap between last_provider_proof_block_num and last_claimed_block_num
+  // blocks gap between last_storage_proof_block_num and last_claimed_block_num
   uint64_t reward_blocks =
-      provider.last_provider_proof_block_num - provider.last_claimed_block_num;
+      provider.last_storage_proof_block_num - provider.last_claimed_block_num;
   if (reward_blocks <= 0) {
     return false;
   }
@@ -184,10 +185,10 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
   u128 reward = 0;
 
   // check each deal's price, calculate the reward
-  vector<deal_capacity>::iterator it;
-  for (it = deal_capacity_vector.begin(); it != deal_capacity_vector.end();
-       ++it) {
-    auto current_deal = deal_table.find<"cid"_n>(it->cid);
+
+  vector<string>::iterator it;
+  for (it = deal_vector.begin(); it != deal_vector.end(); ++it) {
+    auto current_deal = deal_table.find<"cid"_n>(*it);
     u128 price = current_deal->price;
 
     // calculate current deal reward
@@ -200,11 +201,11 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
     });
   }
 
-  // TODO transfer tokens to provider reward address
+  // TODO transfer tokens to storage provider reward address
 
   // update last_claimed_block_num
   provider.last_claimed_block_num = platon_block_number();
-  deal_provider_map[enclave_public_key] = provider;
+  storage_provider_map[enclave_public_key] = provider;
 
   DEBUG(reward);
 
