@@ -138,27 +138,24 @@ vector<string> market::get_opened_deal(const uint8_t &skip) {
 
 // update provider proof
 bool market::update_provider_proof(const string &enclave_public_key,
-                                   const string &cid) {
+                                   vector<deal_capacity> deals) {
   platon_assert(platon_caller() == verify_contract.self(),
                 "platon_caller is not equal with verify contract address");
 
-  auto itr = deal_provider_table.find<"id"_n>(enclave_public_key + cid);
+  deal_provider provider;
+  uint64_t current_block_num = platon_block_number();
 
-  uint64_t current_block_number = platon_block_number();
-
-  if (itr == deal_provider_table.cend()) {
-    // record is not exists
-    deal_provider_table.emplace([&](auto &deal_provider) {
-      deal_provider.id = enclave_public_key + cid;
-      deal_provider.cid = cid;
-      deal_provider.enclave_public_key = enclave_public_key;
-      deal_provider.last_provider_proof_block_num = current_block_number;
-      deal_provider.last_claimed_block_num = current_block_number;
-    });
+  if (deal_provider_map.contains(enclave_public_key)) {
+    // provider info already exists
+    provider = deal_provider_map[enclave_public_key];
+    provider.last_provider_proof_block_num = current_block_num;
+    provider.deals = deals;
   } else {
-    deal_provider_table.modify(itr, [&](auto &deal_provider) {
-      deal_provider.last_provider_proof_block_num = current_block_number;
-    });
+    // add new provider info
+    provider.last_provider_proof_block_num = current_block_num;
+    provider.last_claimed_block_num = current_block_num;
+    provider.deals = deals;
+    deal_provider_map.insert(enclave_public_key, provider);
   }
 
   return true;

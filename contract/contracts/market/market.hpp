@@ -32,21 +32,24 @@ struct deal {
       (cid)(state)(slashed)(size)(price)(duration)(sender)(provider_required));
 };
 
+struct deal_capacity {
+ public:
+  string cid;     // deal cid
+  u128 capacity;  // deal capacity
+
+  PLATON_SERIALIZE(deal_capacity, (cid)(capacity));
+};
+
 struct deal_provider {
  public:
-  string id;                  // id = cid + enclave_public_key
-  string cid;                 // deal cid of IPFS network
-  string enclave_public_key;  // SGX enclave public key
   uint64_t
       last_provider_proof_block_num;  // last storage proof provider submitted
   uint64_t last_claimed_block_num;    // last deal reward provider claimed
-  string primary_key() const { return id; }
-  string by_cid() const { return cid; }
-  string by_enclave_public_key() const { return enclave_public_key; }
+  vector<deal_capacity> deals;        // deals cid which provider stored
 
   PLATON_SERIALIZE(
       deal_provider,
-      (id)(cid)(enclave_public_key)(last_provider_proof_block_num)(last_claimed_block_num));
+      (last_provider_proof_block_num)(last_claimed_block_num)(deals));
 };
 
 CONTRACT market : public Contract {
@@ -70,22 +73,8 @@ CONTRACT market : public Contract {
                                            IndexType::NormalIndex>>>
       deal_table;
 
-  // deal provider table
-  // UniqueIndex: id
-  // NormalIndex: cid
-  // NormalIndex: enclave_public_key
-  MultiIndex<"deal_provider"_n, deal_provider,
-             IndexedBy<"id"_n, IndexMemberFun<deal_provider, string,
-                                              &deal_provider::primary_key,
-                                              IndexType::UniqueIndex>>,
-             IndexedBy<"cid"_n, IndexMemberFun<deal_provider, string,
-                                               &deal_provider::by_cid,
-                                               IndexType::NormalIndex>>,
-             IndexedBy<"enclave_public_key"_n,
-                       IndexMemberFun<deal_provider, string,
-                                      &deal_provider::by_enclave_public_key,
-                                      IndexType::NormalIndex>>>
-      deal_provider_table;
+  platon::db::Map<"enclave_public_key"_n, string, deal_provider>
+      deal_provider_map;
 
  public:
   ACTION void init(const Address &token_contract_address,
@@ -125,7 +114,7 @@ CONTRACT market : public Contract {
 
   // update provider proof
   CONST bool update_provider_proof(const string &enclave_public_key,
-                                   const string &cid);
+                                   vector<deal_capacity> deals);
 };
 
 PLATON_DISPATCH(
