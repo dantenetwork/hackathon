@@ -163,13 +163,13 @@ CONTRACT market : public Contract {
   CONST vector<string> get_opened_deal(const uint8_t &skip);
 
   /**
-   * storage provider accept deal and signature is verified by verify_contract
+   * storage provider fill deal and signature is verified by verify_contract
    * add enclave_public_key into storage_provider_list of deal_table
    * @param enclave_public_key - SGX enclave public key
    * @param deals - deals which storage provider stored
    */
-  CONST bool accept_deal(const string &enclave_public_key,
-                         const vector<cid_file> &deals);
+  CONST bool fill_deal(const string &enclave_public_key,
+                       const vector<cid_file> &deals);
 
   /**
    * storage provider update storage proof and signature is verified by
@@ -189,5 +189,5 @@ CONTRACT market : public Contract {
 
 PLATON_DISPATCH(
     market,
-    (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal)(accept_deal)(update_storage_proof)(claim_deal_reward))
+    (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal)(fill_deal)(update_storage_proof)(claim_deal_reward))
 }  // namespace hackathon
