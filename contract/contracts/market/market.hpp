@@ -37,13 +37,20 @@ struct deal {
       (cid)(state)(slashed)(size)(price)(duration)(sender)(storage_provider_required)(total_reward)(reward_balance)(storage_provider_list));
 };
 
+struct cid_file {
+ public:
+  string cid;  // deal cid
+  u128 size;   // file size of deal
+  PLATON_SERIALIZE(cid_file, (cid)(size));
+};
+
 struct storage_provider {
  public:
   uint64_t last_storage_proof_block_num;  // last storage proof that provider
                                           // submitted
   uint64_t
       last_claimed_block_num;  // the block number that last deal reward claimed
-  vector<string> deals;        // deals which provider stored
+  vector<cid_file> deals;      // deals which provider stored
 
   PLATON_SERIALIZE(
       storage_provider,
@@ -117,7 +124,7 @@ CONTRACT market : public Contract {
 
   // update storage provider proof
   CONST bool update_storage_proof(const string &enclave_public_key,
-                                  vector<string> deals);
+                                  vector<cid_file> deals);
 
   // claim deal reward
   CONST bool claim_deal_reward(const string &enclave_public_key);

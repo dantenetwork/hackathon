@@ -176,7 +176,7 @@ bool market::add_storage_provider(const string &enclave_public_key,
 
 // update storage provider proof
 bool market::update_storage_proof(const string &enclave_public_key,
-                                  vector<string> deals) {
+                                  vector<cid_file> deals) {
   platon_assert(platon_caller() == verify_contract.self(),
                 "platon_caller is not equal with verify contract address");
 
@@ -208,7 +208,7 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
 
   // get target provider info
   storage_provider provider = storage_provider_map[enclave_public_key];
-  vector<string> deal_vector = provider.deals;
+  vector<cid_file> deal_vector = provider.deals;
 
   // blocks gap between last_storage_proof_block_num and last_claimed_block_num
   uint64_t reward_blocks =
@@ -220,10 +220,10 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
   u128 total_reward = 0;
 
   // check each deal's price, calculate the reward
-  vector<string>::iterator it;
+  vector<cid_file>::iterator it;
 
   for (it = deal_vector.begin(); it != deal_vector.end(); ++it) {
-    auto current_deal = deal_table.find<"cid"_n>(*it);
+    auto current_deal = deal_table.find<"cid"_n>(it->cid);
     u128 price = current_deal->price;
     vector<string> provider_list = current_deal->storage_provider_list;
 
