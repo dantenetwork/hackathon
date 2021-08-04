@@ -16,7 +16,8 @@ struct deal {
  public:
   string cid;            // deal cid of IPFS network
   uint8_t state = 0;     // current deal state, 0 = deal opened, 1= filled, 2 =
-                         // closed, default as 0
+                         // closed, 3 = invalid (storage provider reported file
+                         // size is larger than size of deal) , default as 0
   bool slashed = false;  // is slashed, default as false
   u128 size;             // deal files size
   u128 price;            // deal price per block

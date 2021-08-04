@@ -147,16 +147,14 @@ bool market::add_storage_provider(const string &enclave_public_key,
 
   auto current_deal = deal_table.find<"cid"_n>(cid);
 
-  // check cid is exists && storage_provider_list amount is less than
-  // storage_provider_required
-  if (current_deal != deal_table.cend() ||
-      current_deal->storage_provider_list.size() ==
-          current_deal->storage_provider_required) {
+  // check cid is exists && deal state = 0
+  if (current_deal != deal_table.cend() || current_deal->state != 0) {
     return false;
   }
 
-  // if deal's size is larger than SGX uploaded file size
+  // storage provider reported file size is larger than size of deal
   if (current_deal->size > size) {
+    deal_table.modify(current_deal, [&](auto &deal) { deal.state = 3; });
     return false;
   }
 
@@ -167,6 +165,11 @@ bool market::add_storage_provider(const string &enclave_public_key,
   deal_table.modify(current_deal, [&](auto &deal) {
     deal.storage_provider_list = provider_list;
   });
+
+  if (current_deal->storage_provider_list.size() ==
+      current_deal->storage_provider_required) {
+    deal_table.modify(current_deal, [&](auto &deal) { deal.state = 1; });
+  }
 
   return true;
 }
@@ -214,7 +217,7 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
     return false;
   }
 
-  u128 reward = 0;
+  u128 total_reward = 0;
 
   // check each deal's price, calculate the reward
   vector<string>::iterator it;
@@ -229,7 +232,16 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
                   enclave_public_key) != provider_list.end()) {
       // calculate current deal reward
       u128 current_deal_reward = safeMul(price, reward_blocks);
-      reward += current_deal_reward;
+
+      // if current_deal_reward larger than reward_balance, close deal
+      if (current_deal_reward > current_deal->reward_balance) {
+        current_deal_reward = current_deal->reward_balance;
+
+        // close deal
+        deal_table.modify(current_deal, [&](auto &deal) { deal.state = 2; });
+      }
+
+      total_reward += current_deal_reward;
 
       // update reward balance
       deal_table.modify(current_deal, [&](auto &deal) {
@@ -244,7 +256,7 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
   provider.last_claimed_block_num = platon_block_number();
   storage_provider_map[enclave_public_key] = provider;
 
-  DEBUG(reward);
+  DEBUG(total_reward);
 
   return true;
 }
