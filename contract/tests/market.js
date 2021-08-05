@@ -31,7 +31,6 @@ const tokenABI = [{ "anonymous": false, "input": [{ "name": "topic", "type": "Fi
 const tempTokenContractAddress = 'lat1kutjyplvt8dccag9jvy92q7cupg9mkzg3v3wsx';
 const tokenContractAddress = 'lat1hzan4ed929nh9mnua7zht0erzrcxuj5q24a0gt';
 const ONE_TOKEN = '1000000000000000000';
-const THOUSAND_TOKEN = '1000000000000000000000';
 const tokenContract = new web3.platon.Contract(tokenABI, tokenContractAddress, { vmType: 1 });
 
 // 通过私钥签名交易
@@ -101,6 +100,11 @@ describe("dante_market unit test", function () {
       marketContract.options.address = ret.contractAddress;
       marketContractAddress = marketContract.options.address;
       console.log("contract address: " + marketContractAddress);
+
+      // temporary set verify contract address to test account
+      // await sendTransaction(marketContract, "set_verify_contract", privateKey, [testAccount]);
+      // let currentVerifyAddress = await contractCall("get_verify_contract", []);
+      // expect(currentVerifyAddress).to.equal(testAccount);
     } catch (e) {
       console.error(e);
     }
@@ -140,17 +144,17 @@ describe("dante_market unit test", function () {
       const cid = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
       const size = 100;
       const price = ONE_TOKEN;
-      const duration = 100;
+      const duration = 10000;
       const provider_required = 3;
 
       const totalPrice = price * duration * provider_required;
 
       dealInfo = [cid, size, price, duration, provider_required];
 
-      let senderBalance = await tokenContract.methods.balanceOf(testAccount).call();
-      let contractBalance = await tokenContract.methods.balanceOf(marketContractAddress).call();
-      senderBalance = senderBalance;
-      contractBalance = contractBalance;
+      // let senderBalance = await tokenContract.methods.balanceOf(testAccount).call();
+      // let contractBalance = await tokenContract.methods.balanceOf(marketContractAddress).call();
+      // senderBalance = senderBalance;
+      // contractBalance = contractBalance;
       // console.log(senderBalance);
       // console.log(contractBalance);
 
@@ -161,7 +165,7 @@ describe("dante_market unit test", function () {
 
       // quer deal info by cid
       let onchainDealByCid = await contractCall("get_deal_by_cid", [cid]);
-      console.log(onchainDealByCid);
+      // console.log(onchainDealByCid);
 
       // expect onchain info = test data
       assert.isArray(onchainDealByCid);
@@ -173,15 +177,17 @@ describe("dante_market unit test", function () {
       expect(onchainDealByCid[5]).to.equal(duration + '');
       expect(onchainDealByCid[6]).to.equal(testAccount);
       expect(onchainDealByCid[7]).to.equal(provider_required);
+      expect(parseInt(onchainDealByCid[8])).to.equal(totalPrice);
+      expect(parseInt(onchainDealByCid[9])).to.equal(totalPrice);
 
 
-      // quer deal by sender
+      // query deal by sender
       let onchainDealBySender = await contractCall("get_deal_by_sender", [testAccount, 0]);
       // console.log(onchainDealBySender);
       assert.isArray(onchainDealBySender);
       expect(cid).to.equal(onchainDealBySender[0]);
 
-      // quer deal by sender
+      // query opened deal
       let openedDeals = await contractCall("get_opened_deal", [0]);
       // console.log(openedDeals);
       assert.isArray(openedDeals);
@@ -204,6 +210,88 @@ describe("dante_market unit test", function () {
 
     } catch (e) {
       console.error(e);
+    }
+  });
+
+  // fill_deal
+  // it("fill_deal", async function () {
+  //   // 发送交易
+  //   try {
+  //     this.timeout(0);
+  //     const enclave_public_key = "lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex";
+  //     const enclave_stored_files = [["bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi", 100]];
+
+  //     const proof = [enclave_public_key, enclave_stored_files];
+
+  //     let ret = await sendTransaction(marketContract, "fill_deal", testAccountPrivateKey, proof);
+  //     // console.log(ret);
+  //     assert.isObject(ret);
+
+  //     ret = await sendTransaction(marketContract, "fill_deal", testAccountPrivateKey, proof);
+  //     // console.log(ret);
+  //     assert.isObject(ret);
+
+  //     // quer deal info by cid
+  //     const cid = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
+  //     let onchainDealByCid = await contractCall("get_deal_by_cid", [cid]);
+  //     // console.log(onchainDealByCid);
+
+  //     // expect onchain info = test data
+  //     assert.isArray(onchainDealByCid);
+  //     expect(onchainDealByCid[10].length).to.equal(1);
+  //     expect(onchainDealByCid[10][0]).to.equal(enclave_public_key);
+
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  // });
+
+  // update storage proof
+  it("update_storage_proof", async function () {
+    // 发送交易
+    try {
+      this.timeout(0);
+      const enclave_public_key = "lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex";
+      const enclave_stored_files = [["bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi", 100]];
+
+      const proof = [enclave_public_key, enclave_stored_files];
+
+      let ret = await sendTransaction(marketContract, "update_storage_proof", testAccountPrivateKey, proof);
+      assert.isObject(ret);
+
+      // update proof again
+      ret = await sendTransaction(marketContract, "update_storage_proof", testAccountPrivateKey, proof);
+      assert.isObject(ret);
+
+      let onchainProof = await contractCall("get_storage_provider_proof", [enclave_public_key]);
+
+      // expect onchain info = test data
+      // console.log(onchainProof);
+      assert.isArray(onchainProof);
+      expect(onchainProof[0]).to.not.equal(0);// last_proof_block_num
+      expect(onchainProof[1]).to.not.equal(0);// last_claimed_block_num
+      expect(onchainProof[2][0][0]).to.equal(enclave_stored_files[0][0]);// deals
+      expect(onchainProof[2][0][1]).to.equal(enclave_stored_files[0][1] + '');// deals
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  // claim_deal_reward
+  it("claim_deal_reward", async function () {
+    // 发送交易
+    try {
+      this.timeout(0);
+      const enclave_public_key = "lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex";
+
+      const proof = [enclave_public_key];
+
+      const ret = await sendTransaction(marketContract, "claim_deal_reward", testAccountPrivateKey, proof);
+      // console.log(ret);
+      assert.isObject(ret);
+
+    } catch (e) {
+      console.log(e);
     }
   });
 
