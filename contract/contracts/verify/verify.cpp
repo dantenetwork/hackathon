@@ -95,8 +95,8 @@ bool verify::require_auth(const string &message,
 
 // Test signature
 void verify::test(const string &message, const string &enclave_signature) {
-	DEBUG(message);
-	DEBUG(enclave_signature);
+	DEBUG("message: " + message);
+	DEBUG("enclave_signature: " + enclave_signature);
 
 	byte hashed_value[32];
 	platon::platon_sha256(asBytes(message), hashed_value);
@@ -104,8 +104,8 @@ void verify::test(const string &message, const string &enclave_signature) {
 	auto ret =
 	    platon::platon_ecrecover(h256(hashed_value, sizeof(hashed_value)),
 	                             fromHex(enclave_signature), recovered_address);
-	DEBUG(ret);
-	DEBUG(recovered_address.toString());
+	DEBUG("ret: " + std::to_string(ret));
+	DEBUG("recovered_address: " + recovered_address.toString());
 }
 
 // Submit enclave new deal proof
@@ -115,11 +115,11 @@ void verify::submit_new_deal_proof(const string &enclave_public_key,
                                    const string &enclave_signature) {
 	require_auth(enclave_public_key, enclave_signature);
 
-	DEBUG(enclave_public_key);
-	DEBUG(enclave_timestamp);
-	DEBUG(stored_files.front().cid);
-	DEBUG(stored_files.front().size);
-	DEBUG(enclave_signature);
+	DEBUG("enclave_public_key: " + enclave_public_key);
+	DEBUG("enclave_timestamp: " + enclave_timestamp);
+	DEBUG("cid: " + stored_files.front().cid);
+	DEBUG("size: " + std::to_string(stored_files.front().size));
+	DEBUG("enclave_signature: " + enclave_signature);
 	return;
 
 	// call add_storage_provider of market.cpp
@@ -127,8 +127,8 @@ void verify::submit_new_deal_proof(const string &enclave_public_key,
 	auto result = platon_call_with_return_value<bool>(
 	    market_contract.self(), uint32_t(0), uint32_t(0), "add_storage_provider",
 	    enclave_public_key, stored_files);
-	DEBUG(result.first);
-	DEBUG(result.second);
+	DEBUG("result.first: " + std::to_string(result.first));
+	DEBUG("result.second: " + std::to_string(result.second));
 
 	platon_assert(result.first && result.second,
 	              "platon_call add_storage_provider failed");
@@ -142,11 +142,11 @@ void verify::submit_storage_proof(const string &enclave_public_key,
                                   const string &enclave_signature) {
 	require_auth(enclave_public_key, enclave_signature);
 
-	DEBUG(enclave_public_key);
-	DEBUG(enclave_timestamp);
-	DEBUG(enclave_plot_size);
+	DEBUG("enclave_public_key: " + enclave_public_key);
+	DEBUG("enclave_timestamp: " + enclave_timestamp);
+	DEBUG("enclave_plot_size: " + std::to_string(enclave_plot_size));
 	// DEBUG(stored_files);
-	DEBUG(enclave_signature);
+	DEBUG("enclave_signature: " + enclave_signature);
 
 	// update storage provider proof
 	storage_proof proof;
@@ -161,8 +161,8 @@ void verify::submit_storage_proof(const string &enclave_public_key,
 	auto result = platon_call_with_return_value<bool>(
 	    market_contract.self(), uint32_t(0), uint32_t(0), "update_storage_proof",
 	    enclave_public_key, stored_files);
-	DEBUG(result.first);
-	DEBUG(result.second);
+	DEBUG("result.first: " + std::to_string(result.first));
+	DEBUG("result.second: " + std::to_string(result.second));
 
 	platon_assert(result.first && result.second,
 	              "platon_call update_storage_proof failed");
