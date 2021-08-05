@@ -4,7 +4,7 @@ const assert = chai.assert;
 const expect = chai.expect;
 const fs = require('fs');
 const Web3 = require('web3');
-const web3 = new Web3('http://47.241.98.219:6789');
+const web3 = new Web3('http://127.0.0.1:6789');
 
 // deploy account address, lat1qavfd7zwaknrxyx0drcmv0vr5zehgthhaqq6ul
 const privateKey = "0x4940cf212544505a0fad3e3932734220af101da915321489708f69bc908fda65"; // private key, Testnet only
@@ -84,7 +84,7 @@ describe("dante_market unit test", function () {
       // deploy param
       let data = marketContract.deploy({
         data: bin,
-        arguments: [tokenContractAddress,tokenContractAddress]
+        arguments: [tokenContractAddress, tokenContractAddress]
       }).encodeABI();
 
       // transaction param

@@ -3,7 +3,7 @@ const assert = chai.assert;
 const expect = chai.expect;
 const fs = require('fs');
 const Web3 = require('web3');
-const web3 = new Web3('http://47.241.98.219:6789');
+const web3 = new Web3('http://127.0.0.1:6789');
 
 // deploy account address, lat1nhm9fq0vhrfw48e4cevds95xtxxg0f0jc48aq3
 const privateKey = "0x43a5ab4b584ff12d2e81296d399636c0dca10480ca2087cadbc8ad246d0d32a6"; // private key, Testnet only
@@ -83,7 +83,7 @@ describe("dante_verify unit test", function () {
       // deploy param
       let data = verifyContract.deploy({
         data: bin,
-        arguments: [tokenContractAddress]
+        arguments: [tokenContractAddress, tokenContractAddress]
       }).encodeABI();
 
       // transaction param
@@ -203,30 +203,62 @@ describe("dante_verify unit test", function () {
     }
   });
 
-  // submit proof
-  it("submit_proof", async function () {
+  // submit new deal proof
+  it("submit_new_deal_proof", async function () {
     // 发送交易
     try {
       this.timeout(0);
       const enclave_public_key = "lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex";
       const enclave_timestamp = "1626421278671";
-      const enclave_capacity = "1073741824";
+      const enclave_stored_files = [["bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi", 100]];
       const enclave_signature = "0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801";
 
-      const proof = [enclave_public_key, enclave_timestamp, enclave_capacity, enclave_signature];
+      const proof = [enclave_public_key, enclave_timestamp, enclave_stored_files, enclave_signature];
 
-      const ret = await sendTransaction(verifyContract, "submit_proof", testAccountPrivateKey, proof);
+      const ret = await sendTransaction(verifyContract, "submit_new_deal_proof", testAccountPrivateKey, proof);
       // console.log(ret);
       assert.isObject(ret);
+      return;
 
-      let onchainProof = await contractCall("get_submit_proof", [enclave_public_key]);
+      let onchainProof = await contractCall("get_storage_proof", [enclave_public_key]);
 
       // expect onchain info = test data
       assert.isArray(onchainProof);
       expect(onchainProof[0]).to.equal(enclave_public_key);// enclave_public_key
       expect(onchainProof[1]).to.equal(enclave_timestamp);// enclave_timestamp
-      expect(onchainProof[2]).to.equal(enclave_capacity);// enclave_capacity
+      expect(onchainProof[2]).to.equal(enclave_plot_size);// enclave_plot_size
+      expect(onchainProof[2]).to.equal(enclave_stored_files);// enclave_stored_files
       expect(onchainProof[3]).to.equal(enclave_signature);// enclave_signature
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  // submit storage proof
+  it("submit_storage_proof", async function () {
+    // 发送交易
+    try {
+      this.timeout(0);
+      const enclave_public_key = "lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex";
+      const enclave_timestamp = "1626421278671";
+      const enclave_plot_size = "1073741824";
+      const enclave_stored_files = [["bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi", 100]];
+      const enclave_signature = "0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801";
+
+      const proof = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files, enclave_signature];
+
+      const ret = await sendTransaction(verifyContract, "submit_storage_proof", testAccountPrivateKey, proof);
+      // console.log(ret);
+      assert.isObject(ret);
+
+      let onchainProof = await contractCall("get_storage_proof", [enclave_public_key]);
+
+      // expect onchain info = test data
+      // console.log(onchainProof);
+      assert.isArray(onchainProof);
+      expect(onchainProof[0]).to.equal(enclave_timestamp);// enclave_timestamp
+      expect(onchainProof[1]).to.equal(enclave_plot_size);// enclave_plot_size
+      expect(onchainProof[2]).to.equal(enclave_signature);// enclave_signature
     } catch (e) {
       console.log(e);
     }
