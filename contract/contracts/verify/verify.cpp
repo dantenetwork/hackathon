@@ -120,18 +120,17 @@ void verify::submit_new_deal_proof(const string &enclave_public_key,
 	DEBUG("cid: " + stored_files.front().cid);
 	DEBUG("size: " + std::to_string(stored_files.front().size));
 	DEBUG("enclave_signature: " + enclave_signature);
-	return;
 
 	// call add_storage_provider of market.cpp
 	Address sender = platon_caller();
 	auto result = platon_call_with_return_value<bool>(
-	    market_contract.self(), uint32_t(0), uint32_t(0), "add_storage_provider",
+	    market_contract.self(), uint32_t(0), uint32_t(0), "fill_deal",
 	    enclave_public_key, stored_files);
 	DEBUG("result.first: " + std::to_string(result.first));
 	DEBUG("result.second: " + std::to_string(result.second));
 
 	platon_assert(result.first && result.second,
-	              "platon_call add_storage_provider failed");
+	              "platon_call fill_deal failed");
 }
 
 // Submit enclave proof
@@ -155,7 +154,6 @@ void verify::submit_storage_proof(const string &enclave_public_key,
 	proof.enclave_signature = enclave_signature;
 	storage_proof_map[enclave_public_key] = proof;
 
-	return;
 	// call update_storage_proof of market.cpp
 	Address sender = platon_caller();
 	auto result = platon_call_with_return_value<bool>(

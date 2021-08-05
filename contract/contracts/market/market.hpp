@@ -199,5 +199,5 @@ CONTRACT market : public Contract {
 
 PLATON_DISPATCH(
     market,
-    (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal)(fill_deal)(update_storage_proof)(get_storage_provider_proof)(claim_deal_reward))
+    (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(set_verify_contract)(get_verify_contract)(add_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal)(fill_deal)(update_storage_proof)(get_storage_provider_proof)(claim_deal_reward))
 }  // namespace hackathon

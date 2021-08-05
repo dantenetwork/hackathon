@@ -50,6 +50,8 @@ bool market::set_verify_contract(const Address &address) {
    * ensure that current transaction is sent from verify contract
    */
 void market::require_verify_contract_auth() {
+	DEBUG("platon_caller:" + platon_caller().toString());
+	DEBUG("verify_contract address :" + verify_contract.self().toString());
 	// platon_assert(platon_caller() == verify_contract.self(),
 	//               "platon_caller is not equal with verify contract address");
 }

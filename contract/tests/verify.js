@@ -17,6 +17,8 @@ const testAccount = web3.platon.accounts.privateKeyToAccount(testAccountPrivateK
 const binFilePath = '../build/contracts/verify.wasm';
 const abiFilePath = '../build/contracts/verify.abi.json';
 
+const marketContractAddress = "lat1v0awmthtuqgt6p7der49u0kvq2jdh9y39w5rg3";
+
 // PlatON test net init data
 const chainId = 210309;
 let gas;
@@ -30,7 +32,6 @@ const tokenABI = [{ "anonymous": false, "input": [{ "name": "topic", "type": "Fi
 const tempTokenContractAddress = 'lat1kutjyplvt8dccag9jvy92q7cupg9mkzg3v3wsx';
 const tokenContractAddress = 'lat1zf9vh3s63ux2nraaqyl0zmp52kdt5e2j6ylwe4';
 const ONE_TOKEN = '1000000000000000000';
-const THOUSAND_TOKEN = '1000000000000000000000';
 const tokenContract = new web3.platon.Contract(tokenABI, tokenContractAddress, { vmType: 1 });
 
 // 通过私钥签名交易
@@ -83,7 +84,7 @@ describe("dante_verify unit test", function () {
       // deploy param
       let data = verifyContract.deploy({
         data: bin,
-        arguments: [tokenContractAddress, tokenContractAddress]
+        arguments: [tokenContractAddress, marketContractAddress]
       }).encodeABI();
 
       // transaction param
