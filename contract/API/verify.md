@@ -1,4 +1,4 @@
-## The market contract API docs
+## The verify contract API docs
 
 The `verify` smart contract is provided by `dante network team` as a sample platon wasm contract, and it defines the structures and actions needed for platon-hackathon's core functionality.
 
