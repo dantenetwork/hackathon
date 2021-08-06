@@ -13,8 +13,8 @@ lat1x78z0lw3cere8xxsjduplqy5lnzfklr5c8qvhh
 #### Contract init 
 ```
 @action init
-@param token_contract_address - DAT PRC20 token contract address
-@param market_contract_address - DAT market contract address
+@param token_contract_address - PRC20 token contract address
+@param market_contract_address - market contract address
 ```
 
 #### Change contract owner
@@ -31,10 +31,10 @@ lat1x78z0lw3cere8xxsjduplqy5lnzfklr5c8qvhh
 #### Change token contract
 ```
 @action set_token_contract
-@param address - Change DAT PRC20 token contract address
+@param address - Change PRC20 token contract address
 ```
 
-#### Query token contract address
+#### Query token contract
 ```
 @action get_token_contract
 ```
@@ -42,7 +42,7 @@ lat1x78z0lw3cere8xxsjduplqy5lnzfklr5c8qvhh
 #### Change market contract
 ```
 @action set_market_contract
-@param address - Change DAT market contract address
+@param address - Change market contract address
 ```
 
 #### Query market contract

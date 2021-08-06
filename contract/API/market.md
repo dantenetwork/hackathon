@@ -13,8 +13,8 @@ lat10xhguelyz63wn7hsrmastqt52esla9axr5grfa
 #### Contract init 
 ```
 @action init
-@param token_contract_address - DAT PRC20 token contract address
-@param verify_contract_address - DAT verify contract address
+@param token_contract_address - PRC20 token contract address
+@param verify_contract_address - verify contract address
 ```
 
 #### Change contract owner
@@ -31,10 +31,10 @@ lat10xhguelyz63wn7hsrmastqt52esla9axr5grfa
 #### Change token contract
 ```
 @action set_token_contract
-@param address - Change DAT PRC20 token contract address
+@param address - Change PRC20 token contract address
 ```
 
-#### Query token contract address
+#### Query token contract 
 ```
 @action get_token_contract
 ```
@@ -42,7 +42,7 @@ lat10xhguelyz63wn7hsrmastqt52esla9axr5grfa
 #### Change verify contract
 ```
 @action set_verify_contract
-@param address - Change DAT verify contract address
+@param address - Change verify contract address
 ```
 
 #### Query verify contract
