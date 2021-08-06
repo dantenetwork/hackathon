@@ -2,7 +2,15 @@
 
 The `market` smart contract is provided by `dante network team` as a sample platon wasm contract, and it defines the structures and actions needed for platon-hackathon's core functionality.
 
-Testnet Contract address: lat10xhguelyz63wn7hsrmastqt52esla9axr5grfa
+### Testnet Contract address
+```
+lat10xhguelyz63wn7hsrmastqt52esla9axr5grfa
+```
+
+### test cases for market contract
+```
+tests/market.js
+```
 
 ### Contract init 
 ```
