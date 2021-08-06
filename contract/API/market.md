@@ -8,9 +8,7 @@ lat10xhguelyz63wn7hsrmastqt52esla9axr5grfa
 ```
 
 ### Test cases for market contract
-```
 [tests/market.js](../tests/market.js)
-```
 
 #### Contract init 
 ```
