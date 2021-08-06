@@ -7,7 +7,7 @@ The `verify` smart contract is provided by `dante network team` as a sample plat
 lat1x78z0lw3cere8xxsjduplqy5lnzfklr5c8qvhh
 ```
 
-### Test cases for market contract
+### Test cases for verify contract
 [tests/verify.js](../tests/verify.js)
 
 #### Contract init 
