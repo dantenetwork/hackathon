@@ -7,7 +7,7 @@ The `market` smart contract is provided by `dante network team` as a sample plat
 lat10xhguelyz63wn7hsrmastqt52esla9axr5grfa
 ```
 
-#### Test cases for market contract
+### Test cases for market contract
 ```
 tests/market.js
 ```
@@ -81,27 +81,27 @@ tests/market.js
 @param skip - how many deals should be skipped
 ```
 
-#### storage provider fill deal(Verify Contract Only)
+#### Storage provider fill deal(Verify Contract Only)
 ```
 @action fill_deal
 @param enclave_public_key - SGX enclave public key
 @param deals - deals which storage provider stored
 ```
 
-#### storage provider update storage proof(Verify Contract Only)
+#### Storage provider update storage proof(Verify Contract Only)
 ```
 @action update_storage_proof
 @param enclave_public_key - SGX enclave public key
 @param deals - deals which storage provider stored
 ```
 
-#### get storage provider last proof
+#### Get storage provider last proof
 ```
 @action get_storage_provider_proof
 @param enclave_public_key - SGX enclave public key
 ```
 
-#### claim deal reward
+#### Claim deal reward
 ```
 @action claim_deal_reward
 @param enclave_public_key - SGX enclave public key
