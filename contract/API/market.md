@@ -7,52 +7,52 @@ The `market` smart contract is provided by `dante network team` as a sample plat
 lat10xhguelyz63wn7hsrmastqt52esla9axr5grfa
 ```
 
-### test cases for market contract
+#### Test cases for market contract
 ```
 tests/market.js
 ```
 
-### Contract init 
+#### Contract init 
 ```
 @action init
 @param token_contract_address - DAT PRC20 token contract address
 @param verify_contract_address - DAT verify contract address
 ```
 
-### Change contract owner
+#### Change contract owner
 ```
 @action set_owner
 @param address - market contract owner address
 ```
 
-### Query contract owner
+#### Query contract owner
 ```
 @action get_owner
 ```
 
-### Change token contract
+#### Change token contract
 ```
 @action set_token_contract
 @param address - Change DAT PRC20 token contract address
 ```
 
-### Query token contract address
+#### Query token contract address
 ```
 @action get_token_contract
 ```
 
-### Change verify contract
+#### Change verify contract
 ```
 @action set_verify_contract
 @param address - Change DAT verify contract address
 ```
 
-### Query verify contract
+#### Query verify contract
 ```
 @action get_verify_contract
 ```
 
-### Add deal
+#### Add deal
 ```
 @action add_deal
 @param cid - deal cid of IPFS network
@@ -62,46 +62,46 @@ tests/market.js
 @param storage_provider_required - amount of storage providers required
 ```
 
-### Get deal by cid
+#### Get deal by cid
 ```
 @action get_deal_by_cid
 @param cid - deal cid of IPFS network
 ```
 
-### Get deal by sender
+#### Get deal by sender
 ```
 @action get_deal_by_sender
 @param sender - account address which pushed add_deal transaction
 @param skip - how many deals should be skipped
 ```
 
-### Get opened deals
+#### Get opened deals
 ```
 @action get_opened_deal
 @param skip - how many deals should be skipped
 ```
 
-### storage provider fill deal(Verify Contract Only)
+#### storage provider fill deal(Verify Contract Only)
 ```
 @action fill_deal
 @param enclave_public_key - SGX enclave public key
 @param deals - deals which storage provider stored
 ```
 
-### storage provider update storage proof(Verify Contract Only)
+#### storage provider update storage proof(Verify Contract Only)
 ```
 @action update_storage_proof
 @param enclave_public_key - SGX enclave public key
 @param deals - deals which storage provider stored
 ```
 
-### get storage provider last proof
+#### get storage provider last proof
 ```
 @action get_storage_provider_proof
 @param enclave_public_key - SGX enclave public key
 ```
 
-### claim deal reward
+#### claim deal reward
 ```
 @action claim_deal_reward
 @param enclave_public_key - SGX enclave public key
