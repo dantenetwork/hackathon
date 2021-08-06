@@ -91,16 +91,16 @@ CONTRACT market : public Contract {
 	/**
    * Contract init
    * @param token_contract_address - DAT PRC20 token contract address
-   * @param market_contract_address - DAT market contract address
+   * @param verify_contract_address - DAT verify contract address
    */
 	ACTION void init(const Address &token_contract_address,
 	                 const Address &verify_contract_address);
 
 	/**
    * Change contract owner
-   * @param account - Change DAT PRC20 token contract address
+   * @param address - market contract owner address
    */
-	ACTION bool set_owner(const Address &account);
+	ACTION bool set_owner(const Address &address);
 
 	/**
    * Query contract owner
@@ -140,8 +140,7 @@ CONTRACT market : public Contract {
    * @param size - deal files size
    * @param price - deal price per block
    * @param duration - deal duration (blocks)
-   * @param storage_provider_required - // the amount of storage providers
-   * required
+   * @param storage_provider_required - amount of storage providers required
    */
 	ACTION void add_deal(const string &cid, const u128 &size, const u128 &price,
 	                     const u128 &duration,
@@ -155,7 +154,7 @@ CONTRACT market : public Contract {
 
 	/**
    * Get deal by sender
-   * @param sender - the account address which pushed add_deal transaction
+   * @param sender - account address which pushed add_deal transaction
    * @param skip - how many deals should be skipped
    */
 	CONST vector<string> get_deal_by_sender(const Address &sender,
@@ -177,7 +176,7 @@ CONTRACT market : public Contract {
 	                      const vector<cid_file> &deals);
 
 	/**
-   * storage provider update storage proof and signature is verified by
+   * storage provider update storage proof and ensure signature is verified by
    * verify_contract
    * @param enclave_public_key - SGX enclave public key
    * @param deals - deals which storage provider stored
