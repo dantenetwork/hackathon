@@ -83,7 +83,7 @@ CONTRACT market : public Contract {
 	                                         IndexType::NormalIndex>>>
 	    deal_table;
 
-	// storage provider map
+	// Storage provider map
 	platon::db::Map<"enclave_public_key"_n, string, storage_provider>
 	    storage_provider_map;
 
@@ -130,7 +130,7 @@ CONTRACT market : public Contract {
 	CONST string get_verify_contract();
 
 	/**
-   * ensure that current transaction is sent from verify contract
+   * Ensure that current transaction is sent from verify contract
    */
 	void require_verify_contract_auth();
 
@@ -167,7 +167,7 @@ CONTRACT market : public Contract {
 	CONST vector<string> get_opened_deal(const uint8_t &skip);
 
 	/**
-   * storage provider fill deal and signature is verified by verify_contract
+   * Storage provider fill deal and signature is verified by verify_contract
    * add enclave_public_key into storage_provider_list of deal_table
    * @param enclave_public_key - SGX enclave public key
    * @param deals - deals which storage provider stored
@@ -176,7 +176,7 @@ CONTRACT market : public Contract {
 	                      const vector<cid_file> &deals);
 
 	/**
-   * storage provider update storage proof and ensure signature is verified by
+   * Storage provider update storage proof and ensure signature is verified by
    * verify_contract
    * @param enclave_public_key - SGX enclave public key
    * @param deals - deals which storage provider stored
@@ -184,13 +184,13 @@ CONTRACT market : public Contract {
 	ACTION bool update_storage_proof(const string &enclave_public_key,
 	                                 const vector<cid_file> &deals);
 	/**
-   * get storage provider last proof
+   * Get storage provider last proof
    * @param enclave_public_key - SGX enclave public key
    */
 	CONST storage_provider get_storage_provider_proof(const string &enclave_public_key);
 
 	/**
-   * claim deal reward
+   * Claim deal reward
    * @param enclave_public_key - SGX enclave public key
    */
 	ACTION bool claim_deal_reward(const string &enclave_public_key);

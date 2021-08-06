@@ -188,6 +188,7 @@ CONTRACT verify : public Contract {
 
 	/**
    * Query miner info by enclave_public_key
+   * @param enclave_public_key - SGX enclave public key
    */
 	CONST miner get_miner(const string &enclave_public_key);
 
@@ -209,6 +210,7 @@ CONTRACT verify : public Contract {
 
 	/**
    * Get miner info by sender
+   * @param sender - the account which submit miner info
    */
 	CONST miner_info get_miner_info(const Address &sender);
 };
