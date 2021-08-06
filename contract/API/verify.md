@@ -9,7 +9,7 @@ lat1x78z0lw3cere8xxsjduplqy5lnzfklr5c8qvhh
 
 ### Test cases for market contract
 ```
-tests/verify.js
+[tests/verify.js](../tests/verify.js)
 ```
 
 #### Contract init 
