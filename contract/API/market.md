@@ -4,7 +4,7 @@ The `market` smart contract is provided by `dante network team` as a sample plat
 
 ### Testnet Contract address
 ```
-lat10xhguelyz63wn7hsrmastqt52esla9axr5grfa
+lat1lh4u7d3rlzscvy49t80wgguk9rv3sst3wjgnec
 ```
 
 ### Test cases for market contract

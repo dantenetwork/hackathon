@@ -3,8 +3,7 @@
 
 namespace hackathon {
 
-void verify::init(const Address &token_contract_address,
-                  const Address &market_contract_address) {
+void verify::init(const Address &token_contract_address, const Address &market_contract_address) {
 	// set owner
 	platon::set_owner();
 
@@ -50,26 +49,22 @@ string verify::get_market_contract() {
 }
 
 // Add miner by enclave_public_key
-void verify::register_miner(const string &enclave_public_key,
-                            const Address &reward_address) {
-	platon_assert(!miner_map.contains(enclave_public_key),
-	              "the enclave_public_key is already exists");
+void verify::register_miner(const string &enclave_public_key, const Address &reward_address, const string &enclave_signature) {
+	require_auth(enclave_public_key, enclave_signature);
+	platon_assert(!miner_map.contains(enclave_public_key), "the enclave_public_key is already exists");
 
 	// add miner
 	miner info;
 	info.enclave_public_key = enclave_public_key;
 	info.reward_address = reward_address;
 	info.sender = platon_caller();
-	miner_map[enclave_public_key] = info;
+	miner_map.insert(enclave_public_key, info);
 }
 
 // Modify miner info by enclave_public_key
-void verify::update_miner(const string &enclave_public_key,
-                          const Address &reward_address,
-                          const string &enclave_signature) {
+void verify::update_miner(const string &enclave_public_key, const Address &reward_address, const string &enclave_signature) {
 	require_auth(enclave_public_key, enclave_signature);
-	platon_assert(miner_map.contains(enclave_public_key),
-	              "the enclave_public_key is not exists");
+	platon_assert(miner_map.contains(enclave_public_key), "the enclave_public_key is not exists");
 
 	// update miner
 	miner info;
@@ -79,17 +74,14 @@ void verify::update_miner(const string &enclave_public_key,
 	miner_map[enclave_public_key] = info;
 }
 
-// Erase miner by enclave_machine_id
-void verify::unregister_miner(const string &enclave_public_key,
-                              const string &enclave_signature) {
+// Erase miner by enclave_public_key
+void verify::unregister_miner(const string &enclave_public_key, const string &enclave_signature) {
 	require_auth(enclave_public_key, enclave_signature);
-	platon_assert(miner_map.contains(enclave_public_key),
-	              "the enclave_public_key is not exists");
+	platon_assert(miner_map.contains(enclave_public_key), "the enclave_public_key is not exists");
 	miner_map.erase(enclave_public_key);
 }
 
-bool verify::require_auth(const string &message,
-                          const string &enclave_signature) {
+bool verify::require_auth(const string &message, const string &enclave_signature) {
 	return true;
 }
 
@@ -100,52 +92,28 @@ void verify::test(const string &message, const string &enclave_signature) {
 
 	byte hashed_value[32];
 	platon::platon_sha256(asBytes(message), hashed_value);
+
 	Address recovered_address;
-	auto ret =
-	    platon::platon_ecrecover(h256(hashed_value, sizeof(hashed_value)),
-	                             fromHex(enclave_signature), recovered_address);
+	auto ret = platon::platon_ecrecover(h256(hashed_value, sizeof(hashed_value)), fromHex(enclave_signature), recovered_address);
+
 	DEBUG("ret: " + std::to_string(ret));
 	DEBUG("recovered_address: " + recovered_address.toString());
 }
 
 // Submit enclave new deal proof
-void verify::submit_new_deal_proof(const string &enclave_public_key,
-                                   const string &enclave_timestamp,
-                                   const vector<cid_file> stored_files,
-                                   const string &enclave_signature) {
+void verify::fill_deal(const string &enclave_public_key, const string &enclave_timestamp, const vector<cid_file> stored_files, const string &enclave_signature) {
 	require_auth(enclave_public_key, enclave_signature);
-
-	DEBUG("enclave_public_key: " + enclave_public_key);
-	DEBUG("enclave_timestamp: " + enclave_timestamp);
-	DEBUG("cid: " + stored_files.front().cid);
-	DEBUG("size: " + std::to_string(stored_files.front().size));
-	DEBUG("enclave_signature: " + enclave_signature);
 
 	// call add_storage_provider of market.cpp
 	Address sender = platon_caller();
-	auto result = platon_call_with_return_value<bool>(
-	    market_contract.self(), uint32_t(0), uint32_t(0), "fill_deal",
-	    enclave_public_key, stored_files);
-	DEBUG("result.first: " + std::to_string(result.first));
-	DEBUG("result.second: " + std::to_string(result.second));
+	auto result = platon_call_with_return_value<bool>(market_contract.self(), uint32_t(0), uint32_t(0), "fill_deal", enclave_public_key, stored_files);
 
-	platon_assert(result.first && result.second,
-	              "platon_call fill_deal failed");
+	platon_assert(result.first && result.second, "platon_call fill_deal failed");
 }
 
 // Submit enclave proof
-void verify::submit_storage_proof(const string &enclave_public_key,
-                                  const string &enclave_timestamp,
-                                  const u128 &enclave_plot_size,
-                                  const vector<cid_file> stored_files,
-                                  const string &enclave_signature) {
+void verify::submit_storage_proof(const string &enclave_public_key, const string &enclave_timestamp, const u128 &enclave_plot_size, const vector<cid_file> stored_files, const string &enclave_signature) {
 	require_auth(enclave_public_key, enclave_signature);
-
-	DEBUG("enclave_public_key: " + enclave_public_key);
-	DEBUG("enclave_timestamp: " + enclave_timestamp);
-	DEBUG("enclave_plot_size: " + std::to_string(enclave_plot_size));
-	// DEBUG(stored_files);
-	DEBUG("enclave_signature: " + enclave_signature);
 
 	// update storage provider proof
 	storage_proof proof;
@@ -156,14 +124,9 @@ void verify::submit_storage_proof(const string &enclave_public_key,
 
 	// call update_storage_proof of market.cpp
 	Address sender = platon_caller();
-	auto result = platon_call_with_return_value<bool>(
-	    market_contract.self(), uint32_t(0), uint32_t(0), "update_storage_proof",
-	    enclave_public_key, stored_files);
-	DEBUG("result.first: " + std::to_string(result.first));
-	DEBUG("result.second: " + std::to_string(result.second));
+	auto result = platon_call_with_return_value<bool>(market_contract.self(), uint32_t(0), uint32_t(0), "update_storage_proof", enclave_public_key, stored_files);
 
-	platon_assert(result.first && result.second,
-	              "platon_call update_storage_proof failed");
+	platon_assert(result.first && result.second, "platon_call update_storage_proof failed");
 }
 
 // Query last enclave proof
@@ -173,6 +136,8 @@ storage_proof verify::get_storage_proof(const string &enclave_public_key) {
 
 // Query miner info by enclave_machine_id
 miner verify::get_miner(const string &enclave_public_key) {
+	DEBUG(enclave_public_key);
+
 	return miner_map[enclave_public_key];
 }
 
@@ -180,8 +145,7 @@ miner verify::get_miner(const string &enclave_public_key) {
 u128 verify::get_total_capacity() { return total_capacity.self(); }
 
 // Submit miner info
-void verify::submit_miner_info(const string &name, const string &peer_id,
-                               const string &country_code, const string &url) {
+void verify::submit_miner_info(const string &name, const string &peer_id, const string &country_code, const string &url) {
 	Address sender = platon_caller();
 
 	miner_info info;
@@ -198,4 +162,4 @@ void verify::submit_miner_info(const string &name, const string &peer_id,
 miner_info verify::get_miner_info(const Address &sender) {
 	return miner_info_map[sender];
 }
-}  // namespace hackathon
+} // namespace hackathon

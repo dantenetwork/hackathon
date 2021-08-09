@@ -214,37 +214,37 @@ describe("dante_market unit test", function () {
   });
 
   // fill_deal
-  // it("fill_deal", async function () {
-  //   // 发送交易
-  //   try {
-  //     this.timeout(0);
-  //     const enclave_public_key = "lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex";
-  //     const enclave_stored_files = [["bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi", 100]];
+  it("fill_deal", async function () {
+    // 发送交易
+    try {
+      this.timeout(0);
+      const enclave_public_key = "lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex";
+      const enclave_stored_files = [["bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi", 100]];
 
-  //     const proof = [enclave_public_key, enclave_stored_files];
+      const proof = [enclave_public_key, enclave_stored_files];
 
-  //     let ret = await sendTransaction(marketContract, "fill_deal", testAccountPrivateKey, proof);
-  //     // console.log(ret);
-  //     assert.isObject(ret);
+      let ret = await sendTransaction(marketContract, "fill_deal", testAccountPrivateKey, proof);
+      // console.log(ret);
+      assert.isObject(ret);
 
-  //     ret = await sendTransaction(marketContract, "fill_deal", testAccountPrivateKey, proof);
-  //     // console.log(ret);
-  //     assert.isObject(ret);
+      ret = await sendTransaction(marketContract, "fill_deal", testAccountPrivateKey, proof);
+      // console.log(ret);
+      assert.isObject(ret);
 
-  //     // quer deal info by cid
-  //     const cid = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
-  //     let onchainDealByCid = await contractCall("get_deal_by_cid", [cid]);
-  //     // console.log(onchainDealByCid);
+      // quer deal info by cid
+      const cid = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
+      let onchainDealByCid = await contractCall("get_deal_by_cid", [cid]);
+      // console.log(onchainDealByCid);
 
-  //     // expect onchain info = test data
-  //     assert.isArray(onchainDealByCid);
-  //     expect(onchainDealByCid[10].length).to.equal(1);
-  //     expect(onchainDealByCid[10][0]).to.equal(enclave_public_key);
+      // expect onchain info = test data
+      assert.isArray(onchainDealByCid);
+      expect(onchainDealByCid[10].length).to.equal(1);
+      expect(onchainDealByCid[10][0]).to.equal(enclave_public_key);
 
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // });
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
   // update storage proof
   it("update_storage_proof", async function () {
