@@ -47,7 +47,7 @@ struct storage_proof {
 
 /**
 * Why we need a seperate struct miner_info, maybe it's part of struct miner above?
-* Let's say we got a miner pool here, a lot of intel SGX machines share one single Node.js client service to push blockchain transactions.
+* Let's say we have a miner pool here, and many intel SGX machines share a Node.js client service to push blockchain transactions.
 * If struct miner_info is part of struct miner, then we will get a lot of repeated miner info on the chain, that's unnecessary.
 * Therefore, it's a simple way to separate the miner & miner_info and find the corresponding miner info through the same sender.
 */
