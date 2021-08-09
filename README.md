@@ -1,7 +1,7 @@
 # platon-hackathon
 
 
-Minimum viable product of dante network.
+This repository is source code of minimum viable product of dante network.
 
 
-[Details](https://hackerlink.io/buidl/1092?roundProj=804)
+[Tell me more about this project.](https://hackerlink.io/buidl/1092?roundProj=804)
