@@ -4,7 +4,7 @@ The `verify` smart contract is provided by `dante network team` as a sample plat
 
 ### Testnet Contract address
 ```
-lat1x78z0lw3cere8xxsjduplqy5lnzfklr5c8qvhh
+lat1yavy20peuypteazk8g82ed500mafnajkvryffh
 ```
 
 ### Test cases for verify contract
@@ -55,6 +55,7 @@ lat1x78z0lw3cere8xxsjduplqy5lnzfklr5c8qvhh
 @action register_miner
 @param enclave_public_key - SGX enclave public key
 @param reward_address - miner address which receive rewards
+@param enclave_signature - SGX signature
 ```
 
 #### Update miner by enclave_public_key & enclave_signature
@@ -72,9 +73,9 @@ lat1x78z0lw3cere8xxsjduplqy5lnzfklr5c8qvhh
 @param enclave_signature - SGX signature
 ```
 
-#### Submit enclave new deal proof
+#### Submit enclave new deal proof to fill deal
 ```
-@action submit_new_deal_proof
+@action fill_deal
 @param enclave_public_key - SGX enclave public key
 @param enclave_timestamp - SGX timestamp
 @param stored_files - file list which storage provider stored

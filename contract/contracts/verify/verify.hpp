@@ -16,51 +16,53 @@ namespace hackathon {
  * platon-hackathon's core functionality.
  */
 
-const u128 kTokenUnit = 1000000000000000000;  // DAT token decimal
-const u128 kLockedAmount =
-    Energon(100 * kTokenUnit)
-        .Get();  // 100 DAT,the DAT token that storage provider need locked
+const u128 kTokenUnit = 1000000000000000000;                // DAT token decimal
+const u128 kLockedAmount = Energon(100 * kTokenUnit).Get(); // 100 DAT,the DAT token that storage provider need locked
 
 struct miner {
-   public:
-	string enclave_public_key;  // SGX enclave public key
-	Address reward_address;     // miner address which receive rewards
-	Address sender;             // miner address which send transaction
+  public:
+	string enclave_public_key; // SGX enclave public key
+	Address reward_address;    // miner address which receive rewards
+	Address sender;            // miner address which send transaction
 	string primary_key() const { return enclave_public_key; }
 
 	PLATON_SERIALIZE(miner, (enclave_public_key)(reward_address)(sender))
 };
 
 struct cid_file {
-   public:
-	string cid;  // deal cid
-	u128 size;   // file size of deal
+  public:
+	string cid; // deal cid
+	u128 size;  // file size of deal
 	PLATON_SERIALIZE(cid_file, (cid)(size));
 };
 
 struct storage_proof {
-   public:
-	string enclave_timestamp;  // SGX enclave timestamp
-	u128 enclave_plot_size;    // SGX enclave committed plot size
-	string enclave_signature;  // SGX enclave signature
+  public:
+	string enclave_timestamp; // SGX enclave timestamp
+	u128 enclave_plot_size;   // SGX enclave committed plot size
+	string enclave_signature; // SGX enclave signature
 
-	PLATON_SERIALIZE(storage_proof,
-	                 (enclave_timestamp)(enclave_plot_size)(enclave_signature))
+	PLATON_SERIALIZE(storage_proof, (enclave_timestamp)(enclave_plot_size)(enclave_signature))
 };
 
+/**
+* Why we need a seperate struct miner_info, maybe it's part of struct miner above?
+* Let's say we got a miner pool here, a lot of intel SGX machines share one single Node.js client service to push blockchain transactions.
+* If struct miner_info is part of struct miner, then we will get a lot of repeated miner info on the chain, that's unnecessary.
+* Therefore, it's a simple way to separate the miner & miner_info and find the corresponding miner info through the same sender.
+*/
 struct miner_info {
-	Address sender;       // miner address which send transaction
-	string name;          // miner name
-	string peer_id;       // peer id of miner from IPFS network
-	string country_code;  // country code
-	                      // (https://en.wikipedia.org/wiki/ISO_3166-1_numeric)
-	string url;           // the website url of storage provider
+	Address sender;      // miner address which send transaction
+	string name;         // miner name
+	string peer_id;      // peer id of miner from IPFS network
+	string country_code; // country code (https://en.wikipedia.org/wiki/ISO_3166-1_numeric)
+	string url;          // the website url of storage provider
 
 	PLATON_SERIALIZE(miner_info, (sender)(name)(peer_id)(country_code)(url))
 };
 
 CONTRACT verify : public Contract {
-   protected:
+  protected:
 	// dante token contract
 	StorageType<"token_contract"_n, Address> token_contract;
 
@@ -79,14 +81,13 @@ CONTRACT verify : public Contract {
 	// miner_info map
 	platon::db::Map<"miner_info"_n, Address, miner_info> miner_info_map;
 
-   public:
+  public:
 	/**
    * Contract init
    * @param token_contract_address - DAT PRC20 token contract address
    * @param market_contract_address - DAT market contract address
    */
-	ACTION void init(const Address &token_contract_address,
-	                 const Address &market_contract_address);
+	ACTION void init(const Address &token_contract_address, const Address &market_contract_address);
 
 	/**
    * Change contract owner
@@ -126,8 +127,7 @@ CONTRACT verify : public Contract {
    * @param enclave_public_key - SGX enclave public key
    * @param reward_address - miner address which receive rewards
    */
-	ACTION void register_miner(const string &enclave_public_key,
-	                           const Address &reward_address);
+	ACTION void register_miner(const string &enclave_public_key, const Address &reward_address, const string &enclave_signature);
 
 	/**
    * Update miner by enclave_public_key & enclave_signature
@@ -135,17 +135,14 @@ CONTRACT verify : public Contract {
    * @param reward_address - miner address which receive rewards
    * @param enclave_signature - SGX signature
    */
-	ACTION void update_miner(const string &enclave_public_key,
-	                         const Address &reward_address,
-	                         const string &enclave_signature);
+	ACTION void update_miner(const string &enclave_public_key, const Address &reward_address, const string &enclave_signature);
 
 	/**
    * Unregister miner by enclave_public_key & enclave_signature
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_signature - SGX signature
    */
-	ACTION void unregister_miner(const string &enclave_public_key,
-	                             const string &enclave_signature);
+	ACTION void unregister_miner(const string &enclave_public_key, const string &enclave_signature);
 
 	/**
    * Verify SGX signature
@@ -158,15 +155,13 @@ CONTRACT verify : public Contract {
 	ACTION void test(const string &message, const string &enclave_signature);
 
 	/**
-   * Submit enclave new deal proof
+   * Submit enclave new deal proof to fill deal
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
    * @param stored_files - file list which storage provider stored
    * @param enclave_signature - SGX signature
    */
-	ACTION void submit_new_deal_proof(
-	    const string &enclave_public_key, const string &enclave_timestamp,
-	    const vector<cid_file> stored_files, const string &enclave_signature);
+	ACTION void fill_deal(const string &enclave_public_key, const string &enclave_timestamp, const vector<cid_file> stored_files, const string &enclave_signature);
 
 	/**
    * Submit enclave storage proof
@@ -176,10 +171,7 @@ CONTRACT verify : public Contract {
    * @param stored_files - file list which storage provider stored
    * @param enclave_signature - SGX signature
    */
-	ACTION void submit_storage_proof(
-	    const string &enclave_public_key, const string &enclave_timestamp,
-	    const u128 &enclave_plot_size, const vector<cid_file> stored_files,
-	    const string &enclave_signature);
+	ACTION void submit_storage_proof(const string &enclave_public_key, const string &enclave_timestamp, const u128 &enclave_plot_size, const vector<cid_file> stored_files, const string &enclave_signature);
 
 	/**
    * Query last enclave proof
@@ -205,8 +197,7 @@ CONTRACT verify : public Contract {
    * code(https://en.wikipedia.org/wiki/ISO_3166-1_numeric)
    * @param url - the website url of storage provider
    */
-	ACTION void submit_miner_info(const string &name, const string &peer_id,
-	                              const string &country_code, const string &url);
+	ACTION void submit_miner_info(const string &name, const string &peer_id, const string &country_code, const string &url);
 
 	/**
    * Get miner info by sender
@@ -216,5 +207,5 @@ CONTRACT verify : public Contract {
 };
 
 PLATON_DISPATCH(
-    verify, (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(set_market_contract)(get_market_contract)(register_miner)(update_miner)(unregister_miner)(test)(submit_new_deal_proof)(submit_storage_proof)(get_storage_proof)(get_miner)(get_total_capacity)(submit_miner_info)(get_miner_info))
-}  // namespace hackathon
+    verify, (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(set_market_contract)(get_market_contract)(register_miner)(update_miner)(unregister_miner)(test)(fill_deal)(submit_storage_proof)(get_storage_proof)(get_miner)(get_total_capacity)(submit_miner_info)(get_miner_info))
+} // namespace hackathon

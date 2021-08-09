@@ -3,6 +3,7 @@ const assert = chai.assert;
 const expect = chai.expect;
 const fs = require('fs');
 const Web3 = require('web3');
+// const web3 = new Web3('http://47.241.98.219:6789');
 const web3 = new Web3('http://127.0.0.1:6789');
 
 // deploy account address, lat1nhm9fq0vhrfw48e4cevds95xtxxg0f0jc48aq3
@@ -17,7 +18,7 @@ const testAccount = web3.platon.accounts.privateKeyToAccount(testAccountPrivateK
 const binFilePath = '../build/contracts/verify.wasm';
 const abiFilePath = '../build/contracts/verify.abi.json';
 
-const marketContractAddress = "lat10xhguelyz63wn7hsrmastqt52esla9axr5grfa";
+const marketContractAddress = "lat1lh4u7d3rlzscvy49t80wgguk9rv3sst3wjgnec";
 
 // PlatON test net init data
 const chainId = 210309;
@@ -73,7 +74,7 @@ describe("dante_verify unit test", function () {
     verifyContract = new web3.platon.Contract(abi, "", { vmType: 1 });
   });
 
-  it("deploy contract", async function () {
+  it("deploy_contract", async function () {
     try {
       this.timeout(0);
       // load contract wasm file
@@ -106,7 +107,7 @@ describe("dante_verify unit test", function () {
     }
   });
 
-  it("signature test", async function () {
+  it("signature_test", async function () {
     // 发送交易
     try {
       this.timeout(0);
@@ -159,13 +160,14 @@ describe("dante_verify unit test", function () {
       // test data
       const enclave_public_key = "lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex";
       const reward_address = "lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex";
+      const enclave_signature = "0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801";
 
-      miner = [enclave_public_key, reward_address];
+      miner = [enclave_public_key, reward_address, enclave_signature];
 
-      let minerBalance = await tokenContract.methods.balanceOf(testAccount).call();
-      let contractBalance = await tokenContract.methods.balanceOf(verifyContractAddress).call();
-      minerBalance = minerBalance / ONE_TOKEN;
-      contractBalance = contractBalance / ONE_TOKEN;
+      // let minerBalance = await tokenContract.methods.balanceOf(testAccount).call();
+      // let contractBalance = await tokenContract.methods.balanceOf(verifyContractAddress).call();
+      // minerBalance = minerBalance / ONE_TOKEN;
+      // contractBalance = contractBalance / ONE_TOKEN;
       // console.log(minerBalance);
       // console.log(contractBalance);
 
@@ -179,7 +181,7 @@ describe("dante_verify unit test", function () {
       // console.log(onchainMiner);
 
       // expect onchain info = test data
-      assert.isArray(onchainMiner);
+      // assert.isArray(onchainMiner);
       expect(onchainMiner[0]).to.equal(enclave_public_key);// enclave_public_key
       expect(onchainMiner[1]).to.equal(reward_address);// reward_address
       expect(onchainMiner[2]).to.equal(testAccount);// testAccount
@@ -204,8 +206,9 @@ describe("dante_verify unit test", function () {
     }
   });
 
-  // submit new deal proof
-  it("submit_new_deal_proof", async function () {
+
+  // fill deal
+  it("fill_deal", async function () {
     // 发送交易
     try {
       this.timeout(0);
@@ -216,20 +219,10 @@ describe("dante_verify unit test", function () {
 
       const proof = [enclave_public_key, enclave_timestamp, enclave_stored_files, enclave_signature];
 
-      const ret = await sendTransaction(verifyContract, "submit_new_deal_proof", testAccountPrivateKey, proof);
+      const ret = await sendTransaction(verifyContract, "fill_deal", testAccountPrivateKey, proof);
       // console.log(ret);
       assert.isObject(ret);
-      return;
 
-      let onchainProof = await contractCall("get_storage_proof", [enclave_public_key]);
-
-      // expect onchain info = test data
-      assert.isArray(onchainProof);
-      expect(onchainProof[0]).to.equal(enclave_public_key);// enclave_public_key
-      expect(onchainProof[1]).to.equal(enclave_timestamp);// enclave_timestamp
-      expect(onchainProof[2]).to.equal(enclave_plot_size);// enclave_plot_size
-      expect(onchainProof[2]).to.equal(enclave_stored_files);// enclave_stored_files
-      expect(onchainProof[3]).to.equal(enclave_signature);// enclave_signature
     } catch (e) {
       console.log(e);
     }
@@ -316,7 +309,7 @@ describe("dante_verify unit test", function () {
       assert.isObject(ret);
 
       // quer miner info
-      let onchainMiner = await contractCall("get_miner", [testAccount]);
+      let onchainMiner = await contractCall("get_miner", [enclave_public_key]);
       // console.log(onchainMiner);
 
       // expect onchainMinerInfo is empty
@@ -376,7 +369,7 @@ describe("dante_verify unit test", function () {
     }
   });
 
-  it("set owner & token contract", async function () {
+  it("set_owner & set_token_contract", async function () {
     try {
       this.timeout(0);
 

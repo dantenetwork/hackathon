@@ -2,8 +2,7 @@
 #include "market.hpp"
 
 namespace hackathon {
-void market::init(const Address &token_contract_address,
-                  const Address &verify_contract_address) {
+void market::init(const Address &token_contract_address, const Address &verify_contract_address) {
 	// set owner
 	platon::set_owner();
 
@@ -57,9 +56,12 @@ void market::require_verify_contract_auth() {
 }
 
 // add deal
-void market::add_deal(const string &cid, const u128 &size, const u128 &price,
-                      const u128 &duration,
-                      const uint8_t &storage_provider_required) {
+void market::add_deal(const string &cid, const u128 &size, const u128 &price, const u128 &duration, const uint8_t &storage_provider_required) {
+	// check cid is not exists
+	auto vect_iter = deal_table.find<"cid"_n>(cid);
+	platon_assert(vect_iter == deal_table.cend(), "cid is already exists");
+
+	// calculate deal price
 	u128 deal_price = hackathon::safeMul(price, duration);
 	u128 total_reward = hackathon::safeMul(deal_price, storage_provider_required);
 	DEBUG("price: " + std::to_string(price));
@@ -114,16 +116,14 @@ deal market::get_deal_by_cid(const string &cid) {
 }
 
 // get deal by sender, skip = how many deals should be skipped
-vector<string> market::get_deal_by_sender(const Address &sender,
-                                          const uint8_t &skip) {
+vector<string> market::get_deal_by_sender(const Address &sender, const uint8_t &skip) {
 	vector<string> deals;
 	auto vect_iter = deal_table.get_index<"sender"_n>();
-	uint8_t index = 0;   // the index of current deal in iterator
-	uint8_t total = 20;  // return 20 deals per request
+	uint8_t index = 0;  // the index of current deal in iterator
+	uint8_t total = 20; // return 20 deals per request
 
 	// iterate vector iterator
-	for (auto it = vect_iter.cbegin(sender);
-	     it != vect_iter.cend(sender) && total > 0; it++, index++) {
+	for (auto it = vect_iter.cbegin(sender); it != vect_iter.cend(sender) && total > 0; it++, index++) {
 		DEBUG("index: " + std::to_string(index));
 		DEBUG("skip: " + std::to_string(skip));
 		DEBUG("total: " + std::to_string(total));
@@ -141,12 +141,11 @@ vector<string> market::get_deal_by_sender(const Address &sender,
 vector<string> market::get_opened_deal(const uint8_t &skip) {
 	vector<string> deals;
 	auto vect_iter = deal_table.get_index<"state"_n>();
-	uint8_t index = 0;   // the index of current deal in iterator
-	uint8_t total = 20;  // return 20 deals per request
+	uint8_t index = 0;  // the index of current deal in iterator
+	uint8_t total = 20; // return 20 deals per request
 
 	// iterate vector iterator
-	for (auto it = vect_iter.cbegin(0); it != vect_iter.cend(0) && total > 0;
-	     it++, index++) {
+	for (auto it = vect_iter.cbegin(0); it != vect_iter.cend(0) && total > 0; it++, index++) {
 		DEBUG("index: " + std::to_string(index));
 		DEBUG("skip: " + std::to_string(skip));
 		DEBUG("total: " + std::to_string(total));
@@ -162,8 +161,7 @@ vector<string> market::get_opened_deal(const uint8_t &skip) {
 
 // add storage provider's enclave_public_key into storage_provider_list of
 // deal_table
-bool market::fill_deal(const string &enclave_public_key,
-                       const vector<cid_file> &deals) {
+bool market::fill_deal(const string &enclave_public_key, const vector<cid_file> &deals) {
 	// only verify contract allows call this function
 	require_verify_contract_auth();
 
@@ -194,7 +192,7 @@ bool market::fill_deal(const string &enclave_public_key,
 		// ensure current storage provider is not on the list
 		if (std::find(provider_list.begin(), provider_list.end(), enclave_public_key) != provider_list.end()) {
 			DEBUG("storage provider is already on the list");
-			return false;
+			return true;
 		}
 
 		// add current storage provider into list
@@ -205,10 +203,8 @@ bool market::fill_deal(const string &enclave_public_key,
 		});
 		DEBUG("enclave_public_key: " + enclave_public_key);
 
-		// set state to 1 (filled) if storage_provider_list size is match with
-		// required
-		if (current_deal->storage_provider_list.size() ==
-		    current_deal->storage_provider_required) {
+		// set state to 1 (filled) if storage_provider_list size is match with required
+		if (current_deal->storage_provider_list.size() == current_deal->storage_provider_required) {
 			deal_table.modify(current_deal, [&](auto &deal) { deal.state = 1; });
 		}
 		DEBUG("deal state: " + std::to_string(current_deal->state));
@@ -218,8 +214,7 @@ bool market::fill_deal(const string &enclave_public_key,
 }
 
 // update storage provider proof
-bool market::update_storage_proof(const string &enclave_public_key,
-                                  const vector<cid_file> &deals) {
+bool market::update_storage_proof(const string &enclave_public_key, const vector<cid_file> &deals) {
 	// only verify contract allows call this function
 	require_verify_contract_auth();
 
@@ -265,8 +260,7 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
 	vector<cid_file> deal_vector = provider.deals;
 
 	// blocks gap between last_proof_block_num and last_claimed_block_num
-	uint64_t reward_blocks =
-	    provider.last_proof_block_num - provider.last_claimed_block_num;
+	uint64_t reward_blocks = provider.last_proof_block_num - provider.last_claimed_block_num;
 
 	DEBUG("reward_blocks: " + std::to_string(reward_blocks));
 
@@ -286,8 +280,7 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
 		vector<string> provider_list = current_deal->storage_provider_list;
 
 		// check deal's storage_provider_list contains enclave_public_key
-		if (std::find(provider_list.begin(), provider_list.end(),
-		              enclave_public_key) != provider_list.end()) {
+		if (std::find(provider_list.begin(), provider_list.end(), enclave_public_key) != provider_list.end()) {
 			// calculate current deal reward
 			u128 current_deal_reward = safeMul(price, reward_blocks);
 
@@ -320,4 +313,4 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
 
 	return true;
 }
-}  // namespace hackathon
+} // namespace hackathon
