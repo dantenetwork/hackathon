@@ -18,7 +18,7 @@ const testAccount = web3.platon.accounts.privateKeyToAccount(testAccountPrivateK
 const binFilePath = '../build/contracts/verify.wasm';
 const abiFilePath = '../build/contracts/verify.abi.json';
 
-const marketContractAddress = "lat1lh4u7d3rlzscvy49t80wgguk9rv3sst3wjgnec";
+const marketContractAddress = "lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0";
 
 // PlatON test net init data
 const chainId = 210309;

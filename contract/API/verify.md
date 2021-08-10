@@ -1,14 +1,16 @@
-## The verify contract API docs
+## The verify contract docs
 
 The `verify` smart contract is provided by `dante network team` as a sample platon wasm contract, and it defines the structures and actions needed for platon-hackathon's core functionality.
 
 ### Testnet Contract address
 ```
-lat1yavy20peuypteazk8g82ed500mafnajkvryffh
+lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 ```
 
 ### Test cases for verify contract
 [tests/verify.js](../tests/verify.js)
+
+### API List
 
 #### Contract init 
 ```
@@ -121,4 +123,17 @@ lat1yavy20peuypteazk8g82ed500mafnajkvryffh
 ```
 @action get_miner_info
 @param sender - the account which submit miner info
+```
+
+### Contract event List
+```
+PLATON_EMIT_EVENT2(SetOwner, platon_caller(), address);
+PLATON_EMIT_EVENT2(SetTokenContract, platon_caller(), address);
+PLATON_EMIT_EVENT2(SetMarketContract, platon_caller(), address);
+PLATON_EMIT_EVENT2(RegisterMiner, info.sender, enclave_public_key);
+PLATON_EMIT_EVENT1(SubmitMinerInfo, platon_caller());
+PLATON_EMIT_EVENT2(UpdateMiner, info.sender, enclave_public_key);
+PLATON_EMIT_EVENT2(UnregisterMiner, platon_caller(), enclave_public_key);
+PLATON_EMIT_EVENT3(FillDeal, platon_caller(), enclave_public_key, enclave_signature);
+PLATON_EMIT_EVENT3(SubmitStorageProof, platon_caller(), enclave_public_key, enclave_signature);
 ```

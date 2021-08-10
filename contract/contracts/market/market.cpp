@@ -14,9 +14,11 @@ void market::init(const Address &token_contract_address, const Address &verify_c
 }
 
 // Change contract owner
-bool market::set_owner(const Address &account) {
+bool market::set_owner(const Address &address) {
 	platon_assert(platon::is_owner(), "Only owner can change owner");
-	platon::set_owner(account.toString());
+	platon::set_owner(address.toString());
+	PLATON_EMIT_EVENT2(SetOwner, platon_caller(), address);
+
 	return true;
 }
 
@@ -27,6 +29,8 @@ string market::get_owner() { return platon::owner().toString(); }
 bool market::set_token_contract(const Address &address) {
 	platon_assert(platon::is_owner(), "Only owner can change token contract");
 	token_contract.self() = address;
+	PLATON_EMIT_EVENT2(SetTokenContract, platon_caller(), address);
+
 	return true;
 }
 
@@ -42,6 +46,8 @@ string market::get_verify_contract() {
 bool market::set_verify_contract(const Address &address) {
 	platon_assert(platon::is_owner(), "Only owner can change verify contract");
 	verify_contract.self() = address;
+	PLATON_EMIT_EVENT2(SetVerifyContract, platon_caller(), address);
+
 	return true;
 }
 
@@ -93,6 +99,8 @@ void market::add_deal(const string &cid, const u128 &size, const u128 &price, co
 		deal.total_reward = total_reward;
 		deal.reward_balance = total_reward;
 	});
+
+	PLATON_EMIT_EVENT2(AddDeal, platon_caller(), cid);
 }
 
 // get deal by cid
@@ -192,24 +200,24 @@ bool market::fill_deal(const string &enclave_public_key, const vector<cid_file> 
 		// ensure current storage provider is not on the list
 		if (std::find(provider_list.begin(), provider_list.end(), enclave_public_key) != provider_list.end()) {
 			DEBUG("storage provider is already on the list");
-			return true;
-		}
+		} else {
+			// add current storage provider into list
+			provider_list.push_back(enclave_public_key);
+			// update deal table
+			deal_table.modify(current_deal, [&](auto &deal) {
+				deal.storage_provider_list = provider_list;
+			});
+			DEBUG("enclave_public_key: " + enclave_public_key);
 
-		// add current storage provider into list
-		provider_list.push_back(enclave_public_key);
-		// update deal table
-		deal_table.modify(current_deal, [&](auto &deal) {
-			deal.storage_provider_list = provider_list;
-		});
-		DEBUG("enclave_public_key: " + enclave_public_key);
-
-		// set state to 1 (filled) if storage_provider_list size is match with required
-		if (current_deal->storage_provider_list.size() == current_deal->storage_provider_required) {
-			deal_table.modify(current_deal, [&](auto &deal) { deal.state = 1; });
+			// set state to 1 (filled) if storage_provider_list size is match with required
+			if (current_deal->storage_provider_list.size() == current_deal->storage_provider_required) {
+				deal_table.modify(current_deal, [&](auto &deal) { deal.state = 1; });
+			}
+			DEBUG("deal state: " + std::to_string(current_deal->state));
 		}
-		DEBUG("deal state: " + std::to_string(current_deal->state));
 	}
 
+	PLATON_EMIT_EVENT2(FillDeal, platon_caller(), enclave_public_key, deals);
 	return true;
 }
 
@@ -235,6 +243,7 @@ bool market::update_storage_proof(const string &enclave_public_key, const vector
 		storage_provider_map.insert(enclave_public_key, provider);
 	}
 
+	PLATON_EMIT_EVENT2(UpdateStorageProof, platon_caller(), enclave_public_key, deals);
 	return true;
 }
 
@@ -311,6 +320,7 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
 	provider.last_claimed_block_num = platon_block_number();
 	storage_provider_map[enclave_public_key] = provider;
 
+	PLATON_EMIT_EVENT2(ClaimReward, platon_caller(), enclave_public_key);
 	return true;
 }
 } // namespace hackathon

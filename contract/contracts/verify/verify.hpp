@@ -29,22 +29,6 @@ struct miner {
 	PLATON_SERIALIZE(miner, (enclave_public_key)(reward_address)(sender))
 };
 
-struct cid_file {
-  public:
-	string cid; // deal cid
-	u128 size;  // file size of deal
-	PLATON_SERIALIZE(cid_file, (cid)(size));
-};
-
-struct storage_proof {
-  public:
-	string enclave_timestamp; // SGX enclave timestamp
-	u128 enclave_plot_size;   // SGX enclave committed plot size
-	string enclave_signature; // SGX enclave signature
-
-	PLATON_SERIALIZE(storage_proof, (enclave_timestamp)(enclave_plot_size)(enclave_signature))
-};
-
 /**
 * Why we need a seperate struct miner_info, maybe it's part of struct miner above?
 * Let's say we have a miner pool here, and many intel SGX machines share a Node.js client service to push blockchain transactions.
@@ -59,6 +43,22 @@ struct miner_info {
 	string url;          // the website url of storage provider
 
 	PLATON_SERIALIZE(miner_info, (sender)(name)(peer_id)(country_code)(url))
+};
+
+struct cid_file {
+  public:
+	string cid; // deal cid
+	u128 size;  // file size of deal
+	PLATON_SERIALIZE(cid_file, (cid)(size));
+};
+
+struct storage_proof {
+  public:
+	string enclave_timestamp; // SGX enclave timestamp
+	u128 enclave_plot_size;   // SGX enclave committed plot size
+	string enclave_signature; // SGX enclave signature
+
+	PLATON_SERIALIZE(storage_proof, (enclave_timestamp)(enclave_plot_size)(enclave_signature))
 };
 
 CONTRACT verify : public Contract {
@@ -80,6 +80,18 @@ CONTRACT verify : public Contract {
 
 	// miner_info map
 	platon::db::Map<"miner_info"_n, Address, miner_info> miner_info_map;
+
+	// Verify contract events
+  public:
+	PLATON_EVENT2(SetOwner, Address, Address);
+	PLATON_EVENT2(SetTokenContract, Address, Address);
+	PLATON_EVENT2(SetMarketContract, Address, Address);
+	PLATON_EVENT2(RegisterMiner, Address, string);
+	PLATON_EVENT1(SubmitMinerInfo, Address);
+	PLATON_EVENT2(UpdateMiner, Address, string);
+	PLATON_EVENT2(UnregisterMiner, Address, string);
+	PLATON_EVENT3(FillDeal, Address, string, string);
+	PLATON_EVENT3(SubmitStorageProof, Address, string, string);
 
   public:
 	/**
