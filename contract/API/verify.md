@@ -4,7 +4,7 @@ The `verify` smart contract is provided by `dante network team` as a sample plat
 
 ### Testnet Contract address
 ```
-lat1yavy20peuypteazk8g82ed500mafnajkvryffh
+lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 ```
 
 ### Test cases for verify contract

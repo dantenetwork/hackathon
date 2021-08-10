@@ -81,6 +81,18 @@ CONTRACT verify : public Contract {
 	// miner_info map
 	platon::db::Map<"miner_info"_n, Address, miner_info> miner_info_map;
 
+	// Verify contract events
+  public:
+	PLATON_EVENT2(SetOwner, Address, Address);
+	PLATON_EVENT2(SetTokenContract, Address, Address);
+	PLATON_EVENT2(SetMarketContract, Address, Address);
+	PLATON_EVENT2(RegisterMiner, Address, string);
+	PLATON_EVENT1(SubmitMinerInfo, Address);
+	PLATON_EVENT2(UpdateMiner, Address, string);
+	PLATON_EVENT2(UnregisterMiner, Address, string);
+	PLATON_EVENT3(FillDeal, Address, string, string);
+	PLATON_EVENT3(SubmitStorageProof, Address, string, string);
+
   public:
 	/**
    * Contract init

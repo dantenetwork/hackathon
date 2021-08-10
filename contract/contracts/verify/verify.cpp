@@ -17,9 +17,11 @@ void verify::init(const Address &token_contract_address, const Address &market_c
 }
 
 // Change contract owner
-bool verify::set_owner(const Address &account) {
+bool verify::set_owner(const Address &address) {
 	platon_assert(platon::is_owner(), "Only owner can change owner");
-	platon::set_owner(account.toString());
+	platon::set_owner(address.toString());
+	PLATON_EMIT_EVENT2(SetOwner, platon_caller(), address);
+
 	return true;
 }
 
@@ -30,6 +32,8 @@ string verify::get_owner() { return platon::owner().toString(); }
 bool verify::set_token_contract(const Address &address) {
 	platon_assert(platon::is_owner(), "Only owner can change token contract");
 	token_contract.self() = address;
+	PLATON_EMIT_EVENT2(SetTokenContract, platon_caller(), address);
+
 	return true;
 }
 
@@ -40,6 +44,8 @@ string verify::get_token_contract() { return token_contract.self().toString(); }
 bool verify::set_market_contract(const Address &address) {
 	platon_assert(platon::is_owner(), "Only owner can change token contract");
 	market_contract.self() = address;
+	PLATON_EMIT_EVENT2(SetMarketContract, platon_caller(), address);
+
 	return true;
 }
 
@@ -59,6 +65,8 @@ void verify::register_miner(const string &enclave_public_key, const Address &rew
 	info.reward_address = reward_address;
 	info.sender = platon_caller();
 	miner_map.insert(enclave_public_key, info);
+
+	PLATON_EMIT_EVENT2(RegisterMiner, info.sender, enclave_public_key);
 }
 
 // Modify miner info by enclave_public_key
@@ -72,6 +80,8 @@ void verify::update_miner(const string &enclave_public_key, const Address &rewar
 	info.reward_address = reward_address;
 	info.sender = platon_caller();
 	miner_map[enclave_public_key] = info;
+
+	PLATON_EMIT_EVENT2(UpdateMiner, info.sender, enclave_public_key);
 }
 
 // Erase miner by enclave_public_key
@@ -79,6 +89,8 @@ void verify::unregister_miner(const string &enclave_public_key, const string &en
 	require_auth(enclave_public_key, enclave_signature);
 	platon_assert(miner_map.contains(enclave_public_key), "the enclave_public_key is not exists");
 	miner_map.erase(enclave_public_key);
+
+	PLATON_EMIT_EVENT2(UnregisterMiner, platon_caller(), enclave_public_key);
 }
 
 bool verify::require_auth(const string &message, const string &enclave_signature) {
@@ -109,6 +121,8 @@ void verify::fill_deal(const string &enclave_public_key, const string &enclave_t
 	auto result = platon_call_with_return_value<bool>(market_contract.self(), uint32_t(0), uint32_t(0), "fill_deal", enclave_public_key, stored_files);
 
 	platon_assert(result.first && result.second, "platon_call fill_deal failed");
+
+	PLATON_EMIT_EVENT3(FillDeal, platon_caller(), enclave_public_key, enclave_signature);
 }
 
 // Submit enclave proof
@@ -127,6 +141,8 @@ void verify::submit_storage_proof(const string &enclave_public_key, const string
 	auto result = platon_call_with_return_value<bool>(market_contract.self(), uint32_t(0), uint32_t(0), "update_storage_proof", enclave_public_key, stored_files);
 
 	platon_assert(result.first && result.second, "platon_call update_storage_proof failed");
+
+	PLATON_EMIT_EVENT3(SubmitStorageProof, platon_caller(), enclave_public_key, enclave_signature);
 }
 
 // Query last enclave proof
@@ -156,6 +172,8 @@ void verify::submit_miner_info(const string &name, const string &peer_id, const 
 	info.url = url;
 
 	miner_info_map[sender] = info;
+
+	PLATON_EMIT_EVENT1(SubmitMinerInfo, platon_caller());
 }
 
 // Get miner info by sender
