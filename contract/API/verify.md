@@ -10,7 +10,7 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 ### Test cases for verify contract
 [tests/verify.js](../tests/verify.js)
 
-### API List
+### API list
 
 #### Contract init 
 ```
@@ -125,7 +125,7 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @param sender - the account which submit miner info
 ```
 
-### Contract event List
+### Contract event list
 ```
 PLATON_EMIT_EVENT2(SetOwner, platon_caller(), address);
 PLATON_EMIT_EVENT2(SetTokenContract, platon_caller(), address);
