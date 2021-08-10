@@ -1,14 +1,16 @@
-## The market contract API docs
+## The market contract docs
 
 The `market` smart contract is provided by `dante network team` as a sample platon wasm contract, and it defines the structures and actions needed for platon-hackathon's core functionality.
 
 ### Testnet Contract address
 ```
-lat1lh4u7d3rlzscvy49t80wgguk9rv3sst3wjgnec
+lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 ```
 
 ### Test cases for market contract
 [tests/market.js](../tests/market.js)
+
+### API List
 
 #### Contract init 
 ```
@@ -103,4 +105,16 @@ lat1lh4u7d3rlzscvy49t80wgguk9rv3sst3wjgnec
 ```
 @action claim_deal_reward
 @param enclave_public_key - SGX enclave public key
+```
+
+### Contract event List
+
+```
+PLATON_EMIT_EVENT2(SetOwner, platon_caller(), address);
+PLATON_EMIT_EVENT2(SetTokenContract, platon_caller(), address);
+PLATON_EMIT_EVENT2(SetVerifyContract, platon_caller(), address);
+PLATON_EMIT_EVENT2(AddDeal, platon_caller(), cid);
+PLATON_EMIT_EVENT2(FillDeal, platon_caller(), enclave_public_key, deals);
+PLATON_EMIT_EVENT2(UpdateStorageProof, platon_caller(), enclave_public_key, deals);
+PLATON_EMIT_EVENT2(ClaimReward, platon_caller(), enclave_public_key);
 ```
