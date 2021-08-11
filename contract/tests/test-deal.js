@@ -69,52 +69,23 @@ const contractCall = async (method, arguments) => {
   let abi = JSON.parse(rawdata);
   marketContract = new web3.platon.Contract(abi, "", { vmType: 1 });
 
-  const marketContractAddress = "lat16fj8hfkh004hul8z7rk3dw5qpnxlrrg7at3fus";
+  const marketContractAddress = "lat1tref69mlt7kk8gejz37lj2fk502v0574thy7je";
   marketContract.options.address = marketContractAddress;
 
-
-  // add deal
   try {
     // test data
-    const cid = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
-    const size = 100;
-    const price = ONE_TOKEN;
-    const duration = 10000;
-    const provider_required = 3;
+    const enclave_public_key = "lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex";
+    const enclave_stored_files = [["bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi", 100]];
 
-    const totalPrice = price * duration * provider_required;
+    const proof = [enclave_public_key, enclave_stored_files];
 
-    dealInfo = [cid, size, price, duration, provider_required];
+    let ret = await sendTransaction(marketContract, "update_storage_proof", testAccountPrivateKey, proof);
+    assert.isObject(ret);
 
-    // let senderBalance = await tokenContract.methods.balanceOf(testAccount).call();
-    // let contractBalance = await tokenContract.methods.balanceOf(marketContractAddress).call();
-    // senderBalance = senderBalance;
-    // contractBalance = contractBalance;
-    // console.log(senderBalance);
-    // console.log(contractBalance);
-
-    // send transaction
-    // const ret = await sendTransaction(marketContract, "add_deal", testAccountPrivateKey, dealInfo);
-    // // expect ret is obeject
-    // console.log(ret);
-    // assert.isObject(ret);
-
-    // quer deal info by cid
-    let onchainDealByCid = await contractCall("get_deal_by_cid", [cid]);
-    console.log(onchainDealByCid);
-
-    // expect onchain info = test data
-    assert.isArray(onchainDealByCid);
-    expect(onchainDealByCid[0]).to.equal(cid);
-    expect(onchainDealByCid[1]).to.equal(0);
-    expect(onchainDealByCid[2]).to.equal(false);
-    expect(onchainDealByCid[3]).to.equal(size + '');
-    expect(onchainDealByCid[4]).to.equal(price + '');
-    expect(onchainDealByCid[5]).to.equal(duration + '');
-    expect(onchainDealByCid[6]).to.equal(testAccount);
-    expect(onchainDealByCid[7]).to.equal(provider_required);
-    expect(parseInt(onchainDealByCid[8])).to.equal(totalPrice);
-
+    // update proof again
+    ret = await sendTransaction(marketContract, "update_storage_proof", testAccountPrivateKey, proof);
+    assert.isObject(ret);
+    console.log(ret);
   } catch (e) {
     console.error(e);
   }

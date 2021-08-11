@@ -10,7 +10,7 @@ lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 ### Test cases for market contract
 [tests/market.js](../tests/market.js)
 
-### API List
+### API list
 
 #### Contract init 
 ```
@@ -107,7 +107,7 @@ lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 @param enclave_public_key - SGX enclave public key
 ```
 
-### Contract event List
+### Contract event list
 
 ```
 PLATON_EMIT_EVENT2(SetOwner, platon_caller(), address);
