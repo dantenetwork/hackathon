@@ -17,7 +17,7 @@ void market::init(const Address &token_contract_address, const Address &verify_c
 bool market::set_owner(const Address &address) {
 	platon_assert(platon::is_owner(), "Only owner can change owner");
 	platon::set_owner(address.toString());
-	PLATON_EMIT_EVENT2(SetOwner, platon_caller(), address);
+	PLATON_EMIT_EVENT1(MarketContract, "set_owner", address.toString());
 
 	return true;
 }
@@ -29,7 +29,7 @@ string market::get_owner() { return platon::owner().toString(); }
 bool market::set_token_contract(const Address &address) {
 	platon_assert(platon::is_owner(), "Only owner can change token contract");
 	token_contract.self() = address;
-	PLATON_EMIT_EVENT2(SetTokenContract, platon_caller(), address);
+	PLATON_EMIT_EVENT1(MarketContract, "set_token_contract", address.toString());
 
 	return true;
 }
@@ -46,7 +46,7 @@ string market::get_verify_contract() {
 bool market::set_verify_contract(const Address &address) {
 	platon_assert(platon::is_owner(), "Only owner can change verify contract");
 	verify_contract.self() = address;
-	PLATON_EMIT_EVENT2(SetVerifyContract, platon_caller(), address);
+	PLATON_EMIT_EVENT1(MarketContract, "set_verify_contract", address.toString());
 
 	return true;
 }
@@ -100,7 +100,7 @@ void market::add_deal(const string &cid, const u128 &size, const u128 &price, co
 		deal.reward_balance = total_reward;
 	});
 
-	PLATON_EMIT_EVENT2(AddDeal, platon_caller(), cid);
+	PLATON_EMIT_EVENT1(MarketContract, "add_deal", cid);
 }
 
 // get deal by cid
@@ -217,7 +217,7 @@ bool market::fill_deal(const string &enclave_public_key, const vector<cid_file> 
 		}
 	}
 
-	PLATON_EMIT_EVENT2(FillDeal, platon_caller(), enclave_public_key, deals);
+	PLATON_EMIT_EVENT1(MarketContract, "fill_deal", enclave_public_key);
 	return true;
 }
 
@@ -243,7 +243,7 @@ bool market::update_storage_proof(const string &enclave_public_key, const vector
 		storage_provider_map.insert(enclave_public_key, provider);
 	}
 
-	PLATON_EMIT_EVENT2(UpdateStorageProof, platon_caller(), enclave_public_key, deals);
+	PLATON_EMIT_EVENT1(MarketContract, "update_storage_proof", enclave_public_key);
 	return true;
 }
 
@@ -320,7 +320,7 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
 	provider.last_claimed_block_num = platon_block_number();
 	storage_provider_map[enclave_public_key] = provider;
 
-	PLATON_EMIT_EVENT2(ClaimReward, platon_caller(), enclave_public_key);
+	PLATON_EMIT_EVENT1(MarketContract, "claim_deal_reward", enclave_public_key);
 	return true;
 }
 } // namespace hackathon
