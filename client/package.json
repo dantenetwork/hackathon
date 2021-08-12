@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "config": "^3.3.6",
     "mini-ipfs": "^0.1.0",
     "node-fetch": "^2.6.1"
   }
