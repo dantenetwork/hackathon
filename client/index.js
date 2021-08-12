@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const { IpfsClient } = require('mini-ipfs');
 const fetch = require('node-fetch');
 const config = require('config');
@@ -5,6 +7,10 @@ var client = new IpfsClient(config.get('IPFS.clientAddress'), { fetch });
 
 let blockchain = require('./blockchain.js');
 blockchain = new blockchain();
+
+var myArgs = process.argv.slice(2);
+console.log('params: ', myArgs);
+
 
 // upload data to IPFS network
 (async function () {
