@@ -112,7 +112,7 @@ async function download() {
   }
 
   let cwd = process.cwd(); // get current working directory
-  console.log(cwd);
+  console.log('file location: ' + cwd + '/' + cid);
   // option default : {save: false}
   for await (const file of await client.get(cid, { save: true })) {
     const fullFilePath = path.join(cwd, file.path)
