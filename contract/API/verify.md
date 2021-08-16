@@ -127,13 +127,13 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 
 ### Contract event list
 ```
-PLATON_EMIT_EVENT2(SetOwner, platon_caller(), address);
-PLATON_EMIT_EVENT2(SetTokenContract, platon_caller(), address);
-PLATON_EMIT_EVENT2(SetMarketContract, platon_caller(), address);
-PLATON_EMIT_EVENT2(RegisterMiner, info.sender, enclave_public_key);
-PLATON_EMIT_EVENT1(SubmitMinerInfo, platon_caller());
-PLATON_EMIT_EVENT2(UpdateMiner, info.sender, enclave_public_key);
-PLATON_EMIT_EVENT2(UnregisterMiner, platon_caller(), enclave_public_key);
-PLATON_EMIT_EVENT3(FillDeal, platon_caller(), enclave_public_key, enclave_signature);
-PLATON_EMIT_EVENT3(SubmitStorageProof, platon_caller(), enclave_public_key, enclave_signature);
+PLATON_EMIT_EVENT1(VerifyContract, "set_owner", address.toString());
+PLATON_EMIT_EVENT1(VerifyContract, "set_token_contract", address.toString());
+PLATON_EMIT_EVENT1(VerifyContract, "set_market_contract", address.toString());
+PLATON_EMIT_EVENT1(VerifyContract, "register_miner", enclave_public_key);
+PLATON_EMIT_EVENT1(VerifyContract, "update_miner", enclave_public_key);
+PLATON_EMIT_EVENT1(VerifyContract, "unregister_miner", enclave_public_key);
+PLATON_EMIT_EVENT1(VerifyContract, "fill_deal", enclave_public_key);
+PLATON_EMIT_EVENT1(VerifyContract, "submit_storage_proof", enclave_public_key);
+PLATON_EMIT_EVENT1(VerifyContract, "submit_miner_info", platon_caller().toString());
 ```
