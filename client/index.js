@@ -30,6 +30,7 @@ const subCommand = cliParams[0];
 switch (subCommand) {
   // dante-client version
   case 'version':
+    // Retrieve version information
     const rawData = fs.readFileSync('./package.json');
     console.log(JSON.parse(rawData).version);
     break;
@@ -54,13 +55,21 @@ switch (subCommand) {
     help();
 }
 
-// show sub command help info
+/**
+ * Show sub command help info
+ */
 function help() {
   let rawData = fs.readFileSync('./help.txt');
   console.log(rawData.toString());
 }
 
-
+/**
+  * Add file to IPFS network and send to DANTE network
+  * @param file_name - file path and name 
+  * @param price - deal price per block
+  * @param duration - deal duration (blocks)
+  * @param storage_provider_required - amount of storage providers required
+  */
 async function addDeal() {
   // upload data to IPFS network
   const cid = await client.add('Hello world');
@@ -91,13 +100,16 @@ async function addDeal() {
   console.log(onchainDealByCid);
 }
 
+/**
+  * Download file from IPFS network by cid
+  * @param cid - IPFS cid
+  */
 async function download() {
   const cid = cliParams[1] ? cliParams[1] : '';
   if (!cid) {
     console.log('cid is empty');
     return;
   }
-
 
   let cwd = process.cwd(); // get current working directory
   console.log(cwd);
@@ -118,6 +130,10 @@ async function download() {
 
 }
 
+/**
+  * Query deal status by cid
+  * @param cid - IPFS cid
+  */
 async function status() {
   const cid = cliParams[1] ? cliParams[1] : '';
   if (!cid) {
@@ -129,6 +145,9 @@ async function status() {
   console.log(onchainDealByCid);
 }
 
+/**
+  * List deals sent by private key of config file
+  */
 async function list() {
   let onchainDealBySender = await blockchain.contractCall("get_deal_by_sender", [web3.platon.accounts.privateKeyToAccount(config.get('Blockchain.privateKey')).address, 0]);
   console.log(onchainDealBySender);
