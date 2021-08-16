@@ -84,7 +84,7 @@ CONTRACT market : public Contract {
 	PLATON_EVENT1(AddDeal, Address, string, string);
 	PLATON_EVENT0(FillDeal, string);
 	PLATON_EVENT0(UpdateStorageProof, string);
-	PLATON_EVENT0(ClaimDealReward, string);
+	PLATON_EVENT1(ClaimDealReward, Address, string);
 
   public:
 	/**

@@ -317,7 +317,7 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
 	provider.last_claimed_block_num = platon_block_number();
 	storage_provider_map[enclave_public_key] = provider;
 
-	PLATON_EMIT_EVENT1(ClaimDealReward, enclave_public_key);
+	PLATON_EMIT_EVENT1(ClaimDealReward, platon_caller(), enclave_public_key);
 	return true;
 }
 } // namespace hackathon

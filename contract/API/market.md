@@ -110,11 +110,8 @@ lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 ### Contract event list
 
 ```
-PLATON_EMIT_EVENT1(MarketContract, "set_owner", address.toString());
-PLATON_EMIT_EVENT1(MarketContract, "set_token_contract", address.toString());
-PLATON_EMIT_EVENT1(MarketContract, "set_verify_contract", address.toString());
-PLATON_EMIT_EVENT1(MarketContract, "add_deal", cid);
-PLATON_EMIT_EVENT1(MarketContract, "fill_deal", enclave_public_key);
-PLATON_EMIT_EVENT1(MarketContract, "update_storage_proof", enclave_public_key);
-PLATON_EMIT_EVENT1(MarketContract, "claim_deal_reward", enclave_public_key);
+PLATON_EMIT_EVENT1(AddDeal, sender, cid, std::to_string(size));
+PLATON_EMIT_EVENT0(FillDeal, enclave_public_key);
+PLATON_EMIT_EVENT0(UpdateStorageProof, enclave_public_key);
+PLATON_EMIT_EVENT1(ClaimDealReward, platon_caller(), enclave_public_key);
 ```
