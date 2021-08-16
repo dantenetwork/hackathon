@@ -83,7 +83,12 @@ CONTRACT verify : public Contract {
 
 	// Verify contract events
   public:
-	PLATON_EVENT1(VerifyContract, string, string);
+	PLATON_EVENT0(RegisterMiner, string);
+	PLATON_EVENT0(UpdateMiner, string);
+	PLATON_EVENT0(UnregisterMiner, string);
+	PLATON_EVENT0(FillDeal, string);
+	PLATON_EVENT0(SubmitStorageProof, string);
+	PLATON_EVENT0(SubmitMinerInfo, Address);
 
   public:
 	/**

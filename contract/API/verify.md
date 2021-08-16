@@ -127,13 +127,10 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 
 ### Contract event list
 ```
-PLATON_EMIT_EVENT1(VerifyContract, "set_owner", address.toString());
-PLATON_EMIT_EVENT1(VerifyContract, "set_token_contract", address.toString());
-PLATON_EMIT_EVENT1(VerifyContract, "set_market_contract", address.toString());
-PLATON_EMIT_EVENT1(VerifyContract, "register_miner", enclave_public_key);
-PLATON_EMIT_EVENT1(VerifyContract, "update_miner", enclave_public_key);
-PLATON_EMIT_EVENT1(VerifyContract, "unregister_miner", enclave_public_key);
-PLATON_EMIT_EVENT1(VerifyContract, "fill_deal", enclave_public_key);
-PLATON_EMIT_EVENT1(VerifyContract, "submit_storage_proof", enclave_public_key);
-PLATON_EMIT_EVENT1(VerifyContract, "submit_miner_info", platon_caller().toString());
+PLATON_EMIT_EVENT1(RegisterMiner, enclave_public_key);
+PLATON_EMIT_EVENT0(UpdateMiner, enclave_public_key);
+PLATON_EMIT_EVENT0(UnregisterMiner, enclave_public_key);
+PLATON_EMIT_EVENT0(FillDeal, enclave_public_key);
+PLATON_EMIT_EVENT0(SubmitStorageProof, enclave_public_key);
+PLATON_EMIT_EVENT1(SubmitMinerInfo, platon_caller());
 ```
