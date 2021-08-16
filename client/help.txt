@@ -1,0 +1,9 @@
+Command Line Interface to DANTE Client
+Usage: dante-client SUBCOMMAND
+
+Subcommands:
+  version                     Retrieve version information
+  add                         Add file to IPFS network and send to DANTE network
+  download                    Download file from IPFS network by cid
+  status                      Query deal status by cid
+  list                        List deals sent by private key of config file
