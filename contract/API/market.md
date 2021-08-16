@@ -110,11 +110,11 @@ lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 ### Contract event list
 
 ```
-PLATON_EMIT_EVENT2(SetOwner, platon_caller(), address);
-PLATON_EMIT_EVENT2(SetTokenContract, platon_caller(), address);
-PLATON_EMIT_EVENT2(SetVerifyContract, platon_caller(), address);
-PLATON_EMIT_EVENT2(AddDeal, platon_caller(), cid);
-PLATON_EMIT_EVENT2(FillDeal, platon_caller(), enclave_public_key, deals);
-PLATON_EMIT_EVENT2(UpdateStorageProof, platon_caller(), enclave_public_key, deals);
-PLATON_EMIT_EVENT2(ClaimReward, platon_caller(), enclave_public_key);
+PLATON_EMIT_EVENT1(MarketContract, "set_owner", address.toString());
+PLATON_EMIT_EVENT1(MarketContract, "set_token_contract", address.toString());
+PLATON_EMIT_EVENT1(MarketContract, "set_verify_contract", address.toString());
+PLATON_EMIT_EVENT1(MarketContract, "add_deal", cid);
+PLATON_EMIT_EVENT1(MarketContract, "fill_deal", enclave_public_key);
+PLATON_EMIT_EVENT1(MarketContract, "update_storage_proof", enclave_public_key);
+PLATON_EMIT_EVENT1(MarketContract, "claim_deal_reward", enclave_public_key);
 ```
