@@ -3,6 +3,7 @@
 const fs = require('fs');
 
 const deal = require('./src/deal/index.js');
+const token = require('./src/token/index.js');
 const downloadCid = require('./src/downloadCid.js').download;
 const help = require('./src/help.js');
 
@@ -39,6 +40,14 @@ switch (subCommand) {
   // dante-client list
   case 'list':
     deal.list();
+    break;
+  // dante-client balance
+  case 'balance':
+    token.getBalance();
+    break;
+  // dante-client allowance
+  case 'allowance':
+    token.getAllowance();
     break;
   default:
     console.log('dante-client ' + subCommand + ' is not supported');

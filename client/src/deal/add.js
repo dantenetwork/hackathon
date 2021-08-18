@@ -5,9 +5,10 @@ const fetch = require('node-fetch');
 const config = require('config');
 
 const client = new IpfsClient(config.get('IPFS.clientAddress'), { fetch });
-const blockchain = new (require('../blockchain.js'))();
+const dealContract = new (require('./dealContract.js'))();
 
-const dealStatus = require('./status').status;
+const dealStatus = require('./status.js').status;
+const token = require('../token/index.js');
 
 module.exports = {
   /**
@@ -42,12 +43,18 @@ module.exports = {
         console.log('cid: ', cid);
 
         // add deal to PlatON network
-        let onchainDealByCid = await blockchain.contractCall("get_deal_by_cid", [cid]);
+        let onchainDealByCid = await dealContract.contractCall("get_deal_by_cid", [cid]);
         if (onchainDealByCid[0]) {
           console.log('cid is already exists on DANTE network');
           dealStatus(cid);
           return;
         }
+
+        // check account balance and allowance
+        console.log('-------------------------------');
+        console.log('Token Info:');
+        const balance = await token.getBalance();
+        const allowance = await token.getAllowance();
 
         const size = stats.size;
         const price = cliParams[2];
@@ -58,7 +65,7 @@ module.exports = {
         console.log(dealInfo);
 
         // send transaction
-        const ret = await blockchain.sendTransaction("add_deal", config.get('Blockchain.privateKey'), dealInfo);
+        const ret = await dealContract.sendTransaction("add_deal", config.get('Blockchain.privateKey'), dealInfo);
         console.log(ret);
 
         // query deal info by cid

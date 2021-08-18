@@ -3,8 +3,8 @@
     "chainId": 210309,
     "nodeAddress": "http://192.168.1.64:6789",
     "privateKey": "0x34382ebae7d7c628e13f14b4314c9b0149db7bbbc06428ae89de9883ffc7c341",
-    "marketContractAbi": "abi/market.abi.json",
-    "marketContractAddress": "lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0"
+    "marketContractAddress": "lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0",
+    "tokenContractAddress": "lat1hzan4ed929nh9mnua7zht0erzrcxuj5q24a0gt"
   },
   "IPFS": {
     "clientAddress": "http://47.241.69.26:5001"

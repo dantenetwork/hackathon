@@ -36,7 +36,8 @@ module.exports = {
           map((chunk) => chunk.slice()),
           toIterable.sink(fs.createWriteStream(fullFilePath))
         );
-        console.log('file is downloaded: ' + cwd + '/' + cid);
+        console.log('download success.');
+        console.log(cwd + '/' + cid);
       }
     }
   }
