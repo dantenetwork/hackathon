@@ -42,10 +42,6 @@ module.exports = {
         const cid = await client.add(fs.createReadStream(cliParams[1]));
         console.log('cid: ', cid);
 
-        // check account balance and allowance
-        const balance = await token.getBalance();
-        const allowance = await token.getAllowance();
-
         // add deal to PlatON network
         let onchainDealByCid = await dealContract.contractCall("get_deal_by_cid", [cid]);
         if (onchainDealByCid[0]) {
@@ -53,6 +49,12 @@ module.exports = {
           dealStatus(cid);
           return;
         }
+
+        // check account balance and allowance
+        console.log('-------------------------------');
+        console.log('Token Info:');
+        const balance = await token.getBalance();
+        const allowance = await token.getAllowance();
 
         const size = stats.size;
         const price = cliParams[2];

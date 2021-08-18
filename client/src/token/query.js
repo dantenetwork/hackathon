@@ -17,7 +17,7 @@ module.exports = {
   },
 
   /**
-  * get current account DAT allowance
+  * get DAT allowance from current account to market contract
   */
   async getAllowance() {
     const account = web3.platon.accounts.privateKeyToAccount(config.get('Blockchain.privateKey')).address;
