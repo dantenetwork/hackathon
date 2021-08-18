@@ -6,7 +6,7 @@ npm i lerna -g
 npm i -d
 ```
 
-## convert the javaScript file into a node.js command-line script
+## convert JS file into node.js command-line script
 ```
 chmod +x index.js  # Make the file executable
 npm link           # Link your command for development
