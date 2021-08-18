@@ -10,7 +10,9 @@ module.exports = {
     */
   async list() {
     const account = web3.platon.accounts.privateKeyToAccount(config.get('Blockchain.privateKey')).address;
-    let onchainDealBySender = await dealContract.contractCall("get_deal_by_sender", [account, 0]);
-    console.log(onchainDealBySender);
+    let dealList = await dealContract.contractCall("get_deal_by_sender", [account, 0]);
+    for (let item of dealList) {
+      console.log(item);
+    }
   }
 }
