@@ -1,4 +1,4 @@
-#DANTE Client
+# DANTE Client
 
 ## install dependencies
 ```
@@ -12,7 +12,7 @@ chmod +x index.js  # Make the file executable
 npm link           # Link your command for development
 ```
 
-## update config.js
+## update config/default.json
 ```
 {
   "Blockchain": {
