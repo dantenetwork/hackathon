@@ -1,18 +1,18 @@
 # dante client
 
-## install dependencies
+## Install dependencies
 ```
 npm i lerna -g
 npm i -d
 ```
 
-## convert JS file into node.js command-line script
+## Convert JS file into node.js command-line script
 ```
 chmod +x index.js  # Make the file executable
 npm link           # Link your command for development
 ```
 
-## update config/default.json
+## Update config/default.json
 ```
 {
   "Blockchain": {
@@ -28,34 +28,44 @@ npm link           # Link your command for development
 }
 ```
 
-## dante-client command line
+## Command Line
 
-#### show help
+#### Show help
 ```
 dante-client
 ```
 
-#### retrieve version information
+#### Retrieve version information
 ```
 dante-client version
 ```
 
-#### list deals sent by private key of config file
+#### List deals sent by private key of config file
 ```
 dante-client list
 ```
 
-#### add file to IPFS network and send to DANTE network
+#### Add file to IPFS network and send to DANTE network
 ```
 dante-client add a.txt 1 10000 10
 ```
 
-#### download file from IPFS network by cid
+#### Download file from IPFS network by cid
 ```
 dante-client download QmNRCQWfgze6AbBCaT1rkrkV5tJ2aP4oTNPb5JZcXYywve
 ```
 
-#### query deal status by cid
+#### Query deal status by cid
 ```
 dante-client status QmNRCQWfgze6AbBCaT1rkrkV5tJ2aP4oTNPb5JZcXYywve
+```
+
+#### Query DAT balance of current account
+```
+dante-client balance
+```
+
+#### Query DAT allowance from current account to market contract
+```
+dante-client allowance
 ```
