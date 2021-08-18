@@ -1,4 +1,4 @@
-const blockchain = new (require('../blockchain.js'))();
+const blockchain = new (require('./dealContract.js'))();
 
 module.exports = {
   /**

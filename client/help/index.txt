@@ -7,3 +7,5 @@ Subcommands:
   download                    Download file from IPFS network by cid
   status                      Query deal status by cid
   list                        List deals sent by private key of config file
+  balance                     Query DAT balance of current account
+  allowance                   Query DAT allowance of current account

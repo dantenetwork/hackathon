@@ -6,10 +6,7 @@ const web3 = new Web3(config.get('Blockchain.nodeAddress'));
 module.exports = class Blockchain {
   constructor() {
     // market contract abi and wasm
-    const abiFilePath = config.get('Blockchain.marketContractAbi');
-
-    // PlatON test net init data
-    let rawdata = fs.readFileSync(abiFilePath);
+    let rawdata = fs.readFileSync('abi/market.abi.json');
     let abi = JSON.parse(rawdata);
     this.marketContract = new web3.platon.Contract(abi, "", { vmType: 1 });
 
