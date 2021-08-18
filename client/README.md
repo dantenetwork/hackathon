@@ -1,66 +1,61 @@
-DANTE Client
+# dante client
 
-## Install dependencies
+## install dependencies
 ```
 npm i lerna -g
 npm i -d
 ```
 
-## Convert the JavaScript file into a NodeJS command-line script
+## convert JS file into node.js command-line script
 ```
 chmod +x index.js  # Make the file executable
 npm link           # Link your command for development
 ```
 
-## Command Line
-
-#### dante-client
+## update config/default.json
 ```
-Command Line Interface to DANTE Client
-Usage: dante-client SUBCOMMAND
-
-Subcommands:
-  version                     Retrieve version information
-  add                         Add file to IPFS network and send to DANTE network
-  download                    Download file from IPFS network by cid
-  status                      Query deal status by cid
-  list                        List deals sent by private key of config file
-```
-
-#### dante-client version
-```
-1.0.0
+{
+  "Blockchain": {
+    "chainId": 210309, // PlatON mainnet chain id
+    "nodeAddress": "http://192.168.1.64:6789", // PlatON node api address
+    "privateKey": "0x34382ebae7d7c628e13f14b4314c9b0149db7bbbc06428ae89de9883ffc7c341", // private key used to submit PlatON blockchain transaction
+    "marketContractAbi": "abi/market.abi.json", // Dante network market contract abi file
+    "marketContractAddress": "lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0" // Dante network market contract address
+  },
+  "IPFS": {
+    "clientAddress": "http://47.241.69.26:5001" // IPFS node address
+  }
+}
 ```
 
-#### dante-client list
+## dante-client command line
+
+#### show help
 ```
-['QmNRCQWfgze6AbBCaT1rkrkV5tJ2aP4oTNPb5JZcXYywve' ]
+dante-client
 ```
 
-#### dante-client add
-
-#### dante-client download
+#### retrieve version information
 ```
- dante-client download QmNRCQWfgze6AbBCaT1rkrkV5tJ2aP4oTNPb5JZcXYywve
-```
-```
-file location: /home/yy/contracts/platon-hackathon/client/QmNRCQWfgze6AbBCaT1rkrkV5tJ2aP4oTNPb5JZcXYywve
+dante-client version
 ```
 
-#### dante-client status
+#### list deals sent by private key of config file
+```
+dante-client list
+```
+
+#### add file to IPFS network and send to DANTE network
+```
+dante-client add a.txt 1 10000 10
+```
+
+#### download file from IPFS network by cid
+```
+dante-client download QmNRCQWfgze6AbBCaT1rkrkV5tJ2aP4oTNPb5JZcXYywve
+```
+
+#### query deal status by cid
 ```
 dante-client status QmNRCQWfgze6AbBCaT1rkrkV5tJ2aP4oTNPb5JZcXYywve
-```
-```
-[ 'QmNRCQWfgze6AbBCaT1rkrkV5tJ2aP4oTNPb5JZcXYywve',
-  0,
-  false,
-  '100',
-  '1000000000000000000',
-  '10000',
-  'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex',
-  3,
-  '30000000000000000000000',
-  '30000000000000000000000',
-  [] ]
 ```
