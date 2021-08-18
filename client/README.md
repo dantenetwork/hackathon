@@ -1,4 +1,4 @@
-# DANTE Client
+# dante client
 
 ## install dependencies
 ```
