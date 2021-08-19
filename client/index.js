@@ -4,6 +4,7 @@ const fs = require('fs');
 
 const deal = require('./src/deal/index.js');
 const token = require('./src/token/index.js');
+const miner = require('./src/miner/index.js');
 const downloadCid = require('./src/downloadCid.js').download;
 const help = require('./src/help.js');
 
@@ -48,6 +49,10 @@ switch (subCommand) {
   // dante-client allowance
   case 'allowance':
     token.getAllowance();
+    break;
+  // dante-client getMiner
+  case 'getMiner':
+    miner.getMiner(cliParams[1]);
     break;
   default:
     console.log('dante-client ' + subCommand + ' is not supported');

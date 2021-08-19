@@ -1,0 +1,418 @@
+[
+    {
+        "anonymous": false,
+        "input": [
+            {
+                "name": "arg1",
+                "type": "string"
+            }
+        ],
+        "name": "UpdateMiner",
+        "topic": 0,
+        "type": "Event"
+    },
+    {
+        "constant": false,
+        "input": [
+            {
+                "name": "address",
+                "type": "FixedHash<20>"
+            }
+        ],
+        "name": "set_owner",
+        "output": "bool",
+        "type": "Action"
+    },
+    {
+        "constant": true,
+        "input": [],
+        "name": "get_owner",
+        "output": "string",
+        "type": "Action"
+    },
+    {
+        "constant": false,
+        "input": [
+            {
+                "name": "token_contract_address",
+                "type": "FixedHash<20>"
+            },
+            {
+                "name": "market_contract_address",
+                "type": "FixedHash<20>"
+            }
+        ],
+        "name": "init",
+        "output": "void",
+        "type": "Action"
+    },
+    {
+        "constant": false,
+        "input": [
+            {
+                "name": "address",
+                "type": "FixedHash<20>"
+            }
+        ],
+        "name": "set_market_contract",
+        "output": "bool",
+        "type": "Action"
+    },
+    {
+        "constant": true,
+        "input": [],
+        "name": "get_market_contract",
+        "output": "string",
+        "type": "Action"
+    },
+    {
+        "constant": false,
+        "input": [
+            {
+                "name": "address",
+                "type": "FixedHash<20>"
+            }
+        ],
+        "name": "set_token_contract",
+        "output": "bool",
+        "type": "Action"
+    },
+    {
+        "constant": true,
+        "input": [],
+        "name": "get_token_contract",
+        "output": "string",
+        "type": "Action"
+    },
+    {
+        "anonymous": false,
+        "input": [
+            {
+                "name": "arg1",
+                "type": "string"
+            }
+        ],
+        "name": "RegisterMiner",
+        "topic": 0,
+        "type": "Event"
+    },
+    {
+        "anonymous": false,
+        "input": [
+            {
+                "name": "arg1",
+                "type": "string"
+            }
+        ],
+        "name": "UnregisterMiner",
+        "topic": 0,
+        "type": "Event"
+    },
+    {
+        "anonymous": false,
+        "input": [
+            {
+                "name": "arg1",
+                "type": "string"
+            }
+        ],
+        "name": "FillDeal",
+        "topic": 0,
+        "type": "Event"
+    },
+    {
+        "anonymous": false,
+        "input": [
+            {
+                "name": "arg1",
+                "type": "string"
+            }
+        ],
+        "name": "SubmitStorageProof",
+        "topic": 0,
+        "type": "Event"
+    },
+    {
+        "anonymous": false,
+        "input": [
+            {
+                "name": "arg1",
+                "type": "FixedHash<20>"
+            }
+        ],
+        "name": "SubmitMinerInfo",
+        "topic": 0,
+        "type": "Event"
+    },
+    {
+        "constant": false,
+        "input": [
+            {
+                "name": "enclave_public_key",
+                "type": "string"
+            },
+            {
+                "name": "reward_address",
+                "type": "FixedHash<20>"
+            },
+            {
+                "name": "enclave_signature",
+                "type": "string"
+            }
+        ],
+        "name": "register_miner",
+        "output": "void",
+        "type": "Action"
+    },
+    {
+        "constant": false,
+        "input": [
+            {
+                "name": "enclave_public_key",
+                "type": "string"
+            },
+            {
+                "name": "reward_address",
+                "type": "FixedHash<20>"
+            },
+            {
+                "name": "enclave_signature",
+                "type": "string"
+            }
+        ],
+        "name": "update_miner",
+        "output": "void",
+        "type": "Action"
+    },
+    {
+        "constant": false,
+        "input": [
+            {
+                "name": "enclave_public_key",
+                "type": "string"
+            },
+            {
+                "name": "enclave_signature",
+                "type": "string"
+            }
+        ],
+        "name": "unregister_miner",
+        "output": "void",
+        "type": "Action"
+    },
+    {
+        "constant": false,
+        "input": [
+            {
+                "name": "message",
+                "type": "string"
+            },
+            {
+                "name": "enclave_signature",
+                "type": "string"
+            }
+        ],
+        "name": "test",
+        "output": "void",
+        "type": "Action"
+    },
+    {
+        "baseclass": [],
+        "fields": [
+            {
+                "name": "cid",
+                "type": "string"
+            },
+            {
+                "name": "size",
+                "type": "uint128"
+            }
+        ],
+        "name": "cid_file",
+        "type": "struct"
+    },
+    {
+        "constant": false,
+        "input": [
+            {
+                "name": "enclave_public_key",
+                "type": "string"
+            },
+            {
+                "name": "enclave_timestamp",
+                "type": "string"
+            },
+            {
+                "name": "stored_files",
+                "type": "cid_file[]"
+            },
+            {
+                "name": "enclave_signature",
+                "type": "string"
+            }
+        ],
+        "name": "fill_deal",
+        "output": "void",
+        "type": "Action"
+    },
+    {
+        "constant": false,
+        "input": [
+            {
+                "name": "enclave_public_key",
+                "type": "string"
+            },
+            {
+                "name": "enclave_timestamp",
+                "type": "string"
+            },
+            {
+                "name": "enclave_plot_size",
+                "type": "uint128"
+            },
+            {
+                "name": "stored_files",
+                "type": "cid_file[]"
+            },
+            {
+                "name": "enclave_signature",
+                "type": "string"
+            }
+        ],
+        "name": "submit_storage_proof",
+        "output": "void",
+        "type": "Action"
+    },
+    {
+        "baseclass": [],
+        "fields": [
+            {
+                "name": "enclave_timestamp",
+                "type": "string"
+            },
+            {
+                "name": "enclave_plot_size",
+                "type": "uint128"
+            },
+            {
+                "name": "enclave_signature",
+                "type": "string"
+            }
+        ],
+        "name": "storage_proof",
+        "type": "struct"
+    },
+    {
+        "constant": true,
+        "input": [
+            {
+                "name": "enclave_public_key",
+                "type": "string"
+            }
+        ],
+        "name": "get_storage_proof",
+        "output": "storage_proof",
+        "type": "Action"
+    },
+    {
+        "baseclass": [],
+        "fields": [
+            {
+                "name": "enclave_public_key",
+                "type": "string"
+            },
+            {
+                "name": "reward_address",
+                "type": "FixedHash<20>"
+            },
+            {
+                "name": "sender",
+                "type": "FixedHash<20>"
+            }
+        ],
+        "name": "miner",
+        "type": "struct"
+    },
+    {
+        "constant": true,
+        "input": [
+            {
+                "name": "enclave_public_key",
+                "type": "string"
+            }
+        ],
+        "name": "get_miner",
+        "output": "miner",
+        "type": "Action"
+    },
+    {
+        "constant": true,
+        "input": [],
+        "name": "get_total_capacity",
+        "output": "uint128",
+        "type": "Action"
+    },
+    {
+        "constant": false,
+        "input": [
+            {
+                "name": "name",
+                "type": "string"
+            },
+            {
+                "name": "peer_id",
+                "type": "string"
+            },
+            {
+                "name": "country_code",
+                "type": "string"
+            },
+            {
+                "name": "url",
+                "type": "string"
+            }
+        ],
+        "name": "submit_miner_info",
+        "output": "void",
+        "type": "Action"
+    },
+    {
+        "baseclass": [],
+        "fields": [
+            {
+                "name": "sender",
+                "type": "FixedHash<20>"
+            },
+            {
+                "name": "name",
+                "type": "string"
+            },
+            {
+                "name": "peer_id",
+                "type": "string"
+            },
+            {
+                "name": "country_code",
+                "type": "string"
+            },
+            {
+                "name": "url",
+                "type": "string"
+            }
+        ],
+        "name": "miner_info",
+        "type": "struct"
+    },
+    {
+        "constant": true,
+        "input": [
+            {
+                "name": "sender",
+                "type": "FixedHash<20>"
+            }
+        ],
+        "name": "get_miner_info",
+        "output": "miner_info",
+        "type": "Action"
+    }
+]

@@ -19,7 +19,6 @@ module.exports = {
     * @param storage_provider_required - amount of storage providers required
     */
   async add(cliParams) {
-    console.log(cliParams);
     if (cliParams.length < 5) {
       console.log('{dante-client add} expected 5 params,but only got ' + cliParams.length);
       return;
