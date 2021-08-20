@@ -2,7 +2,7 @@ const config = require('config');
 
 const Web3 = require('web3');
 const web3 = new Web3(config.get('Blockchain.nodeAddress'));
-const dealContract = new (require('./dealContract.js'))();
+const marketContract = new (require('../blockchain.js'))();
 
 module.exports = {
   /**
@@ -10,7 +10,7 @@ module.exports = {
     */
   async list() {
     const account = web3.platon.accounts.privateKeyToAccount(config.get('Blockchain.privateKey')).address;
-    let dealList = await dealContract.contractCall("get_deal_by_sender", [account, 0]);
+    let dealList = await marketContract.contractCall('marketContract', 'get_deal_by_sender', [account, 0]);
     for (let item of dealList) {
       console.log(item);
     }

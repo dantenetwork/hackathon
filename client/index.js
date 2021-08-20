@@ -3,8 +3,8 @@
 const fs = require('fs');
 
 const deal = require('./src/deal/index.js');
-const token = require('./src/token/index.js');
 const miner = require('./src/miner/index.js');
+const token = require('./src/token/index.js');
 const downloadCid = require('./src/downloadCid.js').download;
 const help = require('./src/help.js');
 
