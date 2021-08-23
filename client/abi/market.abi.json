@@ -1,300 +1,344 @@
 [
-    {
-        "constant": false,
-        "input": [
-            {
-                "name": "address",
-                "type": "FixedHash<20>"
-            }
-        ],
-        "name": "set_verify_contract",
-        "output": "bool",
-        "type": "Action"
-    },
-    {
-        "constant": false,
-        "input": [
-            {
-                "name": "cid",
-                "type": "string"
-            },
-            {
-                "name": "size",
-                "type": "uint128"
-            },
-            {
-                "name": "price",
-                "type": "uint128"
-            },
-            {
-                "name": "duration",
-                "type": "uint128"
-            },
-            {
-                "name": "storage_provider_required",
-                "type": "uint8"
-            }
-        ],
-        "name": "add_deal",
-        "output": "void",
-        "type": "Action"
-    },
-    {
-        "anonymous": false,
-        "input": [
-            {
-                "name": "topic",
-                "type": "string"
-            },
-            {
-                "name": "arg1",
-                "type": "string"
-            }
-        ],
-        "name": "MarketContract",
-        "topic": 1,
-        "type": "Event"
-    },
-    {
-        "baseclass": [],
-        "fields": [
-            {
-                "name": "cid",
-                "type": "string"
-            },
-            {
-                "name": "state",
-                "type": "uint8"
-            },
-            {
-                "name": "slashed",
-                "type": "bool"
-            },
-            {
-                "name": "size",
-                "type": "uint128"
-            },
-            {
-                "name": "price",
-                "type": "uint128"
-            },
-            {
-                "name": "duration",
-                "type": "uint128"
-            },
-            {
-                "name": "sender",
-                "type": "FixedHash<20>"
-            },
-            {
-                "name": "storage_provider_required",
-                "type": "uint8"
-            },
-            {
-                "name": "total_reward",
-                "type": "uint128"
-            },
-            {
-                "name": "reward_balance",
-                "type": "uint128"
-            },
-            {
-                "name": "storage_provider_list",
-                "type": "string[]"
-            }
-        ],
-        "name": "deal",
-        "type": "struct"
-    },
-    {
-        "constant": true,
-        "input": [
-            {
-                "name": "cid",
-                "type": "string"
-            }
-        ],
-        "name": "get_deal_by_cid",
-        "output": "deal",
-        "type": "Action"
-    },
-    {
-        "constant": false,
-        "input": [
-            {
-                "name": "token_contract_address",
-                "type": "FixedHash<20>"
-            },
-            {
-                "name": "verify_contract_address",
-                "type": "FixedHash<20>"
-            }
-        ],
-        "name": "init",
-        "output": "void",
-        "type": "Action"
-    },
-    {
-        "constant": false,
-        "input": [
-            {
-                "name": "address",
-                "type": "FixedHash<20>"
-            }
-        ],
-        "name": "set_owner",
-        "output": "bool",
-        "type": "Action"
-    },
-    {
-        "constant": true,
-        "input": [],
-        "name": "get_owner",
-        "output": "string",
-        "type": "Action"
-    },
-    {
-        "constant": false,
-        "input": [
-            {
-                "name": "address",
-                "type": "FixedHash<20>"
-            }
-        ],
-        "name": "set_token_contract",
-        "output": "bool",
-        "type": "Action"
-    },
-    {
-        "constant": true,
-        "input": [],
-        "name": "get_token_contract",
-        "output": "string",
-        "type": "Action"
-    },
-    {
-        "constant": true,
-        "input": [],
-        "name": "get_verify_contract",
-        "output": "string",
-        "type": "Action"
-    },
-    {
-        "constant": true,
-        "input": [
-            {
-                "name": "sender",
-                "type": "FixedHash<20>"
-            },
-            {
-                "name": "skip",
-                "type": "uint8"
-            }
-        ],
-        "name": "get_deal_by_sender",
-        "output": "string[]",
-        "type": "Action"
-    },
-    {
-        "constant": true,
-        "input": [
-            {
-                "name": "skip",
-                "type": "uint8"
-            }
-        ],
-        "name": "get_opened_deal",
-        "output": "string[]",
-        "type": "Action"
-    },
-    {
-        "baseclass": [],
-        "fields": [
-            {
-                "name": "cid",
-                "type": "string"
-            },
-            {
-                "name": "size",
-                "type": "uint128"
-            }
-        ],
-        "name": "cid_file",
-        "type": "struct"
-    },
-    {
-        "constant": false,
-        "input": [
-            {
-                "name": "enclave_public_key",
-                "type": "string"
-            },
-            {
-                "name": "deals",
-                "type": "cid_file[]"
-            }
-        ],
-        "name": "fill_deal",
-        "output": "bool",
-        "type": "Action"
-    },
-    {
-        "constant": false,
-        "input": [
-            {
-                "name": "enclave_public_key",
-                "type": "string"
-            },
-            {
-                "name": "deals",
-                "type": "cid_file[]"
-            }
-        ],
-        "name": "update_storage_proof",
-        "output": "bool",
-        "type": "Action"
-    },
-    {
-        "baseclass": [],
-        "fields": [
-            {
-                "name": "last_proof_block_num",
-                "type": "uint64"
-            },
-            {
-                "name": "last_claimed_block_num",
-                "type": "uint64"
-            },
-            {
-                "name": "deals",
-                "type": "cid_file[]"
-            }
-        ],
-        "name": "storage_provider",
-        "type": "struct"
-    },
-    {
-        "constant": true,
-        "input": [
-            {
-                "name": "enclave_public_key",
-                "type": "string"
-            }
-        ],
-        "name": "get_storage_provider_proof",
-        "output": "storage_provider",
-        "type": "Action"
-    },
-    {
-        "constant": false,
-        "input": [
-            {
-                "name": "enclave_public_key",
-                "type": "string"
-            }
-        ],
-        "name": "claim_deal_reward",
-        "output": "bool",
-        "type": "Action"
-    }
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "topic",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "arg1",
+        "type": "string"
+      },
+      {
+        "name": "arg2",
+        "type": "uint128"
+      }
+    ],
+    "name": "AddDeal",
+    "topic": 1,
+    "type": "Event"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "address",
+        "type": "FixedHash<20>"
+      }
+    ],
+    "name": "set_token_contract",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [],
+    "name": "get_token_contract",
+    "output": "string",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "token_contract_address",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "verify_contract_address",
+        "type": "FixedHash<20>"
+      }
+    ],
+    "name": "init",
+    "output": "void",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "address",
+        "type": "FixedHash<20>"
+      }
+    ],
+    "name": "set_owner",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [],
+    "name": "get_owner",
+    "output": "string",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "cid",
+        "type": "string"
+      },
+      {
+        "name": "size",
+        "type": "uint128"
+      },
+      {
+        "name": "price",
+        "type": "uint128"
+      },
+      {
+        "name": "duration",
+        "type": "uint128"
+      },
+      {
+        "name": "storage_provider_required",
+        "type": "uint8"
+      }
+    ],
+    "name": "add_deal",
+    "output": "void",
+    "type": "Action"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "arg1",
+        "type": "string"
+      }
+    ],
+    "name": "FillDeal",
+    "topic": 0,
+    "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "arg1",
+        "type": "string"
+      }
+    ],
+    "name": "UpdateStorageProof",
+    "topic": 0,
+    "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "topic",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "arg1",
+        "type": "string"
+      }
+    ],
+    "name": "ClaimDealReward",
+    "topic": 1,
+    "type": "Event"
+  },
+  {
+    "constant": true,
+    "input": [],
+    "name": "get_verify_contract",
+    "output": "string",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "address",
+        "type": "FixedHash<20>"
+      }
+    ],
+    "name": "set_verify_contract",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "baseclass": [],
+    "fields": [
+      {
+        "name": "cid",
+        "type": "string"
+      },
+      {
+        "name": "state",
+        "type": "uint8"
+      },
+      {
+        "name": "slashed",
+        "type": "bool"
+      },
+      {
+        "name": "size",
+        "type": "uint128"
+      },
+      {
+        "name": "price",
+        "type": "uint128"
+      },
+      {
+        "name": "duration",
+        "type": "uint128"
+      },
+      {
+        "name": "sender",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "storage_provider_required",
+        "type": "uint8"
+      },
+      {
+        "name": "total_reward",
+        "type": "uint128"
+      },
+      {
+        "name": "reward_balance",
+        "type": "uint128"
+      },
+      {
+        "name": "storage_provider_list",
+        "type": "string[]"
+      }
+    ],
+    "name": "deal",
+    "type": "struct"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "cid",
+        "type": "string"
+      }
+    ],
+    "name": "get_deal_by_cid",
+    "output": "deal",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "sender",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "skip",
+        "type": "uint8"
+      }
+    ],
+    "name": "get_deal_by_sender",
+    "output": "string[]",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "skip",
+        "type": "uint8"
+      }
+    ],
+    "name": "get_opened_deal",
+    "output": "string[]",
+    "type": "Action"
+  },
+  {
+    "baseclass": [],
+    "fields": [
+      {
+        "name": "cid",
+        "type": "string"
+      },
+      {
+        "name": "size",
+        "type": "uint128"
+      }
+    ],
+    "name": "cid_file",
+    "type": "struct"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      },
+      {
+        "name": "deals",
+        "type": "cid_file[]"
+      }
+    ],
+    "name": "fill_deal",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      },
+      {
+        "name": "deals",
+        "type": "cid_file[]"
+      }
+    ],
+    "name": "update_storage_proof",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "baseclass": [],
+    "fields": [
+      {
+        "name": "last_proof_block_num",
+        "type": "uint64"
+      },
+      {
+        "name": "last_claimed_block_num",
+        "type": "uint64"
+      },
+      {
+        "name": "deals",
+        "type": "cid_file[]"
+      }
+    ],
+    "name": "storage_provider",
+    "type": "struct"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      }
+    ],
+    "name": "get_storage_provider_proof",
+    "output": "storage_provider",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      }
+    ],
+    "name": "claim_deal_reward",
+    "output": "bool",
+    "type": "Action"
+  }
 ]

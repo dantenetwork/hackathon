@@ -50,38 +50,55 @@
     "constant": false,
     "input": [
       {
-        "name": "address",
-        "type": "FixedHash<20>"
+        "name": "message",
+        "type": "string"
+      },
+      {
+        "name": "enclave_signature",
+        "type": "string"
       }
     ],
-    "name": "set_market_contract",
-    "output": "bool",
+    "name": "test",
+    "output": "void",
     "type": "Action"
   },
   {
-    "constant": true,
-    "input": [],
-    "name": "get_market_contract",
-    "output": "string",
-    "type": "Action"
+    "baseclass": [],
+    "fields": [
+      {
+        "name": "cid",
+        "type": "string"
+      },
+      {
+        "name": "size",
+        "type": "uint128"
+      }
+    ],
+    "name": "cid_file",
+    "type": "struct"
   },
   {
     "constant": false,
     "input": [
       {
-        "name": "address",
-        "type": "FixedHash<20>"
+        "name": "enclave_public_key",
+        "type": "string"
+      },
+      {
+        "name": "enclave_timestamp",
+        "type": "string"
+      },
+      {
+        "name": "stored_files",
+        "type": "cid_file[]"
+      },
+      {
+        "name": "enclave_signature",
+        "type": "string"
       }
     ],
-    "name": "set_token_contract",
-    "output": "bool",
-    "type": "Action"
-  },
-  {
-    "constant": true,
-    "input": [],
-    "name": "get_token_contract",
-    "output": "string",
+    "name": "fill_deal",
+    "output": "void",
     "type": "Action"
   },
   {
@@ -148,6 +165,44 @@
     "constant": false,
     "input": [
       {
+        "name": "address",
+        "type": "FixedHash<20>"
+      }
+    ],
+    "name": "set_token_contract",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [],
+    "name": "get_token_contract",
+    "output": "string",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "address",
+        "type": "FixedHash<20>"
+      }
+    ],
+    "name": "set_market_contract",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [],
+    "name": "get_market_contract",
+    "output": "string",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
         "name": "enclave_public_key",
         "type": "string"
       },
@@ -197,61 +252,6 @@
       }
     ],
     "name": "unregister_miner",
-    "output": "void",
-    "type": "Action"
-  },
-  {
-    "constant": false,
-    "input": [
-      {
-        "name": "message",
-        "type": "string"
-      },
-      {
-        "name": "enclave_signature",
-        "type": "string"
-      }
-    ],
-    "name": "test",
-    "output": "void",
-    "type": "Action"
-  },
-  {
-    "baseclass": [],
-    "fields": [
-      {
-        "name": "cid",
-        "type": "string"
-      },
-      {
-        "name": "size",
-        "type": "uint128"
-      }
-    ],
-    "name": "cid_file",
-    "type": "struct"
-  },
-  {
-    "constant": false,
-    "input": [
-      {
-        "name": "enclave_public_key",
-        "type": "string"
-      },
-      {
-        "name": "enclave_timestamp",
-        "type": "string"
-      },
-      {
-        "name": "stored_files",
-        "type": "cid_file[]"
-      },
-      {
-        "name": "enclave_signature",
-        "type": "string"
-      }
-    ],
-    "name": "fill_deal",
     "output": "void",
     "type": "Action"
   },

@@ -14,9 +14,9 @@ const client = new IpfsClient(config.get('IPFS.clientAddress'), { fetch });
 
 module.exports = {
   /**
-  * Download file from IPFS network by cid
-  * @param cid - IPFS cid
-  */
+   * Download file from IPFS network by cid
+   * @param cid - IPFS cid
+   */
   async download(cid) {
     if (!cid) {
       console.log('{dante-client download} expected 1 param,but got 0');

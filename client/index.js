@@ -54,6 +54,10 @@ switch (subCommand) {
   case 'getMiner':
     miner.getMiner(cliParams[1]);
     break;
+  // dante-client getProof
+  case 'getProof':
+    deal.getProof(cliParams[1]);
+    break;
   default:
     console.log('dante-client ' + subCommand + ' is not supported');
     help.show();

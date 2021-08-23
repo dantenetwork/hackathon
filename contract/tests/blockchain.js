@@ -1,26 +1,19 @@
 const fs = require('fs');
 const Web3 = require('web3');
-const config = require('config');
-const web3 = new Web3(config.get('Blockchain.nodeAddress'));
-
+const web3 = new Web3('http://192.168.1.64:6789');
 
 module.exports = class smartContract {
-  constructor() {
+  constructor(marketContractAddress, verifyContractAddress) {
     // market contract abi
-    let marketRawData = fs.readFileSync('abi/market.abi.json');
+    let marketRawData = fs.readFileSync('../build/contracts/market.abi.json');
     let marketAbi = JSON.parse(marketRawData);
     // Contract.setProvider('ws://localhost:8546');
-    this.marketContract = new web3.platon.Contract(marketAbi, config.get("Blockchain.marketContractAddress"), { vmType: 1 });
+    this.marketContract = new web3.platon.Contract(marketAbi, marketContractAddress, { vmType: 1 });
 
     // verify contract abi
-    let verifyRawData = fs.readFileSync('abi/verify.abi.json');
+    let verifyRawData = fs.readFileSync('../build/contracts/verify.abi.json');
     let verifyAbi = JSON.parse(verifyRawData);
-    this.verifyContract = new web3.platon.Contract(verifyAbi, config.get("Blockchain.verifyContractAddress"), { vmType: 1 });
-
-    // token contract abi
-    let tokenRawData = fs.readFileSync('abi/token.abi.json');
-    let tokenAbi = JSON.parse(tokenRawData);
-    this.tokenContract = new web3.platon.Contract(tokenAbi, config.get("Blockchain.tokenContractAddress"), { vmType: 1 });
+    this.verifyContract = new web3.platon.Contract(verifyAbi, verifyContractAddress, { vmType: 1 });
 
   }
 
@@ -39,7 +32,7 @@ module.exports = class smartContract {
     }
 
     try {
-      const chainId = config.get('Blockchain.chainId');
+      const chainId = '210309';
       const gas = web3.utils.numberToHex(parseInt((await web3.platon.getBlock("latest")).gasLimit - 1));
       const account = web3.platon.accounts.privateKeyToAccount(accountPrivateKey).address; // 私钥导出公钥
       const to = smartContract.options.address;
@@ -98,4 +91,4 @@ module.exports = class smartContract {
     }
     return smartContract;
   }
-}
+};

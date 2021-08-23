@@ -12,12 +12,12 @@ const token = require('../token/index.js');
 
 module.exports = {
   /**
-    * Add file to IPFS network and send to DANTE network
-    * @param file_name - file path and name 
-    * @param price - deal price per block
-    * @param duration - deal duration (blocks)
-    * @param storage_provider_required - amount of storage providers required
-    */
+   * Add file to IPFS network and send to DANTE network
+   * @param file_name - file path and name 
+   * @param price - deal price per block
+   * @param duration - deal duration (blocks)
+   * @param storage_provider_required - amount of storage providers required
+   */
   async add(cliParams) {
     if (cliParams.length < 5) {
       console.log('{dante-client add} expected 5 params,but only got ' + cliParams.length);

@@ -81,7 +81,7 @@ CONTRACT market : public Contract {
 
 	// Market contract events
   public:
-	PLATON_EVENT1(AddDeal, Address, string, string);
+	PLATON_EVENT1(AddDeal, Address, string, u128);
 	PLATON_EVENT0(FillDeal, string);
 	PLATON_EVENT0(UpdateStorageProof, string);
 	PLATON_EVENT1(ClaimDealReward, Address, string);
@@ -128,9 +128,14 @@ CONTRACT market : public Contract {
 	CONST string get_verify_contract();
 
 	/**
-   * Ensure that current transaction is sent from verify contract
+   * Ensure current transaction is sent from verify contract
    */
 	void require_verify_contract_auth();
+
+	/**
+   * Ensure enclave_public_key is registered
+   */
+	void require_miner_registered(const string &enclave_public_key);
 
 	/**
    * Add deal
