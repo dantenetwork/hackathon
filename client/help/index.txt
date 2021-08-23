@@ -9,4 +9,5 @@ Subcommands:
   list                        List deals sent by private key of config file
   balance                     Query DAT balance of current account
   allowance                   Query DAT allowance from current account to market contract
-  getMiner                    Get storage provider info by enclavePublicKey
+  getMiner                    Query storage provider info by enclavePublicKey
+  getProof                    Query miner storage proof by enclavePublicKey

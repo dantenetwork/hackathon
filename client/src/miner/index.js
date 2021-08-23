@@ -1,11 +1,9 @@
 const verifyContract = new (require('../blockchain.js'))();
-const table = ['enclave_public_key', 'reward_address', 'sender'];
-const emptyAddress = 'lat1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq542u6a';
 
 module.exports = {
   /**
-  * get storage provider info by enclavePublicKey
-  */
+   * get storage provider info by enclavePublicKey
+   */
   async getMiner(enclavePublicKey) {
     if (!enclavePublicKey) {
       console.log('{dante-client getMiner} expected 1 params,but only got 0');
@@ -13,6 +11,9 @@ module.exports = {
     }
     console.log(enclavePublicKey);
     const minerInfo = await verifyContract.contractCall('verifyContract', 'get_miner', [enclavePublicKey]);
+
+    const table = ['enclave_public_key', 'reward_address', 'sender'];
+    const emptyAddress = 'lat1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq542u6a';
 
     if (minerInfo[1] == emptyAddress && minerInfo[2] == emptyAddress) {
       console.log('miner ' + enclavePublicKey + ' is not exists');

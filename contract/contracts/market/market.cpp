@@ -48,14 +48,26 @@ bool market::set_verify_contract(const Address &address) {
 	return true;
 }
 
-/**
-   * ensure that current transaction is sent from verify contract
-   */
+// ensure that current transaction is sent from verify contract
 void market::require_verify_contract_auth() {
 	DEBUG("platon_caller:" + platon_caller().toString());
 	DEBUG("verify_contract address :" + verify_contract.self().toString());
 	// platon_assert(platon_caller() == verify_contract.self(),
 	//               "platon_caller is not equal with verify contract address");
+}
+
+void market::require_miner_registered(const string &enclave_public_key) {
+	auto result = platon_call_with_return_value<bool>(verify_contract.self(), uint32_t(0), uint32_t(0), "is_registered", enclave_public_key);
+
+	if (result.first && result.second) {
+		DEBUG("the miner is registered");
+	} else {
+		DEBUG("the miner is not registered");
+	}
+	DEBUG(result.first);
+	DEBUG(result.second);
+
+	// platon_assert(result.first && result.second, "the miner is not registered");
 }
 
 // add deal
@@ -97,7 +109,7 @@ void market::add_deal(const string &cid, const u128 &size, const u128 &price, co
 		deal.reward_balance = total_reward;
 	});
 
-	PLATON_EMIT_EVENT1(AddDeal, sender, cid, std::to_string(size));
+	PLATON_EMIT_EVENT1(AddDeal, sender, cid, size);
 }
 
 // get deal by cid
@@ -164,11 +176,14 @@ vector<string> market::get_opened_deal(const uint8_t &skip) {
 	return deals;
 }
 
-// add storage provider's enclave_public_key into storage_provider_list of
-// deal_table
+// add storage provider's enclave_public_key into storage_provider_list of deal_table
 bool market::fill_deal(const string &enclave_public_key, const vector<cid_file> &deals) {
 	// only verify contract allows call this function
 	require_verify_contract_auth();
+	require_miner_registered(enclave_public_key);
+
+	DEBUG("market.cpp fill deal");
+	DEBUG(enclave_public_key);
 
 	vector<cid_file>::const_iterator it;
 
@@ -207,8 +222,10 @@ bool market::fill_deal(const string &enclave_public_key, const vector<cid_file> 
 			DEBUG("enclave_public_key: " + enclave_public_key);
 
 			// set state to 1 (filled) if storage_provider_list size is match with required
-			if (current_deal->storage_provider_list.size() == current_deal->storage_provider_required) {
-				deal_table.modify(current_deal, [&](auto &deal) { deal.state = 1; });
+			if (current_deal->storage_provider_list.size() + 1 == current_deal->storage_provider_required) {
+				deal_table.modify(current_deal, [&](auto &deal) {
+					deal.state = 1;
+				});
 			}
 			DEBUG("deal state: " + std::to_string(current_deal->state));
 		}
@@ -222,6 +239,7 @@ bool market::fill_deal(const string &enclave_public_key, const vector<cid_file> 
 bool market::update_storage_proof(const string &enclave_public_key, const vector<cid_file> &deals) {
 	// only verify contract allows call this function
 	require_verify_contract_auth();
+	DEBUG(enclave_public_key);
 
 	storage_provider provider;
 	uint64_t current_block_num = platon_block_number();
@@ -259,7 +277,8 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
 		return false;
 	}
 
-	DEBUG("enclave_public_key: " + enclave_public_key)
+	DEBUG("enclave_public_key: " + enclave_public_key);
+	require_miner_registered(enclave_public_key);
 
 	// get target provider info
 	storage_provider provider = storage_provider_map[enclave_public_key];
@@ -268,6 +287,8 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
 	// blocks gap between last_proof_block_num and last_claimed_block_num
 	uint64_t reward_blocks = provider.last_proof_block_num - provider.last_claimed_block_num;
 
+	DEBUG("provider.last_proof_block_num: " + std::to_string(provider.last_proof_block_num));
+	DEBUG("provider.last_claimed_block_num: " + std::to_string(provider.last_claimed_block_num));
 	DEBUG("reward_blocks: " + std::to_string(reward_blocks));
 
 	if (reward_blocks <= 0) {
@@ -282,30 +303,42 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
 	for (it = deal_vector.begin(); it != deal_vector.end(); ++it) {
 		// Query deal info by cid
 		auto current_deal = deal_table.find<"cid"_n>(it->cid);
-		u128 price = current_deal->price;
-		vector<string> provider_list = current_deal->storage_provider_list;
+		auto state = current_deal->state;
 
-		// check deal's storage_provider_list contains enclave_public_key
-		if (std::find(provider_list.begin(), provider_list.end(), enclave_public_key) != provider_list.end()) {
-			// calculate current deal reward
-			u128 current_deal_reward = safeMul(price, reward_blocks);
+		//check current deal status, 0 = deal opened, 1= filled
+		if (state == 0 || state == 1) {
 
-			// if current_deal_reward larger than reward_balance, close deal
-			if (current_deal_reward > current_deal->reward_balance) {
-				current_deal_reward = current_deal->reward_balance;
+			u128 price = current_deal->price;
+			vector<string> provider_list = current_deal->storage_provider_list;
 
-				// close deal
-				deal_table.modify(current_deal, [&](auto &deal) { deal.state = 2; });
+			// check deal's storage_provider_list contains enclave_public_key
+			if (std::find(provider_list.begin(), provider_list.end(), enclave_public_key) != provider_list.end()) {
+				// calculate current deal reward
+				u128 current_deal_reward = safeMul(price, reward_blocks);
+				auto reward_balance = current_deal->reward_balance;
+
+				DEBUG("current_deal_reward: " + std::to_string(current_deal_reward));
+				DEBUG("reward_balance: " + std::to_string(reward_balance));
+
+				// if current_deal_reward larger than reward_balance, close deal
+				if (current_deal_reward >= reward_balance) {
+					// close deal
+					deal_table.modify(current_deal, [&](auto &deal) {
+						deal.state = 2;
+					});
+
+					current_deal_reward = reward_balance;
+				}
+
+				DEBUG("current_deal_reward: " + std::to_string(current_deal_reward));
+
+				total_reward += current_deal_reward;
+
+				// update reward balance
+				deal_table.modify(current_deal, [&](auto &deal) {
+					deal.reward_balance -= current_deal_reward;
+				});
 			}
-
-			DEBUG("current_deal_reward: " + std::to_string(current_deal_reward));
-
-			total_reward += current_deal_reward;
-
-			// update reward balance
-			deal_table.modify(current_deal, [&](auto &deal) {
-				deal.reward_balance -= current_deal_reward;
-			});
 		}
 	}
 

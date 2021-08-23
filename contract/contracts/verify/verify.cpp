@@ -90,6 +90,11 @@ void verify::unregister_miner(const string &enclave_public_key, const string &en
 	PLATON_EMIT_EVENT0(UnregisterMiner, enclave_public_key);
 }
 
+// check if enclave_public_key is registered or not
+bool verify::is_registered(const string &enclave_public_key) {
+	return miner_map.contains(enclave_public_key);
+}
+
 bool verify::require_auth(const string &message, const string &enclave_signature) {
 	return true;
 }
@@ -112,6 +117,10 @@ void verify::test(const string &message, const string &enclave_signature) {
 // Submit enclave new deal proof
 void verify::fill_deal(const string &enclave_public_key, const string &enclave_timestamp, const vector<cid_file> stored_files, const string &enclave_signature) {
 	require_auth(enclave_public_key, enclave_signature);
+	DEBUG("verify.cpp fill deal.");
+	DEBUG(enclave_public_key);
+	DEBUG(enclave_timestamp);
+	DEBUG(enclave_signature);
 
 	// call add_storage_provider of market.cpp
 	Address sender = platon_caller();
@@ -125,6 +134,9 @@ void verify::fill_deal(const string &enclave_public_key, const string &enclave_t
 // Submit enclave proof
 void verify::submit_storage_proof(const string &enclave_public_key, const string &enclave_timestamp, const u128 &enclave_plot_size, const vector<cid_file> stored_files, const string &enclave_signature) {
 	require_auth(enclave_public_key, enclave_signature);
+	DEBUG(enclave_public_key);
+	DEBUG(enclave_timestamp);
+	DEBUG(enclave_plot_size);
 
 	// update storage provider proof
 	storage_proof proof;

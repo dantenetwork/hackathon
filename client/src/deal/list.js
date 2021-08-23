@@ -6,8 +6,8 @@ const marketContract = new (require('../blockchain.js'))();
 
 module.exports = {
   /**
-    * List deals sent by private key of config file
-    */
+   * List deals sent by private key of config file
+   */
   async list() {
     const account = web3.platon.accounts.privateKeyToAccount(config.get('Blockchain.privateKey')).address;
     let dealList = await marketContract.contractCall('marketContract', 'get_deal_by_sender', [account, 0]);

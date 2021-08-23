@@ -18,6 +18,8 @@ const testAccount = web3.platon.accounts.privateKeyToAccount(testAccountPrivateK
 const binFilePath = '../build/contracts/market.wasm';
 const abiFilePath = '../build/contracts/market.abi.json';
 
+const verifyContractAddress = "lat1yhda4ph5w93536vshqxn58l0gs8qtk97s3p7jz";
+
 // PlatON test net init data
 const chainId = 210309;
 let gas;
@@ -83,7 +85,7 @@ describe("dante_market unit test", function () {
       // deploy param
       let data = marketContract.deploy({
         data: bin,
-        arguments: [tokenContractAddress, tokenContractAddress]
+        arguments: [tokenContractAddress, verifyContractAddress]
       }).encodeABI();
 
       // transaction param
@@ -144,8 +146,8 @@ describe("dante_market unit test", function () {
       const cid = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
       const size = 100;
       const price = ONE_TOKEN;
-      const duration = 10000;
-      const provider_required = 3;
+      const duration = 100000000;
+      const provider_required = 1;
 
       const totalPrice = price * duration * provider_required;
 
@@ -227,10 +229,6 @@ describe("dante_market unit test", function () {
       // console.log(ret);
       assert.isObject(ret);
 
-      ret = await sendTransaction(marketContract, "fill_deal", testAccountPrivateKey, proof);
-      // console.log(ret);
-      assert.isObject(ret);
-
       // quer deal info by cid
       const cid = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
       let onchainDealByCid = await contractCall("get_deal_by_cid", [cid]);
@@ -245,6 +243,7 @@ describe("dante_market unit test", function () {
       console.log(e);
     }
   });
+
 
   // update storage proof
   it("update_storage_proof", async function () {

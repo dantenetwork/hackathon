@@ -7,8 +7,8 @@ const UNIT = 1000000000000000000;
 
 module.exports = {
   /**
-  * get current account DAT balance
-  */
+   * get current account DAT balance
+   */
   async getBalance() {
     const account = web3.platon.accounts.privateKeyToAccount(config.get('Blockchain.privateKey')).address;
     const balance = await tokenContract.contractCall('tokenContract', 'balanceOf', [account]);
@@ -17,8 +17,8 @@ module.exports = {
   },
 
   /**
-  * get DAT allowance from current account to market contract
-  */
+   * get DAT allowance from current account to market contract
+   */
   async getAllowance() {
     const account = web3.platon.accounts.privateKeyToAccount(config.get('Blockchain.privateKey')).address;
     const marketContractAddress = config.get('Blockchain.marketContractAddress');

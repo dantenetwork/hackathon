@@ -154,6 +154,13 @@ CONTRACT verify : public Contract {
 	ACTION void unregister_miner(const string &enclave_public_key, const string &enclave_signature);
 
 	/**
+   * check if enclave_public_key is registered or not
+   * @param enclave_public_key - SGX enclave public key
+   * @param enclave_signature - SGX signature
+   */
+	bool is_registered(const string &enclave_public_key);
+
+	/**
    * Verify SGX signature
    * @param message - origin message of signature
    * @param enclave_signature - SGX signature
@@ -216,5 +223,5 @@ CONTRACT verify : public Contract {
 };
 
 PLATON_DISPATCH(
-    verify, (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(set_market_contract)(get_market_contract)(register_miner)(update_miner)(unregister_miner)(test)(fill_deal)(submit_storage_proof)(get_storage_proof)(get_miner)(get_total_capacity)(submit_miner_info)(get_miner_info))
+    verify, (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(set_market_contract)(get_market_contract)(register_miner)(update_miner)(unregister_miner)(is_registered)(test)(fill_deal)(submit_storage_proof)(get_storage_proof)(get_miner)(get_total_capacity)(submit_miner_info)(get_miner_info))
 } // namespace hackathon
