@@ -1,115 +1,36 @@
 const chai = require('chai');
-const exp = require('constants');
 const assert = chai.assert;
 const expect = chai.expect;
 const fs = require('fs');
 const Web3 = require('web3');
 const web3 = new Web3('http://127.0.0.1:6789');
-
-// deploy account address, lat1qavfd7zwaknrxyx0drcmv0vr5zehgthhaqq6ul
-const privateKey = "0x4940cf212544505a0fad3e3932734220af101da915321489708f69bc908fda65"; // private key, Testnet only
-const contractAccount = web3.platon.accounts.privateKeyToAccount(privateKey).address; // 私钥导出公钥
+const blockchain = require('./blockchain.js');
 
 // test account address, lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex
 const testAccountPrivateKey = '0x34382ebae7d7c628e13f14b4314c9b0149db7bbbc06428ae89de9883ffc7c341';// private key, Testnet only
 const testAccount = web3.platon.accounts.privateKeyToAccount(testAccountPrivateKey).address; // 私钥导出公钥
 
-// market contract abi and wasm
-const binFilePath = '../build/contracts/market.wasm';
-const abiFilePath = '../build/contracts/market.abi.json';
-
-const verifyContractAddress = "lat1yhda4ph5w93536vshqxn58l0gs8qtk97s3p7jz";
-
-// PlatON test net init data
-const chainId = 210309;
-let gas;
-let gasPrice;
+// market contract data
 let marketContract;
-let marketContractAddress;
+let marketContractAddress = 'lat1cdclegajw3p6zxzm98czxlqaj0fqw8jcdcxf52';
 
 // token contract
 const tokenABI = [{ "anonymous": false, "input": [{ "name": "topic", "type": "FixedHash<20>" }, { "name": "arg1", "type": "uint128" }], "name": "Burn", "topic": 1, "type": "Event" }, { "constant": true, "input": [{ "name": "_owner", "type": "FixedHash<20>" }, { "name": "_spender", "type": "FixedHash<20>" }], "name": "allowance", "output": "uint128", "type": "Action" }, { "anonymous": false, "input": [{ "name": "topic1", "type": "FixedHash<20>" }, { "name": "topic2", "type": "FixedHash<20>" }, { "name": "arg1", "type": "uint128" }], "name": "Transfer", "topic": 2, "type": "Event" }, { "anonymous": false, "input": [{ "name": "topic1", "type": "FixedHash<20>" }, { "name": "topic2", "type": "FixedHash<20>" }, { "name": "arg1", "type": "uint128" }], "name": "Approval", "topic": 2, "type": "Event" }, { "constant": true, "input": [{ "name": "_owner", "type": "FixedHash<20>" }], "name": "balanceOf", "output": "uint128", "type": "Action" }, { "constant": false, "input": [{ "name": "_to", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "transfer", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_from", "type": "FixedHash<20>" }, { "name": "_to", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "transferFrom", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_spender", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "approve", "output": "bool", "type": "Action" }, { "anonymous": false, "input": [{ "name": "topic", "type": "FixedHash<20>" }, { "name": "arg1", "type": "uint128" }], "name": "Mint", "topic": 1, "type": "Event" }, { "constant": false, "input": [{ "name": "_name", "type": "string" }, { "name": "_symbol", "type": "string" }, { "name": "_decimals", "type": "uint8" }], "name": "init", "output": "void", "type": "Action" }, { "constant": false, "input": [{ "name": "_to", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "transfer", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_from", "type": "FixedHash<20>" }, { "name": "_to", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "transferFrom", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_spender", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "approve", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_account", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "mint", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_account", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "burn", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_account", "type": "FixedHash<20>" }], "name": "setOwner", "output": "bool", "type": "Action" }, { "constant": true, "input": [{ "name": "_owner", "type": "FixedHash<20>" }, { "name": "_spender", "type": "FixedHash<20>" }], "name": "allowance", "output": "uint128", "type": "Action" }, { "constant": true, "input": [], "name": "getOwner", "output": "string", "type": "Action" }, { "constant": true, "input": [], "name": "getName", "output": "string", "type": "Action" }, { "constant": true, "input": [], "name": "getDecimals", "output": "uint8", "type": "Action" }, { "constant": true, "input": [], "name": "getSymbol", "output": "string", "type": "Action" }, { "constant": true, "input": [], "name": "getTotalSupply", "output": "uint128", "type": "Action" }];
 
 const tempTokenContractAddress = 'lat1kutjyplvt8dccag9jvy92q7cupg9mkzg3v3wsx';
-const tokenContractAddress = 'lat1hzan4ed929nh9mnua7zht0erzrcxuj5q24a0gt';
+const tokenContractAddress = 'lat1zf9vh3s63ux2nraaqyl0zmp52kdt5e2j6ylwe4';
 const ONE_TOKEN = '1000000000000000000';
 const tokenContract = new web3.platon.Contract(tokenABI, tokenContractAddress, { vmType: 1 });
 
-// 通过私钥签名交易
-async function sendTransaction(targetContract, actionName, accountPrivateKey, arguments) {
-  try {
-    const account = web3.platon.accounts.privateKeyToAccount(accountPrivateKey).address; // 私钥导出公钥
-    const to = targetContract.options.address;
-    const nonce = web3.utils.numberToHex(await web3.platon.getTransactionCount(account)); // 获取生成 nonce
-    const data = targetContract.methods[actionName].apply(targetContract.methods, arguments).encodeABI(); // encode ABI
-
-    // 准备交易数据
-    const tx = { account, to, chainId, data, nonce, gas };
-    // console.log(tx);
-
-    // 签名交易
-    let signTx = await web3.platon.accounts.signTransaction(tx, accountPrivateKey);
-    let ret = await web3.platon.sendSignedTransaction(signTx.rawTransaction);
-    // console.log(ret);
-    return ret;
-  } catch (e) {
-    console.error(e);
-  }
-}
-// query info from blockchain node
-const contractCall = async (method, arguments) => {
-  let methodObj = marketContract.methods[method].apply(marketContract.methods, arguments);
-  let ret = await methodObj.call({});
-  // console.log(ret);
-  return ret;
-}
 
 // test case 
 describe("dante_market unit test", function () {
   before(async function () {
-    gasPrice = web3.utils.numberToHex(await web3.platon.getGasPrice());
-    gas = web3.utils.numberToHex(parseInt((await web3.platon.getBlock("latest")).gasLimit - 1));
-    let rawdata = fs.readFileSync(abiFilePath);
-    let abi = JSON.parse(rawdata);
-    marketContract = new web3.platon.Contract(abi, "", { vmType: 1 });
-  });
+    // market contract abi
+    let marketRawData = fs.readFileSync('../build/contracts/market.abi.json');
+    let marketAbi = JSON.parse(marketRawData);
 
-  it("deploy contract", async function () {
-    try {
-      this.timeout(0);
-      // load contract wasm file
-      let rawdata = await fs.readFileSync(binFilePath);
-      bin = rawdata.toString("hex");
-      // get nonce
-      let nonce = web3.utils.numberToHex(await web3.platon.getTransactionCount(contractAccount));
-      // deploy param
-      let data = marketContract.deploy({
-        data: bin,
-        arguments: [tokenContractAddress, verifyContractAddress]
-      }).encodeABI();
-
-      // transaction param
-      let tx = { gasPrice, gas, nonce, chainId, data };
-      // sign transaction by private key
-      let signTx = await web3.platon.accounts.signTransaction(tx, privateKey);
-      // send transaction 
-      const ret = await web3.platon.sendSignedTransaction(signTx.rawTransaction);
-
-      assert.isObject(ret);
-      assert.isNotNull(ret.contractAddress);
-
-      // 更新合约地址
-      marketContract.options.address = ret.contractAddress;
-      marketContractAddress = marketContract.options.address;
-      console.log("contract address: " + marketContractAddress);
-
-      // temporary set verify contract address to test account
-      // await sendTransaction(marketContract, "set_verify_contract", privateKey, [testAccount]);
-      // let currentVerifyAddress = await contractCall("get_verify_contract", []);
-      // expect(currentVerifyAddress).to.equal(testAccount);
-    } catch (e) {
-      console.error(e);
-    }
+    marketContract = new web3.platon.Contract(marketAbi, marketContractAddress, { vmType: 1 });
   });
 
   // it("approve token", async function () {
@@ -161,12 +82,12 @@ describe("dante_market unit test", function () {
       // console.log(contractBalance);
 
       // send transaction
-      const ret = await sendTransaction(marketContract, "add_deal", testAccountPrivateKey, dealInfo);
+      const ret = await blockchain.sendTransaction(marketContract, "add_deal", testAccountPrivateKey, dealInfo);
       // expect ret is obeject
       assert.isObject(ret);
 
       // quer deal info by cid
-      let onchainDealByCid = await contractCall("get_deal_by_cid", [cid]);
+      let onchainDealByCid = await blockchain.contractCall(marketContract, "get_deal_by_cid", [cid]);
       // console.log(onchainDealByCid);
 
       // expect onchain info = test data
@@ -184,13 +105,13 @@ describe("dante_market unit test", function () {
 
 
       // query deal by sender
-      let onchainDealBySender = await contractCall("get_deal_by_sender", [testAccount, 0]);
+      let onchainDealBySender = await blockchain.contractCall(marketContract, "get_deal_by_sender", [testAccount, 0]);
       // console.log(onchainDealBySender);
       assert.isArray(onchainDealBySender);
       expect(cid).to.equal(onchainDealBySender[0]);
 
       // query opened deal
-      let openedDeals = await contractCall("get_opened_deal", [0]);
+      let openedDeals = await blockchain.contractCall(marketContract, "get_opened_deal", [0]);
       // console.log(openedDeals);
       assert.isArray(openedDeals);
       expect(cid).to.equal(openedDeals[0]);
@@ -225,13 +146,13 @@ describe("dante_market unit test", function () {
 
       const proof = [enclave_public_key, enclave_stored_files];
 
-      let ret = await sendTransaction(marketContract, "fill_deal", testAccountPrivateKey, proof);
+      let ret = await blockchain.sendTransaction(marketContract, "fill_deal", testAccountPrivateKey, proof);
       // console.log(ret);
       assert.isObject(ret);
 
       // quer deal info by cid
       const cid = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
-      let onchainDealByCid = await contractCall("get_deal_by_cid", [cid]);
+      let onchainDealByCid = await blockchain.contractCall(marketContract, "get_deal_by_cid", [cid]);
       // console.log(onchainDealByCid);
 
       // expect onchain info = test data
@@ -255,14 +176,14 @@ describe("dante_market unit test", function () {
 
       const proof = [enclave_public_key, enclave_stored_files];
 
-      let ret = await sendTransaction(marketContract, "update_storage_proof", testAccountPrivateKey, proof);
+      let ret = await blockchain.sendTransaction(marketContract, "update_storage_proof", testAccountPrivateKey, proof);
       assert.isObject(ret);
 
       // update proof again
-      ret = await sendTransaction(marketContract, "update_storage_proof", testAccountPrivateKey, proof);
+      ret = await blockchain.sendTransaction(marketContract, "update_storage_proof", testAccountPrivateKey, proof);
       assert.isObject(ret);
 
-      let onchainProof = await contractCall("get_storage_provider_proof", [enclave_public_key]);
+      let onchainProof = await blockchain.contractCall(marketContract, "get_storage_provider_proof", [enclave_public_key]);
 
       // expect onchain info = test data
       // console.log(onchainProof);
@@ -285,7 +206,7 @@ describe("dante_market unit test", function () {
 
       const proof = [enclave_public_key];
 
-      const ret = await sendTransaction(marketContract, "claim_deal_reward", testAccountPrivateKey, proof);
+      const ret = await blockchain.sendTransaction(marketContract, "claim_deal_reward", testAccountPrivateKey, proof);
       // console.log(ret);
       assert.isObject(ret);
 
@@ -298,27 +219,26 @@ describe("dante_market unit test", function () {
   it("set owner & token contract", async function () {
     try {
       this.timeout(0);
+      // deploy market contract account address, lat1qavfd7zwaknrxyx0drcmv0vr5zehgthhaqq6ul
+      const marketPrivateKey = "0x4940cf212544505a0fad3e3932734220af101da915321489708f69bc908fda65"; // private key, Testnet only
 
-      // expect contract owner = {{contractAccount}}
-      let contractOwner = await contractCall("get_owner", []);
-      expect(contractOwner).to.equal(contractAccount);
 
       // expect token contract address = tokenContractAddress
-      let tokenAddress = await contractCall("get_token_contract", []);
+      let tokenAddress = await blockchain.contractCall(marketContract, "get_token_contract", []);
       expect(tokenAddress).to.equal(tokenContractAddress);
 
       ////////////////////////////////////////////////////////////
       // change owner to testAccount
-      await sendTransaction(marketContract, "set_owner", privateKey, [testAccount]);
+      await blockchain.sendTransaction(marketContract, "set_owner", marketPrivateKey, [testAccount]);
       // expect contract owner = testAccount
-      let currentContractOwner = await contractCall("get_owner", []);
+      let currentContractOwner = await blockchain.contractCall(marketContract, "get_owner", []);
       expect(currentContractOwner).to.equal(testAccount);
 
       // change token contract to {{contractAccount}}
-      await sendTransaction(marketContract, "set_token_contract", testAccountPrivateKey, [tempTokenContractAddress]);
+      await blockchain.sendTransaction(marketContract, "set_token_contract", testAccountPrivateKey, [tempTokenContractAddress]);
 
       // expect token contract address = {{contractAccount}}
-      let currentTokenAddress = await contractCall("get_token_contract", []);
+      let currentTokenAddress = await blockchain.contractCall(marketContract, "get_token_contract", []);
       expect(currentTokenAddress).to.equal(tempTokenContractAddress);
 
     } catch (e) {
