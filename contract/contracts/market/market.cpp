@@ -156,24 +156,23 @@ vector<string> market::get_deal_by_sender(const Address &sender, const uint8_t &
 
 // get opened deals, skip = how many deals should be skipped
 vector<string> market::get_opened_deal(const uint8_t &skip) {
-	vector<string> deals;
-	auto vect_iter = deal_table.get_index<"state"_n>();
+	vector<string> deal_cid;
 	uint8_t index = 0;  // the index of current deal in iterator
 	uint8_t total = 20; // return 20 deals per request
 
 	// iterate vector iterator
-	for (auto it = vect_iter.cbegin(0); it != vect_iter.cend(0) && total > 0; it++, index++) {
+	for (auto it = deal_table.cbegin(); it != deal_table.cend() && total > 0; it++, index++) {
 		DEBUG("index: " + std::to_string(index));
 		DEBUG("skip: " + std::to_string(skip));
 		DEBUG("total: " + std::to_string(total));
 
 		// detect state == 0
 		if (index >= skip && it->state == 0) {
-			deals.push_back(it->cid);
+			deal_cid.push_back(it->cid);
 			total--;
 		}
 	}
-	return deals;
+	return deal_cid;
 }
 
 // add storage provider's enclave_public_key into storage_provider_list of deal_table
@@ -213,21 +212,23 @@ bool market::fill_deal(const string &enclave_public_key, const vector<cid_file> 
 		if (std::find(provider_list.begin(), provider_list.end(), enclave_public_key) != provider_list.end()) {
 			DEBUG("storage provider is already on the list");
 		} else {
-			// add current storage provider into list
+
+			// update state to 1 (filled) if storage_provider_list size is match with required
+			uint8_t deal_state = current_deal->state;
+			if (current_deal->storage_provider_list.size() + 1 == current_deal->storage_provider_required) {
+				DEBUG("change deal state to 1");
+				deal_state = 1;
+			}
+
+			// add new enclave_public_key into storage_provider_list
+			DEBUG("add enclave_public_key " + enclave_public_key + " into storage_provider_list");
 			provider_list.push_back(enclave_public_key);
-			// update deal table
+
+			// update deal
 			deal_table.modify(current_deal, [&](auto &deal) {
 				deal.storage_provider_list = provider_list;
+				deal.state = deal_state;
 			});
-			DEBUG("enclave_public_key: " + enclave_public_key);
-
-			// set state to 1 (filled) if storage_provider_list size is match with required
-			if (current_deal->storage_provider_list.size() + 1 == current_deal->storage_provider_required) {
-				deal_table.modify(current_deal, [&](auto &deal) {
-					deal.state = 1;
-				});
-			}
-			DEBUG("deal state: " + std::to_string(current_deal->state));
 		}
 	}
 
@@ -321,12 +322,10 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
 				DEBUG("reward_balance: " + std::to_string(reward_balance));
 
 				// if current_deal_reward larger than reward_balance, close deal
+				uint8_t deal_state = current_deal->state;
 				if (current_deal_reward >= reward_balance) {
 					// close deal
-					deal_table.modify(current_deal, [&](auto &deal) {
-						deal.state = 2;
-					});
-
+					deal_state = 2;
 					current_deal_reward = reward_balance;
 				}
 
@@ -337,6 +336,7 @@ bool market::claim_deal_reward(const string &enclave_public_key) {
 				// update reward balance
 				deal_table.modify(current_deal, [&](auto &deal) {
 					deal.reward_balance -= current_deal_reward;
+					deal.state = deal_state;
 				});
 			}
 		}

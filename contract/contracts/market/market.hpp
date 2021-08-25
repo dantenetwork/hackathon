@@ -21,8 +21,8 @@ namespace hackathon {
 struct deal {
   public:
 	string cid;                           // deal cid of IPFS network
-	uint8_t state = 0;                    // current deal state, 0 = deal opened, 1= filled, 2 = closed, 3 = invalid (storage provider reported file size is larger than size of deal) , default as 0
-	bool slashed = false;                 // is slashed, default as false
+	uint8_t state;                        // current deal state, 0 = deal opened, 1= filled, 2 = closed, 3 = invalid (storage provider reported file size is larger than size of deal) , default as 0
+	bool slashed;                         // is slashed, default as false
 	u128 size;                            // deal files size
 	u128 price;                           // deal price per block
 	u128 duration;                        // deal duration (blocks)
@@ -32,7 +32,6 @@ struct deal {
 	u128 reward_balance;                  // reward balance after storage provider claimed
 	vector<string> storage_provider_list; // storage provider list
 	string primary_key() const { return cid; }
-	uint8_t by_state() const { return state; }
 	Address by_sender() const { return sender; }
 
 	PLATON_SERIALIZE(deal, (cid)(state)(slashed)(size)(price)(duration)(sender)(storage_provider_required)(total_reward)(reward_balance)(storage_provider_list));
@@ -70,8 +69,6 @@ CONTRACT market : public Contract {
 	    "deal"_n, deal,
 	    IndexedBy<"cid"_n, IndexMemberFun<deal, string, &deal::primary_key,
 	                                      IndexType::UniqueIndex>>,
-	    IndexedBy<"state"_n, IndexMemberFun<deal, uint8_t, &deal::by_state,
-	                                        IndexType::NormalIndex>>,
 	    IndexedBy<"sender"_n, IndexMemberFun<deal, Address, &deal::by_sender,
 	                                         IndexType::NormalIndex>>>
 	    deal_table;

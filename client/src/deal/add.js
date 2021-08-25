@@ -64,8 +64,8 @@ module.exports = {
 
         // send transaction
         const ret = await marketContract.sendTransaction('marketContract', 'add_deal', config.get('Blockchain.privateKey'), dealInfo);
-        console.log(ret);
-        console.log(ret.logs);
+        // console.log(ret);
+        // console.log(ret.logs);
 
         // query deal info by cid
         dealStatus(cid);

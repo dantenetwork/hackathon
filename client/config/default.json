@@ -3,8 +3,8 @@
     "chainId": 210309,
     "nodeAddress": "http://192.168.1.64:6789",
     "privateKey": "0x34382ebae7d7c628e13f14b4314c9b0149db7bbbc06428ae89de9883ffc7c341",
-    "marketContractAddress": "lat176eqjq6jz5qevtjc7qcpu80xuayassc6h4q2px",
-    "verifyContractAddress": "lat105qv7nk23pwnh86703de86jm3y4s5t45wf59c5",
+    "marketContractAddress": "lat12x0vuvsjv5q79tfq6tz6rurtmadnlx2vmj3u3d",
+    "verifyContractAddress": "lat1mf7hfyxyxvheus6rrad2kxjhpe7rvvvgnn3g38",
     "tokenContractAddress": "lat1hzan4ed929nh9mnua7zht0erzrcxuj5q24a0gt"
   },
   "IPFS": {
