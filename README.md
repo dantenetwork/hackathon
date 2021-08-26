@@ -1,4 +1,4 @@
-# platon-hackathon
+# hackathon
 
 
 This repository is source code of minimum viable product of dante network.
