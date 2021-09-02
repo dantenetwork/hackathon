@@ -1,0 +1,25 @@
+{
+  "name": "storage-service",
+  "version": "0.1.0",
+  "description": "Data",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "mocha": "./node_modules/mocha/bin/mocha"
+  },
+  "author": "virgil",
+  "license": "ISC",
+  "dependencies": {
+    "web3": "github:PlatONnetwork/client-sdk-js#0.15.1-develop",
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.4",
+    "express": "^4.17.1",
+    "lru-cache": "^6.0.0",
+    "mini-ipfs": "^0.1.0",
+    "moment": "^2.24.0",
+    "node-fetch": "^2.6.0",
+    "q": "^1.5.1",
+    "request": "^2.88.2",
+    "rlp": "^2.2.6"
+  }
+}
