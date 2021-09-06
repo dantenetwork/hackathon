@@ -37,20 +37,29 @@ struct deal {
 	PLATON_SERIALIZE(deal, (cid)(state)(slashed)(size)(price)(duration)(sender)(storage_provider_required)(total_reward)(reward_balance)(storage_provider_list));
 };
 
-struct cid_file {
+struct stored_deal {
   public:
 	string cid; // deal cid
 	u128 size;  // file size of deal
-	PLATON_SERIALIZE(cid_file, (cid)(size));
+	PLATON_SERIALIZE(stored_deal, (cid)(size));
+};
+
+struct fresh_deal {
+  public:
+	string cid;                // deal cid
+	u128 size;                 // file size of deal
+	uint64_t filled_block_num; // block number when storage provider filled deal
+	PLATON_SERIALIZE(fresh_deal, (cid)(size)(filled_block_num));
 };
 
 struct storage_provider {
   public:
-	uint64_t last_proof_block_num;   // last storage proof that provider submitted
-	uint64_t last_claimed_block_num; // the block number that last deal reward claimed
-	vector<cid_file> deals;          // deals which provider stored
+	uint64_t last_proof_block_num;    // last storage proof when provider submitted
+	uint64_t last_claimed_block_num;  // block number when last deal reward claimed
+	vector<stored_deal> stored_deals; // deals that provider stored
+	vector<fresh_deal> fresh_deals;   // deals that provider just received
 
-	PLATON_SERIALIZE(storage_provider, (last_proof_block_num)(last_claimed_block_num)(deals));
+	PLATON_SERIALIZE(storage_provider, (last_proof_block_num)(last_claimed_block_num)(stored_deals)(fresh_deals));
 };
 
 CONTRACT market : public Contract {
@@ -169,7 +178,7 @@ CONTRACT market : public Contract {
    * @param enclave_public_key - SGX enclave public key
    * @param deals - deals which storage provider stored
    */
-	ACTION bool fill_deal(const string &enclave_public_key, const vector<cid_file> &deals);
+	ACTION bool fill_deal(const string &enclave_public_key, const vector<stored_deal> &deals);
 
 	/**
    * Storage provider update storage proof and ensure signature is verified by
@@ -177,7 +186,7 @@ CONTRACT market : public Contract {
    * @param enclave_public_key - SGX enclave public key
    * @param deals - deals which storage provider stored
    */
-	ACTION bool update_storage_proof(const string &enclave_public_key, const vector<cid_file> &deals);
+	ACTION bool update_storage_proof(const string &enclave_public_key, const vector<stored_deal> &deals);
 
 	/**
    * Get storage provider last proof
@@ -190,6 +199,14 @@ CONTRACT market : public Contract {
    * @param enclave_public_key - SGX enclave public key
    */
 	ACTION bool claim_deal_reward(const string &enclave_public_key);
+
+	/**
+   * handle one deal reward
+   * @param enclave_public_key - SGX enclave public key
+   * @param cid - deal cid
+   * @param reward_blocks - block number since last claimed
+   */
+	u128 each_deal_reward(const string &enclave_public_key, const string &cid, uint64_t reward_blocks);
 };
 
 PLATON_DISPATCH(

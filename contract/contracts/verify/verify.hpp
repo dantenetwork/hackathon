@@ -158,7 +158,7 @@ CONTRACT verify : public Contract {
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_signature - SGX signature
    */
-	bool is_registered(const string &enclave_public_key);
+	CONST bool is_registered(const string &enclave_public_key);
 
 	/**
    * Verify SGX signature

@@ -25,6 +25,7 @@ let gas;
   const marketContract = await deployMarketContract();
   const marketContractAddress = marketContract.options.address;
   console.log('market contract is deployed, contract address = ' + marketContractAddress);
+  console.log('----------------------------------------');
 
   // deploy verify contract
   const verifyContract = await deployVerifyContract();

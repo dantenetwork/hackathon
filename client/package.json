@@ -19,6 +19,6 @@
     "path": "^0.12.7",
     "stream-to-it": "^0.2.4",
     "streaming-iterables": "^6.0.0",
-    "web3": "github:PlatONnetwork/client-sdk-js#0.15.1-develop"
+    "web3": "github:PlatONnetwork/client-sdk-js#master"
   }
 }
