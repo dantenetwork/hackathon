@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "chai": "^4.3.4",
+    "config": "^3.3.6",
     "web3": "github:PlatONnetwork/client-sdk-js#master"
   }
 }

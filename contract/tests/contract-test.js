@@ -6,6 +6,7 @@ const fs = require('fs');
 const Web3 = require('web3');
 const web3 = new Web3('http://127.0.0.1:6789');
 const blockchain = require('./blockchain.js');
+const config = require('config');
 
 // test account address, lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex
 const testAccountPrivateKey = '0x34382ebae7d7c628e13f14b4314c9b0149db7bbbc06428ae89de9883ffc7c341';// private key, Testnet only
@@ -13,11 +14,11 @@ const testAccount = web3.platon.accounts.privateKeyToAccount(testAccountPrivateK
 
 // market contract
 let marketContract;
-let marketContractAddress = 'lat10y7qq9glp9qrqe6ry2jpxgvqdsr45dkpmc7935';
+let marketContractAddress = config.get("marketContractAddress");
 
 // verify contract
 let verifyContract;
-let verifyContractAddress = 'lat1qe32wksmna3zfkmfmdke4kz3zlyuhj0uh3jw89';
+let verifyContractAddress = config.get("verifyContractAddress");
 
 // token contract
 const tokenABI = [{ "anonymous": false, "input": [{ "name": "topic", "type": "FixedHash<20>" }, { "name": "arg1", "type": "uint128" }], "name": "Burn", "topic": 1, "type": "Event" }, { "constant": true, "input": [{ "name": "_owner", "type": "FixedHash<20>" }, { "name": "_spender", "type": "FixedHash<20>" }], "name": "allowance", "output": "uint128", "type": "Action" }, { "anonymous": false, "input": [{ "name": "topic1", "type": "FixedHash<20>" }, { "name": "topic2", "type": "FixedHash<20>" }, { "name": "arg1", "type": "uint128" }], "name": "Transfer", "topic": 2, "type": "Event" }, { "anonymous": false, "input": [{ "name": "topic1", "type": "FixedHash<20>" }, { "name": "topic2", "type": "FixedHash<20>" }, { "name": "arg1", "type": "uint128" }], "name": "Approval", "topic": 2, "type": "Event" }, { "constant": true, "input": [{ "name": "_owner", "type": "FixedHash<20>" }], "name": "balanceOf", "output": "uint128", "type": "Action" }, { "constant": false, "input": [{ "name": "_to", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "transfer", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_from", "type": "FixedHash<20>" }, { "name": "_to", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "transferFrom", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_spender", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "approve", "output": "bool", "type": "Action" }, { "anonymous": false, "input": [{ "name": "topic", "type": "FixedHash<20>" }, { "name": "arg1", "type": "uint128" }], "name": "Mint", "topic": 1, "type": "Event" }, { "constant": false, "input": [{ "name": "_name", "type": "string" }, { "name": "_symbol", "type": "string" }, { "name": "_decimals", "type": "uint8" }], "name": "init", "output": "void", "type": "Action" }, { "constant": false, "input": [{ "name": "_to", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "transfer", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_from", "type": "FixedHash<20>" }, { "name": "_to", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "transferFrom", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_spender", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "approve", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_account", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "mint", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_account", "type": "FixedHash<20>" }, { "name": "_value", "type": "uint128" }], "name": "burn", "output": "bool", "type": "Action" }, { "constant": false, "input": [{ "name": "_account", "type": "FixedHash<20>" }], "name": "setOwner", "output": "bool", "type": "Action" }, { "constant": true, "input": [{ "name": "_owner", "type": "FixedHash<20>" }, { "name": "_spender", "type": "FixedHash<20>" }], "name": "allowance", "output": "uint128", "type": "Action" }, { "constant": true, "input": [], "name": "getOwner", "output": "string", "type": "Action" }, { "constant": true, "input": [], "name": "getName", "output": "string", "type": "Action" }, { "constant": true, "input": [], "name": "getDecimals", "output": "uint8", "type": "Action" }, { "constant": true, "input": [], "name": "getSymbol", "output": "string", "type": "Action" }, { "constant": true, "input": [], "name": "getTotalSupply", "output": "uint128", "type": "Action" }];
@@ -129,7 +130,7 @@ describe("dante market&verify unit test", function () {
     }
   });
 
-  const cid = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzda";
+  const cid = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdm";
   const size = 100;
 
   it("market add_deal", async function () {
@@ -180,17 +181,9 @@ describe("dante market&verify unit test", function () {
       expect(parseInt(onchainDealByCid[9])).to.equal(totalPrice);
 
 
-      // query deal by sender
-      let onchainDealBySender = await blockchain.contractCall(marketContract, "get_deal_by_sender", [testAccount, 0]);
-      // console.log(onchainDealBySender);
-      assert.isArray(onchainDealBySender);
-      expect(cid).to.equal(onchainDealBySender[0]);
-
-      // query opened deal
-      let openedDeals = await blockchain.contractCall(marketContract, "get_opened_deal", [0]);
-      // console.log(openedDeals);
-      assert.isArray(openedDeals);
-      expect(cid).to.equal(openedDeals[0]);
+      onchainDealByCid = await blockchain.contractCall(marketContract, "get_deal_by_cid", [cid]);
+      console.log('deal info:');
+      console.log(onchainDealByCid);
 
       return;
       // expect contract DAT token increase totalPrice DAT
@@ -212,6 +205,7 @@ describe("dante market&verify unit test", function () {
     }
   });
 
+
   // fill deal
   it("verify fill_deal", async function () {
     // 发送交易
@@ -229,10 +223,10 @@ describe("dante market&verify unit test", function () {
       assert.isObject(ret);
 
       onchainDealByCid = await blockchain.contractCall(marketContract, "get_deal_by_cid", [cid]);
-      // console.log(onchainDealByCid);
+      console.log(onchainDealByCid);
 
       let onchainProof = await blockchain.contractCall(marketContract, "get_storage_provider_proof", [enclave_public_key]);
-      // console.log(onchainProof);
+      console.log(onchainProof);
 
     } catch (e) {
       console.log(e);
@@ -257,23 +251,17 @@ describe("dante market&verify unit test", function () {
       // console.log(ret);
       assert.isObject(ret);
 
-      // expect onchain info = test data
-      // console.log(onchainProof);
-      // expect(onchainProof[0]).to.equal(enclave_timestamp);// enclave_timestamp
-      // expect(onchainProof[1]).to.equal(enclave_plot_size);// enclave_plot_size
-      // expect(onchainProof[2]).to.equal(enclave_signature);// enclave_signature
-
       onchainDealByCid = await blockchain.contractCall(marketContract, "get_deal_by_cid", [cid]);
+      console.log('deal info:');
       console.log(onchainDealByCid);
 
       let onchainProof = await blockchain.contractCall(marketContract, "get_storage_provider_proof", [enclave_public_key]);
+      console.log('proof info:');
       console.log(onchainProof);
     } catch (e) {
       console.log(e);
     }
   });
-
-  return;
 
 
   // update miner
@@ -305,6 +293,39 @@ describe("dante market&verify unit test", function () {
       console.error(e);
     }
   });
+
+  it("verify submit_miner_info", async function () {
+    try {
+      this.timeout(0);
+      // test data
+      const name = "Hello World";
+      const peer_id = "10737418241111111111073741824111111111";
+      const country_code = "72";
+      const url = "https://google.com";
+
+      miner = [name, peer_id, country_code, url];
+
+      // send transaction
+      const ret = await blockchain.sendTransaction(verifyContract, "submit_miner_info", testAccountPrivateKey, miner);
+      // expect ret is object
+      assert.isObject(ret);
+
+      // quer miner info
+      let onchainMinerInfo = await blockchain.contractCall(verifyContract, "get_miner_info", [testAccount]);
+      // console.log(onchainMinerInfo);
+
+      // expect onchain info = test data
+      assert.isArray(onchainMinerInfo);
+      expect(onchainMinerInfo[0]).to.equal(testAccount);// testAccount
+      expect(onchainMinerInfo[1]).to.equal(name);// name
+      expect(onchainMinerInfo[2]).to.equal(peer_id);// peer_id
+      expect(onchainMinerInfo[3]).to.equal(country_code);// country_code
+      expect(onchainMinerInfo[4]).to.equal(url);// url
+    } catch (e) {
+      console.error(e);
+    }
+  });
+  return;
 
   // erase miner
   it("verify unregister_miner", async function () {
@@ -354,39 +375,6 @@ describe("dante market&verify unit test", function () {
       console.error(e);
     }
   });
-
-  it("verify submit_miner_info", async function () {
-    try {
-      this.timeout(0);
-      // test data
-      const name = "Hello World";
-      const peer_id = "10737418241111111111073741824111111111";
-      const country_code = "72";
-      const url = "https://google.com";
-
-      miner = [name, peer_id, country_code, url];
-
-      // send transaction
-      const ret = await blockchain.sendTransaction(verifyContract, "submit_miner_info", testAccountPrivateKey, miner);
-      // expect ret is object
-      assert.isObject(ret);
-
-      // quer miner info
-      let onchainMinerInfo = await blockchain.contractCall(verifyContract, "get_miner_info", [testAccount]);
-      // console.log(onchainMinerInfo);
-
-      // expect onchain info = test data
-      assert.isArray(onchainMinerInfo);
-      expect(onchainMinerInfo[0]).to.equal(testAccount);// testAccount
-      expect(onchainMinerInfo[1]).to.equal(name);// name
-      expect(onchainMinerInfo[2]).to.equal(peer_id);// peer_id
-      expect(onchainMinerInfo[3]).to.equal(country_code);// country_code
-      expect(onchainMinerInfo[4]).to.equal(url);// url
-    } catch (e) {
-      console.error(e);
-    }
-  });
-  return;
 
   it("market contract set owner & token contract", async function () {
     try {

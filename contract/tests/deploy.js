@@ -47,6 +47,11 @@ let gas;
   // get_market_contract
   address = await blockchain.contractCall(verifyContract, 'get_market_contract', []);
   console.log('marketContractAddress of verify contract: ' + address);
+
+  const contractAddressFile = './config/default.json';
+  const contractAddress = { "marketContractAddress": marketContractAddress, "verifyContractAddress": verifyContractAddress };
+  fs.writeFileSync(contractAddressFile, JSON.stringify(contractAddress));
+  console.log('contract address is updated.');
 })();
 
 
