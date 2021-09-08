@@ -40,17 +40,17 @@ string market::get_token_contract() {
   return token_contract.self().toString();
 }
 
-// Query verify contract
-string market::get_verify_contract() {
-  return verify_contract.self().toString();
-}
-
 // Change verify contract
 bool market::set_verify_contract(const Address& address) {
   platon_assert(platon::is_owner(), "Only owner can change verify contract");
   verify_contract.self() = address;
 
   return true;
+}
+
+// Query verify contract
+string market::get_verify_contract() {
+  return verify_contract.self().toString();
 }
 
 // ensure that current transaction is sent from verify contract
@@ -72,7 +72,7 @@ void market::add_deal(const string& cid,
                       const u128& price,
                       const u128& duration,
                       const uint8_t& storage_provider_required) {
-  // check cid is not exists
+  // check if cid is exists
   auto vect_iter = deal_table.find<"cid"_n>(cid);
   platon_assert(vect_iter == deal_table.cend(), "cid is already exists");
 
@@ -186,7 +186,7 @@ bool market::fill_deal(const string& enclave_public_key,
   require_miner_registered(enclave_public_key);
   uint64_t current_block_num = platon_block_number();
 
-  storage_provider provider;
+  storage_proof provider;
 
   vector<stored_deal>::const_iterator it;
   DEBUG("fill deal at " + std::to_string(current_block_num));
@@ -199,7 +199,7 @@ bool market::fill_deal(const string& enclave_public_key,
     // DEBUG("uploaded size: " + std::to_string(it->size));
     // DEBUG("deal size: " + std::to_string(current_deal->size));
 
-    // check cid is exists && deal state = 0
+    // check if cid is exists && deal state = 0
     if (current_deal == deal_table.cend() || current_deal->state != 0) {
       DEBUG("deal is not exists or deal is not opened");
       return false;
@@ -253,23 +253,23 @@ bool market::update_storage_proof(const string& enclave_public_key,
   // only verify contract allows call this function
   require_verify_contract_auth();
 
-  storage_provider provider;
+  storage_proof proof;
   uint64_t current_block_num = platon_block_number();
   DEBUG("update storage proof at " + std::to_string(current_block_num));
 
-  if (storage_provider_map.contains(enclave_public_key)) {
-    // storage provider info already exists
-    provider = storage_provider_map[enclave_public_key];
-    provider.last_proof_block_num = current_block_num;
-    provider.stored_deals = stored_deals;
-    storage_provider_map[enclave_public_key] = provider;
+  // check if storage proof info already exists
+  if (storage_proof_map.contains(enclave_public_key)) {
+    proof = storage_proof_map[enclave_public_key];
+    proof.last_proof_block_num = current_block_num;
+    proof.stored_deals = stored_deals;
+    storage_proof_map[enclave_public_key] = proof;
     market::claim_deal_reward(enclave_public_key);
   } else {
-    // add new storage provider info
-    provider.last_proof_block_num = current_block_num;
-    provider.last_claimed_block_num = current_block_num;
-    provider.stored_deals = stored_deals;
-    storage_provider_map.insert(enclave_public_key, provider);
+    // add new storage proof info
+    proof.last_proof_block_num = current_block_num;
+    proof.last_claimed_block_num = current_block_num;
+    proof.stored_deals = stored_deals;
+    storage_proof_map.insert(enclave_public_key, proof);
   }
 
   PLATON_EMIT_EVENT0(UpdateStorageProof, enclave_public_key);
@@ -280,22 +280,21 @@ bool market::update_storage_proof(const string& enclave_public_key,
  * get storage provider last proof
  * @param enclave_public_key - SGX enclave public key
  */
-storage_provider market::get_storage_provider_proof(
-    const string& enclave_public_key) {
-  return storage_provider_map[enclave_public_key];
+storage_proof market::get_storage_proof(const string& enclave_public_key) {
+  return storage_proof_map[enclave_public_key];
 }
 
 // claim deal reward
 bool market::claim_deal_reward(const string& enclave_public_key) {
-  // check enclave_public_key is exists
-  if (!storage_provider_map.contains(enclave_public_key)) {
+  // check if enclave_public_key is exists
+  if (!storage_proof_map.contains(enclave_public_key)) {
     return false;
   }
 
   require_miner_registered(enclave_public_key);
 
   // get target provider info
-  storage_provider provider = storage_provider_map[enclave_public_key];
+  storage_proof provider = storage_proof_map[enclave_public_key];
   vector<stored_deal> stored_deals = provider.stored_deals;
 
   // blocks gap between last_proof_block_num and last_claimed_block_num
@@ -345,7 +344,7 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
 
   // update last_claimed_block_num
   provider.last_claimed_block_num = platon_block_number();
-  storage_provider_map[enclave_public_key] = provider;
+  storage_proof_map[enclave_public_key] = provider;
 
   PLATON_EMIT_EVENT1(ClaimDealReward, platon_caller(), enclave_public_key);
   return true;
