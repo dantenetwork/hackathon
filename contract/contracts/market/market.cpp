@@ -177,16 +177,13 @@ vector<string> market::get_opened_deal(const uint8_t& skip) {
   return deal_cid;
 }
 
-// add storage provider's enclave_public_key into storage_provider_list of
-// deal_table
+// fill deal
 bool market::fill_deal(const string& enclave_public_key,
                        const vector<stored_deal>& deals) {
   // only verify contract allows call this function
   require_verify_contract_auth();
   require_miner_registered(enclave_public_key);
   uint64_t current_block_num = platon_block_number();
-
-  storage_proof provider;
 
   vector<stored_deal>::const_iterator it;
   DEBUG("fill deal at " + std::to_string(current_block_num));
@@ -323,7 +320,7 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
 
     // if cid exists in fresh_deal_map
     if (fresh_deal_map.contains(cid)) {
-      DEBUG("cid exists in fresh_deal_map, filled_blocks: " +
+      DEBUG("cid exists in fresh_deal_map, filled_block_num: " +
             std::to_string(fresh_deal_map[cid]));
       current_deal_reward_blocks =
           provider.last_proof_block_num - fresh_deal_map[cid];
