@@ -182,8 +182,8 @@ describe("dante market&verify unit test", function () {
 
 
       onchainDealByCid = await blockchain.contractCall(marketContract, "get_deal_by_cid", [cid]);
-      console.log('deal info:');
-      console.log(onchainDealByCid);
+      // console.log('deal info:');
+      // console.log(onchainDealByCid);
 
       return;
       // expect contract DAT token increase totalPrice DAT
@@ -223,10 +223,7 @@ describe("dante market&verify unit test", function () {
       assert.isObject(ret);
 
       onchainDealByCid = await blockchain.contractCall(marketContract, "get_deal_by_cid", [cid]);
-      console.log(onchainDealByCid);
-
-      let onchainProof = await blockchain.contractCall(marketContract, "get_storage_provider_proof", [enclave_public_key]);
-      console.log(onchainProof);
+      // console.log(onchainDealByCid);
 
     } catch (e) {
       console.log(e);

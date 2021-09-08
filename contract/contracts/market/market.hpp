@@ -50,25 +50,16 @@ struct stored_deal {
   PLATON_SERIALIZE(stored_deal, (cid)(size));
 };
 
-struct fresh_deal {
- public:
-  string cid;                 // deal cid
-  u128 size;                  // file size of deal
-  uint64_t filled_block_num;  // block number when storage provider filled deal
-  PLATON_SERIALIZE(fresh_deal, (cid)(size)(filled_block_num));
-};
-
 struct storage_provider {
  public:
   uint64_t last_proof_block_num;  // last storage proof when provider submitted
   uint64_t
       last_claimed_block_num;  // block number when last deal reward claimed
   vector<stored_deal> stored_deals;  // deals that provider stored
-  vector<fresh_deal> fresh_deals;    // deals that provider just received
 
-  PLATON_SERIALIZE(storage_provider,
-                   (last_proof_block_num)(last_claimed_block_num)(stored_deals)(
-                       fresh_deals));
+  PLATON_SERIALIZE(
+      storage_provider,
+      (last_proof_block_num)(last_claimed_block_num)(stored_deals));
 };
 
 CONTRACT market : public Contract {
@@ -92,8 +83,16 @@ CONTRACT market : public Contract {
       deal_table;
 
   // Storage provider map
-  platon::db::Map<"enclave_public_key"_n, string, storage_provider>
+  platon::db::Map<"storage_provider"_n, string, storage_provider>
       storage_provider_map;
+
+  /**
+   * If the storage provider fills a new deal, the storage proof record will be
+   * stored in the temporary fresh_deal_map, which will be deleted after the
+   * next reward is claimed
+   */
+  // <cid, filled_block_num>
+  platon::db::Map<"fresh_deal"_n, string, uint64_t> fresh_deal_map;
 
   // Market contract events
  public:
