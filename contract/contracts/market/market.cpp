@@ -187,14 +187,6 @@ bool market::fill_deal(const string& enclave_public_key,
   uint64_t current_block_num = platon_block_number();
 
   storage_provider provider;
-  if (storage_provider_map.contains(enclave_public_key)) {
-    provider = storage_provider_map[enclave_public_key];
-  } else {
-    // init storage provider
-    provider.last_claimed_block_num = current_block_num;
-    provider.last_proof_block_num = current_block_num;
-  }
-  auto fresh_deals = provider.fresh_deals;
 
   vector<stored_deal>::const_iterator it;
   DEBUG("fill deal at " + std::to_string(current_block_num));
@@ -246,17 +238,10 @@ bool market::fill_deal(const string& enclave_public_key,
         deal.state = deal_state;
       });
 
-      // add storage proof of deal into fresh_deals
-      fresh_deal deal;
-      deal.cid = it->cid;
-      deal.size = it->size;
-      deal.filled_block_num = platon_block_number();
-      DEBUG("fresh deal: " + deal.cid);
-      fresh_deals.push_back(deal);
+      // add storage proof of deal into fresh_deal
+      fresh_deal_map.insert(it->cid, platon_block_number());
     }
   }
-  provider.fresh_deals = fresh_deals;
-  storage_provider_map[enclave_public_key] = provider;
 
   PLATON_EMIT_EVENT0(FillDeal, enclave_public_key);
   return true;
@@ -282,7 +267,7 @@ bool market::update_storage_proof(const string& enclave_public_key,
   } else {
     // add new storage provider info
     provider.last_proof_block_num = current_block_num;
-    provider.last_claimed_block_num = platon_block_number();
+    provider.last_claimed_block_num = current_block_num;
     provider.stored_deals = stored_deals;
     storage_provider_map.insert(enclave_public_key, provider);
   }
@@ -334,29 +319,25 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
   for (stored_deal_iterator = stored_deals.begin();
        stored_deal_iterator != stored_deals.end(); ++stored_deal_iterator) {
     DEBUG("----- stored_deal_iterator -----");
-    u128 current_deal_reward =
-        market::each_deal_reward(enclave_public_key, stored_deal_iterator->cid,
-                                 stored_deal_reward_blocks);
-    total_reward += current_deal_reward;
-  }
+    auto cid = stored_deal_iterator->cid;
+    auto current_deal_reward_blocks = stored_deal_reward_blocks;
 
-  // check each fresh deal's price, calculate the reward
-  vector<fresh_deal> fresh_deals = provider.fresh_deals;
-  vector<fresh_deal>::iterator fresh_deal_iterator;
+    // if cid exists in fresh_deal_map
+    if (fresh_deal_map.contains(cid)) {
+      DEBUG("cid exists in fresh_deal_map, filled_blocks: " +
+            std::to_string(fresh_deal_map[cid]));
+      current_deal_reward_blocks =
+          provider.last_proof_block_num - fresh_deal_map[cid];
+      fresh_deal_map.erase(cid);
+    }
 
-  // handle each deal
-  for (fresh_deal_iterator = fresh_deals.begin();
-       fresh_deal_iterator != fresh_deals.end(); ++fresh_deal_iterator) {
-    // calculate reward blocks
-    DEBUG("----- fresh_deal_iterator -----");
-    uint64_t fresh_deal_reward_blocks =
-        platon_block_number() - fresh_deal_iterator->filled_block_num;
+    DEBUG("current_deal_reward_blocks: " +
+          std::to_string(current_deal_reward_blocks));
+
     u128 current_deal_reward = market::each_deal_reward(
-        enclave_public_key, fresh_deal_iterator->cid, fresh_deal_reward_blocks);
+        enclave_public_key, cid, current_deal_reward_blocks);
     total_reward += current_deal_reward;
   }
-  fresh_deals.clear();
-  provider.fresh_deals = fresh_deals;
 
   DEBUG("total_reward: " + std::to_string(total_reward));
 
