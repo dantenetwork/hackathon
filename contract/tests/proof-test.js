@@ -43,7 +43,7 @@ let verifyContractAddress = config.get("verifyContractAddress");
     const ret = await blockchain.sendTransaction(verifyContract, "submit_storage_proof", testAccountPrivateKey, proof);
     // console.log(ret);
 
-    let onchainProof = await blockchain.contractCall(marketContract, "get_storage_provider_proof", [enclave_public_key]);
+    let onchainProof = await blockchain.contractCall(marketContract, "get_storage_proof", [enclave_public_key]);
     console.log('proof info:');
     console.log(onchainProof);
 

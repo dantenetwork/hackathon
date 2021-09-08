@@ -50,7 +50,7 @@ struct stored_deal {
   PLATON_SERIALIZE(stored_deal, (cid)(size));
 };
 
-struct storage_provider {
+struct storage_proof {
  public:
   uint64_t last_proof_block_num;  // last storage proof when provider submitted
   uint64_t
@@ -58,22 +58,20 @@ struct storage_provider {
   vector<stored_deal> stored_deals;  // deals that provider stored
 
   PLATON_SERIALIZE(
-      storage_provider,
+      storage_proof,
       (last_proof_block_num)(last_claimed_block_num)(stored_deals));
 };
 
 CONTRACT market : public Contract {
  public:
-  // dante token contract
+  // DANTE token contract
   StorageType<"token_contract"_n, Address> token_contract;
 
-  // dante verify contract
+  // DANTE verify contract
   StorageType<"verify_contract"_n, Address> verify_contract;
 
-  // deal table
-  // UniqueIndex: cid
-  // NormalIndex: state
-  // NormalIndex: sender
+  // Deal table
+  // UniqueIndex: cid, NormalIndex: sender
   MultiIndex<
       "deal"_n, deal,
       IndexedBy<"cid"_n, IndexMemberFun<deal, string, &deal::primary_key,
@@ -82,9 +80,9 @@ CONTRACT market : public Contract {
                                            IndexType::NormalIndex>>>
       deal_table;
 
-  // Storage provider map
-  platon::db::Map<"storage_provider"_n, string, storage_provider>
-      storage_provider_map;
+  // Storage proof map of storage provider
+  // <enclave_public_key, storage_proof>
+  platon::db::Map<"storage_proof"_n, string, storage_proof> storage_proof_map;
 
   /**
    * If the storage provider fills a new deal, the storage proof record will be
@@ -207,8 +205,7 @@ CONTRACT market : public Contract {
    * Get storage provider last proof
    * @param enclave_public_key - SGX enclave public key
    */
-  CONST storage_provider get_storage_provider_proof(
-      const string& enclave_public_key);
+  CONST storage_proof get_storage_proof(const string& enclave_public_key);
 
   /**
    * Claim deal reward
@@ -231,5 +228,5 @@ PLATON_DISPATCH(
     (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(
         set_verify_contract)(get_verify_contract)(add_deal)(get_deal_by_cid)(
         get_deal_by_sender)(get_opened_deal)(fill_deal)(update_storage_proof)(
-        get_storage_provider_proof)(claim_deal_reward))
+        get_storage_proof)(claim_deal_reward))
 }  // namespace hackathon

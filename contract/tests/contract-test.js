@@ -252,7 +252,7 @@ describe("dante market&verify unit test", function () {
       console.log('deal info:');
       console.log(onchainDealByCid);
 
-      let onchainProof = await blockchain.contractCall(marketContract, "get_storage_provider_proof", [enclave_public_key]);
+      let onchainProof = await blockchain.contractCall(marketContract, "get_storage_proof", [enclave_public_key]);
       console.log('proof info:');
       console.log(onchainProof);
     } catch (e) {
