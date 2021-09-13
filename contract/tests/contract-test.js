@@ -79,7 +79,7 @@ describe('dante market&verify unit test', function () {
     try {
       this.timeout(0);
       // test data
-      const enclave_public_key = 'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5';
+      const enclave_public_key = 'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex';
       const reward_address = 'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex';
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
@@ -150,10 +150,10 @@ describe('dante market&verify unit test', function () {
       expect(onchainDealByCid[3]).to.equal(size + '');
       expect(onchainDealByCid[4]).to.equal(price + '');
       expect(onchainDealByCid[5]).to.equal(duration + '');
-      expect(onchainDealByCid[6]).to.equal(testAccount);
-      expect(onchainDealByCid[7]).to.equal(provider_required);
-      expect(parseInt(onchainDealByCid[8])).to.equal(totalPrice);
+      expect(onchainDealByCid[7]).to.equal(testAccount);
+      expect(onchainDealByCid[8]).to.equal(provider_required);
       expect(parseInt(onchainDealByCid[9])).to.equal(totalPrice);
+      expect(parseInt(onchainDealByCid[10])).to.equal(totalPrice);
 
 
       onchainDealByCid = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
