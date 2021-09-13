@@ -18,8 +18,8 @@ namespace hackathon {
 
 const u128 kTokenUnit = 1000000000000000000;  // DAT token decimal
 const u128 kLockedAmount =
-    Energon(100 * kTokenUnit)
-        .Get();  // 100 DAT,the DAT token that storage provider need locked
+    Energon(1000 * kTokenUnit)
+        .Get();  // 1000 DAT,the DAT token that storage provider need locked
 
 struct miner {
  public:
@@ -239,6 +239,12 @@ CONTRACT verify : public Contract {
    * @param sender - the account which submit miner info
    */
   CONST miner_info get_miner_info(const Address& sender);
+
+  /**
+   * Get miner reward address by enclave_public_key
+   * @param enclave_public_key - SGX enclave public key
+   */
+  Address get_miner_reward_address(const string& enclave_public_key);
 };
 
 PLATON_DISPATCH(
@@ -247,5 +253,5 @@ PLATON_DISPATCH(
         set_market_contract)(get_market_contract)(register_miner)(update_miner)(
         unregister_miner)(is_registered)(test)(fill_deal)(submit_storage_proof)(
         get_storage_proof)(get_miner)(get_total_capacity)(submit_miner_info)(
-        get_miner_info))
+        get_miner_info)(get_miner_reward_address))
 }  // namespace hackathon

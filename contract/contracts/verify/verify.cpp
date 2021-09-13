@@ -64,6 +64,32 @@ void verify::register_miner(const string& enclave_public_key,
   platon_assert(!miner_map.contains(enclave_public_key),
                 "the enclave_public_key is already exists");
 
+  // check sender DAT balance
+  Address sender = platon_caller();
+  auto balance_result = platon_call_with_return_value<u128>(
+      token_contract.self(), uint32_t(0), uint32_t(0), "balanceOf", sender);
+
+  // ensure cross contract called successfully
+  platon_assert(balance_result.second, "check balance failed");
+  // ensure sender balance is >= deal reward
+  u128 balance = balance_result.first;
+  platon_assert(balance >= kLockedAmount,
+                "sender balance is less than " + std::to_string(kLockedAmount));
+
+  // transfer register DAT from sender to verify contract
+  Address self = platon_address();
+  auto transfer_result = platon_call_with_return_value<bool>(
+      token_contract.self(), uint32_t(0), uint32_t(0), "transferFrom", sender,
+      self, kLockedAmount);
+  DEBUG("token contract: ", token_contract.self().toString());
+  DEBUG("sender: ", sender.toString());
+  DEBUG("receiver: ", self.toString());
+  DEBUG("kLockedAmount: ", std::to_string(kLockedAmount));
+
+  // ensure cross contract called successfully
+  platon_assert(transfer_result.first && transfer_result.second,
+                "register miner failed");
+
   // add miner
   miner info;
   info.enclave_public_key = enclave_public_key;
@@ -212,5 +238,12 @@ void verify::submit_miner_info(const string& name,
 // Get miner info by sender
 miner_info verify::get_miner_info(const Address& sender) {
   return miner_info_map[sender];
+}
+
+// Get miner reward address by enclave_public_key
+Address verify::get_miner_reward_address(const string& enclave_public_key) {
+  platon_assert(miner_map.contains(enclave_public_key),
+                "the enclave_public_key is not exists");
+  return miner_map[enclave_public_key].reward_address;
 }
 }  // namespace hackathon

@@ -80,19 +80,29 @@ void market::add_deal(const string& cid,
   u128 deal_price = hackathon::safeMul(price, duration);
   u128 total_reward = hackathon::safeMul(deal_price, storage_provider_required);
 
+  // check sender DAT balance
   Address sender = platon_caller();
-  // Address self = platon_address();
-  // platon_assert(platon_balance(sender).Get() >= deal_price, "sender balance
-  // is not enough");
+  auto balance_result = platon_call_with_return_value<u128>(
+      token_contract.self(), uint32_t(0), uint32_t(0), "balanceOf", sender);
 
-  // // transfer deal DAT from sender to contract
-  // auto result = platon_call_with_return_value<bool>(token_contract.self(),
-  // uint32_t(0), uint32_t(0), "transferFrom", sender, self, total_price);
-  // DEBUG(result.first);
-  // DEBUG(result.second);
+  // ensure cross contract called successfully
+  platon_assert(balance_result.first, "check balance failed");
+  // ensure sender balance is >= deal reward
+  platon_assert(balance_result.first >= total_reward,
+                sender.toString() + " balance is less than " +
+                    std::to_string(total_reward));
 
-  // platon_assert(result.first && result.second, "platon_call transferFrom
-  // failed");
+  // transfer DAT from sender to market contract
+  Address self = platon_address();
+  auto transfer_result = platon_call_with_return_value<bool>(
+      token_contract.self(), uint32_t(0), uint32_t(0), "transferFrom", sender,
+      self, total_reward);
+  DEBUG("sender: " + sender.toString());
+  DEBUG("contract address: " + self.toString());
+  DEBUG("total_reward: " + std::to_string(total_reward));
+
+  platon_assert(transfer_result.first && transfer_result.second,
+                "add deal failed");
 
   // add deal
   deal_table.emplace([&](auto& deal) {
@@ -191,14 +201,17 @@ bool market::fill_deal(const string& enclave_public_key,
   // iterate vector iterator
   for (it = deals.begin(); it != deals.end(); ++it) {
     auto current_deal = deal_table.find<"cid"_n>(it->cid);
-    // DEBUG("cid: " + current_deal->cid);
-    // DEBUG("state: " + std::to_string(current_deal->state));
-    // DEBUG("uploaded size: " + std::to_string(it->size));
-    // DEBUG("deal size: " + std::to_string(current_deal->size));
 
-    // check if cid is exists && deal state = 0
-    if (current_deal == deal_table.cend() || current_deal->state != 0) {
-      DEBUG("deal is not exists or deal is not opened");
+    // ensure deal cid is exists
+    if (current_deal == deal_table.cend()) {
+      DEBUG("fill deal failed, deal is not exists");
+      return false;
+    }
+
+    // ensure deal state = 0
+    if (current_deal->state != 0) {
+      DEBUG("fill deal failed, deal state is ",
+            std::to_string(current_deal->state));
       return false;
     }
 
@@ -252,7 +265,8 @@ bool market::update_storage_proof(const string& enclave_public_key,
 
   storage_proof proof;
   uint64_t current_block_num = platon_block_number();
-  DEBUG("update storage proof at " + std::to_string(current_block_num));
+  DEBUG(enclave_public_key + " update storage proof at " +
+        std::to_string(current_block_num));
 
   // check if storage proof info already exists
   if (storage_proof_map.contains(enclave_public_key)) {
@@ -320,7 +334,7 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
 
     // if cid exists in fresh_deal_map
     if (fresh_deal_map.contains(cid)) {
-      DEBUG("cid exists in fresh_deal_map, filled_block_num: " +
+      DEBUG("cid " + cid + " exists in fresh_deal_map, filled_block_num: " +
             std::to_string(fresh_deal_map[cid]));
       current_deal_reward_blocks =
           provider.last_proof_block_num - fresh_deal_map[cid];
@@ -335,16 +349,33 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
     total_reward += current_deal_reward;
   }
 
-  DEBUG("total_reward: " + std::to_string(total_reward));
+  if (total_reward > 0) {
+    DEBUG("total_reward: " + std::to_string(total_reward));
+    // query miner reward address
+    auto address_result = platon_call_with_return_value<Address>(
+        verify_contract.self(), uint32_t(0), uint32_t(0),
+        "get_miner_reward_address", enclave_public_key);
+    platon_assert(address_result.second, "get miner reward address failed");
 
-  // TODO transfer tokens to storage provider reward address
+    // transfer DAT from market contract to miner
+    Address reward_address = address_result.first;
+    Address self = platon_address();
+    auto transfer_result = platon_call_with_return_value<bool>(
+        token_contract.self(), uint32_t(0), uint32_t(0), "transfer",
+        reward_address, total_reward);
 
-  // update last_claimed_block_num
-  provider.last_claimed_block_num = platon_block_number();
-  storage_proof_map[enclave_public_key] = provider;
+    platon_assert(transfer_result.first && transfer_result.second,
+                  "transfer deal reward failed");
 
-  PLATON_EMIT_EVENT1(ClaimDealReward, platon_caller(), enclave_public_key);
-  return true;
+    // update last_claimed_block_num
+    provider.last_claimed_block_num = platon_block_number();
+    storage_proof_map[enclave_public_key] = provider;
+
+    PLATON_EMIT_EVENT1(ClaimDealReward, platon_caller(), enclave_public_key);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 u128 market::each_deal_reward(const string& enclave_public_key,
@@ -353,12 +384,20 @@ u128 market::each_deal_reward(const string& enclave_public_key,
   // Query deal info by cid
   DEBUG("cid: " + cid);
   auto current_deal = deal_table.find<"cid"_n>(cid);
+
+  // ensure deal cid is exists
+  if (current_deal == deal_table.cend()) {
+    DEBUG("claim reward failed, deal " + cid + " is not exists");
+    return 0;
+  }
+
   auto state = current_deal->state;
   DEBUG("state: " + std::to_string(state));
   u128 current_deal_reward = 0;
 
   // check current deal status, 0 = deal opened, 1= filled
   if (state > 1) {
+    DEBUG("claim reward failed, deal state is " + std::to_string(state));
     return 0;
   }
 
@@ -388,6 +427,7 @@ u128 market::each_deal_reward(const string& enclave_public_key,
     DEBUG("current_deal_reward: " + std::to_string(current_deal_reward));
     return current_deal_reward;
   } else {
+    DEBUG("claim reward failed, enclave_public_key is not in provider_list");
     return 0;
   }
 }

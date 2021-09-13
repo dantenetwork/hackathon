@@ -5,7 +5,7 @@
     "privateKey": "0x34382ebae7d7c628e13f14b4314c9b0149db7bbbc06428ae89de9883ffc7c341",
     "marketContractAddress": "lat1nc48ufv43z3kh50084ktwpgku0lgy7ala3t7fp",
     "verifyContractAddress": "lat1f6e0da2hmhhdm4kunlxnqdrvgusvuagp788wks",
-    "tokenContractAddress": "lat1hzan4ed929nh9mnua7zht0erzrcxuj5q24a0gt"
+    "tokenContractAddress": "lat143nf803rkuk0j6p9204rgwkj6tv7u72a5jz7s0"
   },
   "IPFS": {
     "clientAddress": "http://47.241.69.26:5001"
