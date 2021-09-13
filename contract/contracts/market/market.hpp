@@ -28,7 +28,8 @@ struct deal {
   u128 size;      // deal files size
   u128 price;     // deal price per block
   u128 duration;  // deal duration (blocks)
-  Address sender;  // deal sender
+  uint64_t closed_block_num;  // the block number that deal will closed
+  Address sender;             // deal sender
   uint8_t
       storage_provider_required;  // the amount of storage providers required
   u128 total_reward;              // deal total rewards
@@ -38,9 +39,9 @@ struct deal {
   Address by_sender() const { return sender; }
 
   PLATON_SERIALIZE(deal,
-                   (cid)(state)(slashed)(size)(price)(duration)(sender)(
-                       storage_provider_required)(total_reward)(reward_balance)(
-                       storage_provider_list));
+                   (cid)(state)(slashed)(size)(price)(duration)(
+                       closed_block_num)(sender)(storage_provider_required)(
+                       total_reward)(reward_balance)(storage_provider_list));
 };
 
 struct stored_deal {

@@ -112,6 +112,7 @@ void market::add_deal(const string& cid,
     deal.size = size;
     deal.price = price;
     deal.duration = duration;
+    deal.closed_block_num = platon_block_number() + duration;
     deal.sender = sender;
     deal.storage_provider_required = storage_provider_required;
     deal.total_reward = total_reward;
@@ -132,6 +133,7 @@ deal market::get_deal_by_cid(const string& cid) {
     ret.size = current_deal->size;
     ret.price = current_deal->price;
     ret.duration = current_deal->duration;
+    ret.closed_block_num = current_deal->closed_block_num;
     ret.sender = current_deal->sender;
     ret.storage_provider_required = current_deal->storage_provider_required;
     ret.total_reward = current_deal->total_reward;
