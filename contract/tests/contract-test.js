@@ -209,7 +209,6 @@ describe('dante market&verify unit test', function () {
 
       const ret = await blockchain.sendTransaction(verifyContract, 'fill_deal', testAccountPrivateKey, param);
       // console.log(ret);
-      assert.isObject(ret);
 
       onchainDealByCid = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
       // console.log(onchainDealByCid);
@@ -226,23 +225,26 @@ describe('dante market&verify unit test', function () {
     try {
       this.timeout(0);
       const enclave_timestamp = new Date().getTime();
-      const enclave_plot_size = 1073741824;
+      const enclave_plot_size = 1000000;
       const enclave_stored_files = [[cid, size]];
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
       const param = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files, enclave_signature];
 
-      const ret = await blockchain.sendTransaction(verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
-      // console.log(ret);
-      assert.isObject(ret);
+      await blockchain.sendTransaction(verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
 
-      onchainDealByCid = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
+      let ret = await blockchain.contractCall(verifyContract, 'get_total_capacity');
+      console.log('total capacity:');
+      console.log(ret);
+      expect(ret).to.equal(enclave_plot_size+'');
+
+      ret = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
       console.log('deal info:');
-      console.log(onchainDealByCid);
+      console.log(ret);
 
-      let onchainProof = await blockchain.contractCall(marketContract, 'get_storage_proof', [enclave_public_key]);
+      ret = await blockchain.contractCall(marketContract, 'get_storage_proof', [enclave_public_key]);
       console.log('proof info:');
-      console.log(onchainProof);
+      console.log(ret);
     } catch (e) {
       console.log(e);
     }
@@ -255,22 +257,26 @@ describe('dante market&verify unit test', function () {
       this.timeout(0);
       console.log('--------------------------- update storage proof again ---------------------------');
       const enclave_timestamp = new Date().getTime();
-      const enclave_plot_size = 1073741824;
+      const enclave_plot_size = 20000000;
       const enclave_stored_files = [[cid, size]];
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
       const param = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files, enclave_signature];
 
-      const ret = await blockchain.sendTransaction(verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
-      // console.log(ret);
+      await blockchain.sendTransaction(verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
 
-      onchainDealByCid = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
+      let ret = await blockchain.contractCall(verifyContract, 'get_total_capacity');
+      console.log('total capacity:');
+      console.log(ret);
+      expect(ret).to.equal(enclave_plot_size+'');
+
+      ret = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
       console.log('deal info:');
-      console.log(onchainDealByCid);
+      console.log(ret);
 
-      let onchainProof = await blockchain.contractCall(marketContract, 'get_storage_proof', [enclave_public_key]);
+      ret = await blockchain.contractCall(marketContract, 'get_storage_proof', [enclave_public_key]);
       console.log('proof info:');
-      console.log(onchainProof);
+      console.log(ret);
     } catch (e) {
       console.log(e);
     }

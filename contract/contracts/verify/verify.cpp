@@ -229,12 +229,19 @@ void verify::update_storage_proof(const string& enclave_public_key,
 
   // update storage provider proof
   storage_proof proof;
-  // ensure timestamp is larger than previous timestamp
+
+  // previous storage_proof exists
   if (storage_proof_map.contains(enclave_public_key)) {
-    storage_proof proof = storage_proof_map[enclave_public_key];
+    proof = storage_proof_map[enclave_public_key];
+    // ensure timestamp is larger than previous timestamp
     platon_assert(proof.enclave_timestamp < enclave_timestamp,
                   "Timestamp is smaller than previous timestamp of proof");
+
+    total_capacity.self() -= proof.enclave_plot_size;
   }
+
+  total_capacity.self() += enclave_plot_size;
+
   proof.enclave_timestamp = enclave_timestamp;
   proof.enclave_plot_size = enclave_plot_size;
   proof.enclave_signature = enclave_signature;
