@@ -113,8 +113,21 @@ describe('dante market&verify unit test', function () {
       console.error(e);
     }
   });
-  
 
+  it('verify verify_signature', async function () {
+    try {
+      this.timeout(0);
+
+      const hashed_value = '0xa1de988600a42c4b4ab089b619297c17d53cffae5d5120d82d8a92d0bb3b78f2';
+      const enclave_signature = '0xf28b8fde3ea610e59590da237b9e99871390fd458baae8d30e2da070ac9850f70cb89a8fb817d73a3709b375c3aee82a5b64fae5743cbd95feff1bb6965f040b00';
+
+      const param = [enclave_public_key,hashed_value,enclave_signature];
+      await blockchain.sendTransaction(verifyContract, 'verify_signature', testAccountPrivateKey, param);
+    } catch (e) {
+      console.log(e);
+    }
+   });
+  
   it('market add_deal', async function () {
     try {
       this.timeout(0);
@@ -203,9 +216,10 @@ describe('dante market&verify unit test', function () {
       this.timeout(0);
       const enclave_timestamp = new Date().getTime();
       const enclave_stored_files = [[cid, size]];
+      const hashed_value = '';
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
-      const param = [enclave_public_key, enclave_timestamp, enclave_stored_files, enclave_signature];
+      const param = [enclave_public_key, enclave_timestamp, enclave_stored_files,hashed_value, enclave_signature];
 
       const ret = await blockchain.sendTransaction(verifyContract, 'fill_deal', testAccountPrivateKey, param);
       // console.log(ret);
@@ -227,9 +241,10 @@ describe('dante market&verify unit test', function () {
       const enclave_timestamp = new Date().getTime();
       const enclave_plot_size = 1000000;
       const enclave_stored_files = [[cid, size]];
+      const hashed_value = '';
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
-      const param = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files, enclave_signature];
+      const param = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files,hashed_value, enclave_signature];
 
       await blockchain.sendTransaction(verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
 
@@ -259,9 +274,10 @@ describe('dante market&verify unit test', function () {
       const enclave_timestamp = new Date().getTime();
       const enclave_plot_size = 20000000;
       const enclave_stored_files = [[cid, size]];
+      const hashed_value = '';
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
-      const param = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files, enclave_signature];
+      const param = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files,hashed_value, enclave_signature];
 
       await blockchain.sendTransaction(verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
 
@@ -287,9 +303,10 @@ describe('dante market&verify unit test', function () {
     // 发送交易
     try {
       this.timeout(0);
+      const hashed_value = '';
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
-      const param = [enclave_public_key, cid, enclave_signature];
+      const param = [enclave_public_key, cid,hashed_value, enclave_signature];
 
       const ret = await blockchain.sendTransaction(verifyContract, 'withdraw_deal', testAccountPrivateKey, param);
       // console.log(ret);

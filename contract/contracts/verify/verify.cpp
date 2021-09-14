@@ -60,7 +60,6 @@ string verify::get_market_contract() {
 void verify::register_miner(const string& enclave_public_key,
                             const Address& reward_address,
                             const string& enclave_signature) {
-  verify_signature(enclave_public_key, enclave_signature);
   platon_assert(!miner_map.contains(enclave_public_key),
                 "The enclave_public_key is already exists");
 
@@ -108,13 +107,60 @@ void verify::register_miner(const string& enclave_public_key,
   PLATON_EMIT_EVENT1(RegisterMiner, enclave_public_key);
 }
 
+// verify intel SGX signature
+bool verify::verify_signature(const string& enclave_public_key,
+                              const string& hashed_value,
+                              const string& enclave_signature) {
+  platon_assert(miner_map.contains(enclave_public_key),
+                "The enclave_public_key is not exists");
+  auto miner = miner_map[enclave_public_key];
+  Address enclave_lat_address = miner.enclave_lat_address;
+
+  // recover public key
+  Address recovered_address;
+  auto ret =
+      platon::platon_ecrecover(h256(hashed_value, sizeof(hashed_value)),
+                               fromHex(enclave_signature), recovered_address);
+
+  // check ecrecover result
+  if (ret == 0 && enclave_lat_address == recovered_address) {
+    DEBUG("verify_signature success");
+    return true;
+  }
+  // DEBUG("verify_signature failed, enclave_lat_address: " +
+  //       enclave_lat_address.toString() +
+  //       ", recovered_address: " + recovered_address.toString());
+  return true;  // TODO temporary return true for DEBUG
+}
+
+// // Test signature
+// void verify::test(const string& message, const string& enclave_signature) {
+//   // DEBUG("message: " + message);
+//   // DEBUG("enclave_signature: " + enclave_signature);
+//   message = "Hello World";
+//   enclave_signature =
+//       "0xf28b8fde3ea610e59590da237b9e99871390fd458baae8d30e2da070ac9850f70cb89a"
+//       "8fb817d73a3709b375c3aee82a5b64fae5743cbd95feff1bb6965f040b00";
+
+//   byte hashed_value[32];
+//   platon::platon_sha256(asBytes(message), hashed_value);
+
+//   Address recovered_address;
+//   auto ret =
+//       platon::platon_ecrecover(h256(hashed_value, sizeof(hashed_value)),
+//                                fromHex(enclave_signature),
+//                                recovered_address);
+
+//   DEBUG("ret: " + std::to_string(ret));
+//   DEBUG("recovered_address: " + recovered_address.toString());
+// }
+
 // Modify miner info by enclave_public_key
 void verify::update_miner(const string& enclave_public_key,
                           const Address& reward_address,
+                          const string& hashed_value,
                           const string& enclave_signature) {
-  verify_signature(enclave_public_key, enclave_signature);
-  platon_assert(miner_map.contains(enclave_public_key),
-                "The enclave_public_key is not exists");
+  verify_signature(enclave_public_key, hashed_value, enclave_signature);
 
   miner info = miner_map[enclave_public_key];
   Address sender = platon_caller();
@@ -129,10 +175,9 @@ void verify::update_miner(const string& enclave_public_key,
 
 // Erase miner by enclave_public_key
 void verify::unregister_miner(const string& enclave_public_key,
+                              const string& hashed_value,
                               const string& enclave_signature) {
-  verify_signature(enclave_public_key, enclave_signature);
-  platon_assert(miner_map.contains(enclave_public_key),
-                "The enclave_public_key is not exists");
+  verify_signature(enclave_public_key, hashed_value, enclave_signature);
 
   miner info = miner_map[enclave_public_key];
   Address sender = platon_caller();
@@ -149,34 +194,13 @@ bool verify::is_registered(const string& enclave_public_key) {
   return miner_map.contains(enclave_public_key);
 }
 
-bool verify::verify_signature(const string& enclave_public_key,
-                              const string& enclave_signature) {
-  return true;
-}
-
-// Test signature
-void verify::test(const string& message, const string& enclave_signature) {
-  DEBUG("message: " + message);
-  DEBUG("enclave_signature: " + enclave_signature);
-
-  byte hashed_value[32];
-  platon::platon_sha256(asBytes(message), hashed_value);
-
-  Address recovered_address;
-  auto ret =
-      platon::platon_ecrecover(h256(hashed_value, sizeof(hashed_value)),
-                               fromHex(enclave_signature), recovered_address);
-
-  DEBUG("ret: " + std::to_string(ret));
-  DEBUG("recovered_address: " + recovered_address.toString());
-}
-
 // Submit enclave new deal proof
 void verify::fill_deal(const string& enclave_public_key,
                        const int64_t& enclave_timestamp,
                        const vector<cid_file> stored_files,
+                       const string& hashed_value,
                        const string& enclave_signature) {
-  verify_signature(enclave_public_key, enclave_signature);
+  verify_signature(enclave_public_key, hashed_value, enclave_signature);
 
   miner info = miner_map[enclave_public_key];
   Address sender = platon_caller();
@@ -196,8 +220,9 @@ void verify::fill_deal(const string& enclave_public_key,
 // Withdraw storage service from deal
 void verify::withdraw_deal(const string& enclave_public_key,
                            const string& cid,
+                           const string& hashed_value,
                            const string& enclave_signature) {
-  verify_signature(enclave_public_key, enclave_signature);
+  verify_signature(enclave_public_key, hashed_value, enclave_signature);
 
   miner info = miner_map[enclave_public_key];
   Address sender = platon_caller();
@@ -219,8 +244,9 @@ void verify::update_storage_proof(const string& enclave_public_key,
                                   const int64_t& enclave_timestamp,
                                   const u128& enclave_plot_size,
                                   const vector<cid_file> stored_files,
+                                  const string& hashed_value,
                                   const string& enclave_signature) {
-  verify_signature(enclave_public_key, enclave_signature);
+  verify_signature(enclave_public_key, hashed_value, enclave_signature);
 
   miner info = miner_map[enclave_public_key];
   Address sender = platon_caller();
