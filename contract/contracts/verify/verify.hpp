@@ -154,14 +154,24 @@ CONTRACT verify : public Contract {
                              const string& enclave_signature);
 
   /**
+   * Verify SGX signature
+   * @param enclave_public_key - SGX enclave_public_key
+   * @param hashed_value - hashed value of original data
+   * @param enclave_signature - SGX signature
+   */
+  ACTION bool verify_signature(const string& message,
+                               const string& hashed_value,
+                               const string& enclave_signature);
+
+  /**
    * Update miner by enclave_public_key & enclave_signature
    * @param enclave_public_key - SGX enclave public key
    * @param reward_address - miner address which receive rewards
    * @param enclave_signature - SGX signature
    */
-  ACTION void update_miner(const string& enclave_public_key,
-                           const Address& reward_address,
-                           const string& enclave_signature);
+  ACTION void update_miner(
+      const string& enclave_public_key, const Address& reward_address,
+      const string& hashed_value, const string& enclave_signature);
 
   /**
    * Unregister miner by enclave_public_key & enclave_signature
@@ -169,6 +179,7 @@ CONTRACT verify : public Contract {
    * @param enclave_signature - SGX signature
    */
   ACTION void unregister_miner(const string& enclave_public_key,
+                               const string& hashed_value,
                                const string& enclave_signature);
 
   /**
@@ -179,16 +190,6 @@ CONTRACT verify : public Contract {
   CONST bool is_registered(const string& enclave_public_key);
 
   /**
-   * Verify SGX signature
-   * @param message - origin message of signature
-   * @param enclave_signature - SGX signature
-   */
-  bool verify_signature(const string& message, const string& enclave_signature);
-
-  // Test signature
-  ACTION void test(const string& message, const string& enclave_signature);
-
-  /**
    * Submit enclave new deal proof to fill deal
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
@@ -197,7 +198,8 @@ CONTRACT verify : public Contract {
    */
   ACTION void fill_deal(
       const string& enclave_public_key, const int64_t& enclave_timestamp,
-      const vector<cid_file> stored_files, const string& enclave_signature);
+      const vector<cid_file> stored_files, const string& hashed_value,
+      const string& enclave_signature);
 
   /**
    * Withdraw storage service from deal
@@ -205,6 +207,7 @@ CONTRACT verify : public Contract {
    * @param enclave_signature - SGX signature
    */
   ACTION void withdraw_deal(const string& enclave_public_key, const string& cid,
+                            const string& hashed_value,
                             const string& enclave_signature);
 
   /**
@@ -218,7 +221,7 @@ CONTRACT verify : public Contract {
   ACTION void update_storage_proof(
       const string& enclave_public_key, const int64_t& enclave_timestamp,
       const u128& enclave_plot_size, const vector<cid_file> stored_files,
-      const string& enclave_signature);
+      const string& hashed_value, const string& enclave_signature);
 
   /**
    * Query last enclave proof
@@ -264,7 +267,8 @@ PLATON_DISPATCH(
     verify,
     (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(
         set_market_contract)(get_market_contract)(register_miner)(update_miner)(
-        unregister_miner)(is_registered)(test)(fill_deal)(withdraw_deal)(
-        update_storage_proof)(get_storage_proof)(get_miner)(get_total_capacity)(
-        submit_miner_info)(get_miner_info)(get_miner_reward_address))
+        unregister_miner)(is_registered)(verify_signature)(fill_deal)(
+        withdraw_deal)(update_storage_proof)(get_storage_proof)(get_miner)(
+        get_total_capacity)(submit_miner_info)(get_miner_info)(
+        get_miner_reward_address))
 }  // namespace hackathon
