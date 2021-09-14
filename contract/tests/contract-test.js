@@ -27,6 +27,10 @@ const tempTokenContractAddress = 'lat1kutjyplvt8dccag9jvy92q7cupg9mkzg3v3wsx';
 const ONE_TOKEN = '1000000000000000000';
 const THOUSAND_TOKEN = '1000000000000000000000';
 
+const enclave_public_key = '0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8';
+const cid = 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdb';
+const size = 100;
+
 // test case 
 describe('dante market&verify unit test', function () {
   before(async function () {
@@ -79,7 +83,6 @@ describe('dante market&verify unit test', function () {
     try {
       this.timeout(0);
       // test data
-      const enclave_public_key = 'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex';
       const reward_address = 'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex';
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
@@ -99,21 +102,18 @@ describe('dante market&verify unit test', function () {
 
       // quer miner info
       onchainMiner = await blockchain.contractCall(verifyContract, 'get_miner', [enclave_public_key]);
-      // console.log(onchainMiner);
+      console.log(onchainMiner);
 
       // expect onchain info = test data
       assert.isArray(onchainMiner);
       expect(onchainMiner[0]).to.equal(enclave_public_key);// enclave_public_key
-      expect(onchainMiner[1]).to.equal(reward_address);// reward_address
-      expect(onchainMiner[2]).to.equal(testAccount);// testAccount
+      expect(onchainMiner[2]).to.equal(reward_address);// reward_address
+      expect(onchainMiner[3]).to.equal(testAccount);// testAccount
     } catch (e) {
       console.error(e);
     }
   });
   
-
-  const cid = 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdm';
-  const size = 100;
 
   it('market add_deal', async function () {
     try {
@@ -163,7 +163,37 @@ describe('dante market&verify unit test', function () {
       console.error(e);
     }
   });
-  
+
+  // renewal deal
+  it('verify renewal_deal', async function () {
+    try {
+      this.timeout(0);
+      // test data
+      const duration = 500;
+      dealInfo = [cid, duration];
+
+      // send transaction
+      const ret = await blockchain.sendTransaction(marketContract, 'renewal_deal', testAccountPrivateKey, dealInfo);
+      // expect ret is obeject
+      // assert.isObject(ret);
+
+      // quer deal info by cid
+      onchainDealByCid = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
+      // console.log('deal info:');
+      // console.log(onchainDealByCid);
+
+      // expect onchain info = test data
+      assert.isArray(onchainDealByCid);
+      expect(onchainDealByCid[0]).to.equal(cid);
+      expect(onchainDealByCid[1]).to.equal(0);
+      expect(onchainDealByCid[5]).to.equal(duration*2 + '');
+      expect(onchainDealByCid[7]).to.equal(testAccount);
+      expect(onchainDealByCid[9]).to.equal('20000000000000000000');
+      expect(onchainDealByCid[10]).to.equal('20000000000000000000');
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
 
   // fill deal
@@ -171,14 +201,13 @@ describe('dante market&verify unit test', function () {
     // 发送交易
     try {
       this.timeout(0);
-      const enclave_public_key = 'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex';
-      const enclave_timestamp = '1626421278671';
+      const enclave_timestamp = new Date().getTime();
       const enclave_stored_files = [[cid, size]];
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
-      const proof = [enclave_public_key, enclave_timestamp, enclave_stored_files, enclave_signature];
+      const param = [enclave_public_key, enclave_timestamp, enclave_stored_files, enclave_signature];
 
-      const ret = await blockchain.sendTransaction(verifyContract, 'fill_deal', testAccountPrivateKey, proof);
+      const ret = await blockchain.sendTransaction(verifyContract, 'fill_deal', testAccountPrivateKey, param);
       // console.log(ret);
       assert.isObject(ret);
 
@@ -191,20 +220,19 @@ describe('dante market&verify unit test', function () {
   });
 
 
-  // submit storage proof
-  it('verify submit_storage_proof', async function () {
+  // update storage proof
+  it('verify update_storage_proof', async function () {
     // 发送交易
     try {
       this.timeout(0);
-      const enclave_public_key = 'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex';
-      const enclave_timestamp = '1626421278671';
-      const enclave_plot_size = '1073741824';
+      const enclave_timestamp = new Date().getTime();
+      const enclave_plot_size = 1073741824;
       const enclave_stored_files = [[cid, size]];
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
-      const proof = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files, enclave_signature];
+      const param = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files, enclave_signature];
 
-      const ret = await blockchain.sendTransaction(verifyContract, 'submit_storage_proof', testAccountPrivateKey, proof);
+      const ret = await blockchain.sendTransaction(verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
       // console.log(ret);
       assert.isObject(ret);
 
@@ -220,13 +248,60 @@ describe('dante market&verify unit test', function () {
     }
   });
 
+  // update storage proof
+  it('verify update_storage_proof', async function () {
+    // 发送交易
+    try {
+      this.timeout(0);
+      console.log('--------------------------- update storage proof again ---------------------------');
+      const enclave_timestamp = new Date().getTime();
+      const enclave_plot_size = 1073741824;
+      const enclave_stored_files = [[cid, size]];
+      const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
+      const param = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files, enclave_signature];
+
+      const ret = await blockchain.sendTransaction(verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
+      // console.log(ret);
+
+      onchainDealByCid = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
+      console.log('deal info:');
+      console.log(onchainDealByCid);
+
+      let onchainProof = await blockchain.contractCall(marketContract, 'get_storage_proof', [enclave_public_key]);
+      console.log('proof info:');
+      console.log(onchainProof);
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  // withdraw deal
+  it('verify withdraw_deal', async function () {
+    // 发送交易
+    try {
+      this.timeout(0);
+      const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
+
+      const param = [enclave_public_key, cid, enclave_signature];
+
+      const ret = await blockchain.sendTransaction(verifyContract, 'withdraw_deal', testAccountPrivateKey, param);
+      // console.log(ret);
+
+      onchainDealByCid = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
+      console.log('deal info:');
+      console.log(onchainDealByCid);
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  return;
   // update miner
   it('verify update_miner', async function () {
     try {
       this.timeout(0);
       // test data
-      const enclave_public_key = 'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex';
       const reward_address = 'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex';
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
@@ -282,7 +357,7 @@ describe('dante market&verify unit test', function () {
       console.error(e);
     }
   });
-  return;
+  
 
   // erase miner
   it('verify unregister_miner', async function () {
@@ -296,7 +371,6 @@ describe('dante market&verify unit test', function () {
       // console.log(minerBalance);
       // console.log(contractBalance);
 
-      const enclave_public_key = 'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex';
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
       // send transaction
