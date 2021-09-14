@@ -24,11 +24,15 @@ const u128 kLockedAmount =
 struct miner {
  public:
   string enclave_public_key;  // SGX enclave public key
-  Address reward_address;     // miner address which receive rewards
-  Address sender;             // miner address which send transaction
+  Address
+      enclave_lat_address;  // convert enclave public key to lat format address
+  Address reward_address;   // miner address which receive rewards
+  Address sender;           // miner address which send transaction
   string primary_key() const { return enclave_public_key; }
 
-  PLATON_SERIALIZE(miner, (enclave_public_key)(reward_address)(sender))
+  PLATON_SERIALIZE(
+      miner,
+      (enclave_public_key)(enclave_lat_address)(reward_address)(sender))
 };
 
 /**
@@ -60,9 +64,9 @@ struct cid_file {
 
 struct storage_proof {
  public:
-  string enclave_timestamp;  // SGX enclave timestamp
-  u128 enclave_plot_size;    // SGX enclave committed plot size
-  string enclave_signature;  // SGX enclave signature
+  int64_t enclave_timestamp;  // SGX enclave timestamp
+  u128 enclave_plot_size;     // SGX enclave committed plot size
+  string enclave_signature;   // SGX enclave signature
 
   PLATON_SERIALIZE(storage_proof,
                    (enclave_timestamp)(enclave_plot_size)(enclave_signature))
@@ -94,6 +98,7 @@ CONTRACT verify : public Contract {
   PLATON_EVENT0(UpdateMiner, string);
   PLATON_EVENT0(UnregisterMiner, string);
   PLATON_EVENT0(FillDeal, string);
+  PLATON_EVENT0(WithdrawDeal, string);
   PLATON_EVENT0(SubmitStorageProof, string);
   PLATON_EVENT0(SubmitMinerInfo, Address);
 
@@ -178,7 +183,7 @@ CONTRACT verify : public Contract {
    * @param message - origin message of signature
    * @param enclave_signature - SGX signature
    */
-  bool require_auth(const string& message, const string& enclave_signature);
+  bool verify_signature(const string& message, const string& enclave_signature);
 
   // Test signature
   ACTION void test(const string& message, const string& enclave_signature);
@@ -191,19 +196,27 @@ CONTRACT verify : public Contract {
    * @param enclave_signature - SGX signature
    */
   ACTION void fill_deal(
-      const string& enclave_public_key, const string& enclave_timestamp,
+      const string& enclave_public_key, const int64_t& enclave_timestamp,
       const vector<cid_file> stored_files, const string& enclave_signature);
 
   /**
-   * Submit enclave storage proof
+   * Withdraw storage service from deal
+   * @param cid - deal cid
+   * @param enclave_signature - SGX signature
+   */
+  ACTION void withdraw_deal(const string& enclave_public_key, const string& cid,
+                            const string& enclave_signature);
+
+  /**
+   * Update enclave storage proof
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
    * @param enclave_plot_size - storage provider plot size
    * @param stored_files - file list which storage provider stored
    * @param enclave_signature - SGX signature
    */
-  ACTION void submit_storage_proof(
-      const string& enclave_public_key, const string& enclave_timestamp,
+  ACTION void update_storage_proof(
+      const string& enclave_public_key, const int64_t& enclave_timestamp,
       const u128& enclave_plot_size, const vector<cid_file> stored_files,
       const string& enclave_signature);
 
@@ -251,7 +264,7 @@ PLATON_DISPATCH(
     verify,
     (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(
         set_market_contract)(get_market_contract)(register_miner)(update_miner)(
-        unregister_miner)(is_registered)(test)(fill_deal)(submit_storage_proof)(
-        get_storage_proof)(get_miner)(get_total_capacity)(submit_miner_info)(
-        get_miner_info)(get_miner_reward_address))
+        unregister_miner)(is_registered)(test)(fill_deal)(withdraw_deal)(
+        update_storage_proof)(get_storage_proof)(get_miner)(get_total_capacity)(
+        submit_miner_info)(get_miner_info)(get_miner_reward_address))
 }  // namespace hackathon

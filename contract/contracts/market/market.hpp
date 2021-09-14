@@ -97,6 +97,8 @@ CONTRACT market : public Contract {
  public:
   PLATON_EVENT1(AddDeal, Address, string, u128);
   PLATON_EVENT0(FillDeal, string);
+  PLATON_EVENT0(RenewalDeal, string);
+  PLATON_EVENT0(WithdrawDeal, string);
   PLATON_EVENT0(UpdateStorageProof, string);
   PLATON_EVENT1(ClaimDealReward, Address, string);
 
@@ -165,6 +167,21 @@ CONTRACT market : public Contract {
                        const uint8_t& storage_provider_required);
 
   /**
+   * Renewal deal
+   * @param cid - deal cid of IPFS network
+   * @param duration - deal duration (blocks)
+   */
+  ACTION void renewal_deal(const string& cid, const u128& duration);
+
+  /**
+   * Withdraw deal
+   * @param enclave_public_key - storage provider enclave_public_key
+   * @param cid - deal cid of IPFS network
+   */
+  ACTION bool withdraw_deal(const string& enclave_public_key,
+                            const string& cid);
+
+  /**
    * Get deal by cid
    * @param cid - deal cid of IPFS network
    */
@@ -227,7 +244,7 @@ CONTRACT market : public Contract {
 PLATON_DISPATCH(
     market,
     (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(
-        set_verify_contract)(get_verify_contract)(add_deal)(get_deal_by_cid)(
-        get_deal_by_sender)(get_opened_deal)(fill_deal)(update_storage_proof)(
-        get_storage_proof)(claim_deal_reward))
+        set_verify_contract)(get_verify_contract)(add_deal)(renewal_deal)(
+        withdraw_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal)(
+        fill_deal)(update_storage_proof)(get_storage_proof)(claim_deal_reward))
 }  // namespace hackathon

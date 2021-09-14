@@ -10,12 +10,13 @@ const testAccount = web3.platon.accounts.privateKeyToAccount(testAccountPrivateK
 
 // market contract
 let marketContract;
-let marketContractAddress = config.get("marketContractAddress");
+let marketContractAddress = config.get('marketContractAddress');
 
 // verify contract
 let verifyContract;
-let verifyContractAddress = config.get("verifyContractAddress");
+let verifyContractAddress = config.get('verifyContractAddress');
 
+const enclave_public_key = '0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8';
 
 (async function () {
   // market contract abi 
@@ -31,23 +32,22 @@ let verifyContractAddress = config.get("verifyContractAddress");
 
   try {
 
-    const cid = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdm";
-    const enclave_public_key = "lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex";
-    const enclave_timestamp = "1626421278671";
-    const enclave_plot_size = "1073741824";
+    const cid = 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdb';
+    const enclave_timestamp = 2926421278672;
+    const enclave_plot_size = 1073741824;
     const enclave_stored_files = [[cid, 100]];
-    const enclave_signature = "0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801";
+    const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
     const proof = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files, enclave_signature];
 
-    const ret = await blockchain.sendTransaction(verifyContract, "submit_storage_proof", testAccountPrivateKey, proof);
+    const ret = await blockchain.sendTransaction(verifyContract, 'update_storage_proof', testAccountPrivateKey, proof);
     // console.log(ret);
 
-    let onchainProof = await blockchain.contractCall(marketContract, "get_storage_proof", [enclave_public_key]);
+    let onchainProof = await blockchain.contractCall(marketContract, 'get_storage_proof', [enclave_public_key]);
     console.log('proof info:');
     console.log(onchainProof);
 
-    onchainDealByCid = await blockchain.contractCall(marketContract, "get_deal_by_cid", [cid]);
+    onchainDealByCid = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
     console.log('deal info:');
     console.log(onchainDealByCid);
 
