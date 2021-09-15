@@ -74,14 +74,14 @@ void market::add_deal(const string& cid,
                       const u128& size,
                       const u128& price,
                       const u128& duration,
-                      const uint8_t& storage_provider_required) {
+                      const uint8_t& miner_required) {
   // check if cid is exists
   auto vect_iter = deal_table.find<"cid"_n>(cid);
   platon_assert(vect_iter == deal_table.cend(), "Cid is already exists");
 
   // calculate deal price
   u128 deal_price = hackathon::safeMul(price, duration);
-  u128 total_reward = hackathon::safeMul(deal_price, storage_provider_required);
+  u128 total_reward = hackathon::safeMul(deal_price, miner_required);
 
   // query sender DAT balance
   Address sender = platon_caller();
@@ -117,7 +117,7 @@ void market::add_deal(const string& cid,
     deal.duration = duration;
     deal.closed_block_num = platon_block_number() + duration;
     deal.sender = sender;
-    deal.storage_provider_required = storage_provider_required;
+    deal.miner_required = miner_required;
     deal.total_reward = total_reward;
     deal.reward_balance = total_reward;
   });
@@ -143,11 +143,11 @@ void market::renewal_deal(const string& cid, const u128& duration) {
 
   // get deal info from exists deal
   u128 price = current_deal->price;
-  uint8_t storage_provider_required = current_deal->storage_provider_required;
+  uint8_t miner_required = current_deal->miner_required;
 
   // calculate deal price
   u128 deal_price = hackathon::safeMul(price, duration);
-  u128 total_reward = hackathon::safeMul(deal_price, storage_provider_required);
+  u128 total_reward = hackathon::safeMul(deal_price, miner_required);
 
   // query sender DAT balance
   auto balance_result = platon_call_with_return_value<u128>(
@@ -194,27 +194,27 @@ bool market::withdraw_deal(const string& enclave_public_key,
   DEBUG(enclave_public_key + " withdraw deal at " +
         std::to_string(platon_block_number()));
 
-  // erase enclave_public_key into deal's storage_provider_list
-  vector<string> provider_list = current_deal->storage_provider_list;
+  // erase enclave_public_key into deal's miner_list
+  vector<string> miner_list = current_deal->miner_list;
 
-  // find provider enclave_public_key
+  // find miner enclave_public_key
   vector<string>::iterator itr =
-      std::find(provider_list.begin(), provider_list.end(), enclave_public_key);
+      std::find(miner_list.begin(), miner_list.end(), enclave_public_key);
 
-  if (itr != provider_list.end()) {
-    // erase enclave_public_key from storage_provider_list
-    provider_list.erase(itr);
+  if (itr != miner_list.end()) {
+    // erase enclave_public_key from miner_list
+    miner_list.erase(itr);
 
     // update deal
     deal_table.modify(current_deal, [&](auto& deal) {
-      deal.storage_provider_list = provider_list;
+      deal.miner_list = miner_list;
       deal.state = 0;
     });
 
     PLATON_EMIT_EVENT0(WithdrawDeal, enclave_public_key);
     return true;
   }
-  DEBUG("withdraw_deal failed, provider is not exists");
+  DEBUG("withdraw_deal failed, miner is not exists");
   return false;
 }
 
@@ -231,10 +231,10 @@ deal market::get_deal_by_cid(const string& cid) {
     ret.duration = current_deal->duration;
     ret.closed_block_num = current_deal->closed_block_num;
     ret.sender = current_deal->sender;
-    ret.storage_provider_required = current_deal->storage_provider_required;
+    ret.miner_required = current_deal->miner_required;
     ret.total_reward = current_deal->total_reward;
     ret.reward_balance = current_deal->reward_balance;
-    ret.storage_provider_list = current_deal->storage_provider_list;
+    ret.miner_list = current_deal->miner_list;
   }
   return ret;
 }
@@ -314,37 +314,36 @@ bool market::fill_deal(const string& enclave_public_key,
       return false;
     }
 
-    // storage provider reported file size is larger than size of deal
+    // miner reported file size is larger than size of deal
     if (current_deal->size > it->size) {
       deal_table.modify(current_deal, [&](auto& deal) { deal.state = 3; });
-      DEBUG("storage provider reported file size is larger than size of deal");
+      DEBUG("miner reported file size is larger than size of deal");
       return false;
     }
 
-    // add enclave_public_key into deal's storage_provider_list
-    vector<string> provider_list = current_deal->storage_provider_list;
+    // add enclave_public_key into deal's miner_list
+    vector<string> miner_list = current_deal->miner_list;
 
-    // ensure current storage provider in the list
-    if (std::find(provider_list.begin(), provider_list.end(),
-                  enclave_public_key) != provider_list.end()) {
-      DEBUG("storage provider is already on the list");
+    // ensure current miner in the list
+    if (std::find(miner_list.begin(), miner_list.end(), enclave_public_key) !=
+        miner_list.end()) {
+      DEBUG("miner is already on the list");
       return false;
     } else {
-      // update state to 1 (filled) if storage_provider_list size is match with
+      // update state to 1 (filled) if miner_list size is match with
       // required
       uint8_t deal_state = current_deal->state;
-      if (current_deal->storage_provider_list.size() + 1 ==
-          current_deal->storage_provider_required) {
+      if (current_deal->miner_list.size() + 1 == current_deal->miner_required) {
         DEBUG("change deal state to 1");
         deal_state = 1;
       }
 
-      // add new enclave_public_key into storage_provider_list
-      provider_list.push_back(enclave_public_key);
+      // add new enclave_public_key into miner_list
+      miner_list.push_back(enclave_public_key);
 
       // update deal
       deal_table.modify(current_deal, [&](auto& deal) {
-        deal.storage_provider_list = provider_list;
+        deal.miner_list = miner_list;
         deal.state = deal_state;
       });
 
@@ -357,7 +356,7 @@ bool market::fill_deal(const string& enclave_public_key,
   return true;
 }
 
-// update storage provider proof
+// update miner proof
 bool market::update_storage_proof(const string& enclave_public_key,
                                   const vector<stored_deal>& stored_deals) {
   // only verify contract allows call this function
@@ -388,7 +387,7 @@ bool market::update_storage_proof(const string& enclave_public_key,
 }
 
 /**
- * get storage provider last proof
+ * get miner last proof
  * @param enclave_public_key - SGX enclave public key
  */
 storage_proof market::get_storage_proof(const string& enclave_public_key) {
@@ -404,13 +403,13 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
 
   require_miner_registered(enclave_public_key);
 
-  // get target provider info
-  storage_proof provider = storage_proof_map[enclave_public_key];
-  vector<stored_deal> stored_deals = provider.stored_deals;
+  // get target miner info
+  storage_proof miner = storage_proof_map[enclave_public_key];
+  vector<stored_deal> stored_deals = miner.stored_deals;
 
   // blocks gap between last_proof_block_num and last_claimed_block_num
   uint64_t stored_deal_reward_blocks =
-      provider.last_proof_block_num - provider.last_claimed_block_num;
+      miner.last_proof_block_num - miner.last_claimed_block_num;
 
   if (stored_deal_reward_blocks <= 0) {
     DEBUG("stored_deal_reward_blocks is 0, waiting for new proofs");
@@ -435,7 +434,7 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
       DEBUG("cid " + cid + " exists in fresh_deal_map, filled_block_num: " +
             std::to_string(fresh_deal_map[cid]));
       current_deal_reward_blocks =
-          provider.last_proof_block_num - fresh_deal_map[cid];
+          miner.last_proof_block_num - fresh_deal_map[cid];
       fresh_deal_map.erase(cid);
     }
 
@@ -467,8 +466,8 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
                   "Transfer deal reward failed");
 
     // update last_claimed_block_num
-    provider.last_claimed_block_num = platon_block_number();
-    storage_proof_map[enclave_public_key] = provider;
+    miner.last_claimed_block_num = platon_block_number();
+    storage_proof_map[enclave_public_key] = miner;
 
     PLATON_EMIT_EVENT1(ClaimDealReward, platon_caller(), enclave_public_key);
     return true;
@@ -499,11 +498,11 @@ u128 market::each_deal_reward(const string& enclave_public_key,
   }
 
   u128 price = current_deal->price;
-  vector<string> provider_list = current_deal->storage_provider_list;
+  vector<string> miner_list = current_deal->miner_list;
 
-  // check deal's storage_provider_list contain enclave_public_key
-  if (std::find(provider_list.begin(), provider_list.end(),
-                enclave_public_key) != provider_list.end()) {
+  // check deal's miner_list contain enclave_public_key
+  if (std::find(miner_list.begin(), miner_list.end(), enclave_public_key) !=
+      miner_list.end()) {
     // calculate current deal reward
     u128 current_deal_reward = safeMul(price, reward_blocks);
     auto reward_balance = current_deal->reward_balance;
@@ -528,7 +527,7 @@ u128 market::each_deal_reward(const string& enclave_public_key,
     DEBUG("current_deal_reward: " + std::to_string(current_deal_reward));
     return current_deal_reward;
   } else {
-    DEBUG("claim reward failed, enclave_public_key is not in provider_list");
+    DEBUG("claim reward failed, enclave_public_key is not in miner_list");
     return 0;
   }
 }

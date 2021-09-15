@@ -4,7 +4,8 @@
 namespace hackathon {
 
 void verify::init(const Address& token_contract_address,
-                  const Address& market_contract_address) {
+                  const Address& market_contract_address,
+                  const Address& mining_contract_address) {
   // set owner
   platon::set_owner();
 
@@ -13,6 +14,9 @@ void verify::init(const Address& token_contract_address,
 
   // set market contract
   market_contract.self() = market_contract_address;
+
+  // set mining contract
+  mining_contract.self() = mining_contract_address;
 
   // set total capacity
   total_capacity.self() = 0;
@@ -62,10 +66,20 @@ string verify::get_market_contract() {
 
 // Register miner by enclave_public_key
 void verify::register_miner(const string& enclave_public_key,
-                            const Address& reward_address,
-                            const string& enclave_signature) {
+                            const Address& reward_address) {
   platon_assert(!miner_map.contains(enclave_public_key),
                 "The enclave_public_key is already exists");
+
+  // convert enclave_public_key to lat format address
+  auto public_key_bytes = fromHex(enclave_public_key);
+  platon_assert(public_key_bytes.size() >= 64,
+                "Enclave public key decode to lat address failed");
+  if (public_key_bytes.size() > 64) {
+    public_key_bytes.erase(public_key_bytes.begin());
+  }
+  auto public_key_sha3 = platon_sha3(public_key_bytes);
+  auto enclave_lat_address = Address(public_key_sha3.begin() + 12, 20);
+  DEBUG("enclave_public_key lat address: " + enclave_lat_address.toString());
 
   // check sender DAT balance
   Address sender = platon_caller();
@@ -88,17 +102,6 @@ void verify::register_miner(const string& enclave_public_key,
   // ensure cross contract called successfully
   platon_assert(transfer_result.first && transfer_result.second,
                 "Register miner failed");
-
-  // convert enclave_public_key to lat format address
-  auto public_key_bytes = fromHex(enclave_public_key);
-  platon_assert(public_key_bytes.size() >= 64,
-                "Enclave public key decode to lat address failed");
-  if (public_key_bytes.size() > 64) {
-    public_key_bytes.erase(public_key_bytes.begin());
-  }
-  auto public_key_sha3 = platon_sha3(public_key_bytes);
-  auto enclave_lat_address = Address(public_key_sha3.begin() + 12, 20);
-  DEBUG("enclave_public_key lat address: " + enclave_lat_address.toString());
 
   // register miner
   miner info;
@@ -141,11 +144,7 @@ bool verify::verify_signature(const string& enclave_public_key,
 
 // Modify miner info by enclave_public_key
 void verify::update_miner(const string& enclave_public_key,
-                          const Address& reward_address,
-                          const string& hashed_value,
-                          const string& enclave_signature) {
-  verify_signature(enclave_public_key, hashed_value, enclave_signature);
-
+                          const Address& reward_address) {
   miner info = miner_map[enclave_public_key];
   Address sender = platon_caller();
   platon_assert(sender == info.sender, "Only original sender can update miner");
@@ -158,11 +157,7 @@ void verify::update_miner(const string& enclave_public_key,
 }
 
 // Erase miner by enclave_public_key
-void verify::unregister_miner(const string& enclave_public_key,
-                              const string& hashed_value,
-                              const string& enclave_signature) {
-  verify_signature(enclave_public_key, hashed_value, enclave_signature);
-
+void verify::unregister_miner(const string& enclave_public_key) {
   miner info = miner_map[enclave_public_key];
   Address sender = platon_caller();
   platon_assert(sender == info.sender,
@@ -205,11 +200,7 @@ void verify::fill_deal(const string& enclave_public_key,
 
 // Withdraw storage service from deal
 void verify::withdraw_deal(const string& enclave_public_key,
-                           const string& cid,
-                           const string& hashed_value,
-                           const string& enclave_signature) {
-  verify_signature(enclave_public_key, hashed_value, enclave_signature);
-
+                           const string& cid) {
   miner info = miner_map[enclave_public_key];
   Address sender = platon_caller();
   platon_assert(sender == info.sender,
