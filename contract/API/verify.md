@@ -1,6 +1,6 @@
 ## The verify contract docs
 
-The `verify` smart contract is provided by `dante network team` as a sample platon wasm contract, and it defines the structures and actions needed for platon-hackathon's core functionality.
+The `verify` smart contract is provided by `dante network team` as a sample platon wasm contract, and it defines the structures and actions needed for hackathon's core functionality.
 
 ### Testnet Contract address
 ```
@@ -8,7 +8,7 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 ```
 
 ### Test cases for verify contract
-[tests/verify.js](../tests/verify.js)
+[tests/verify.js](../tests/contract-test.js)
 
 ### API list
 
