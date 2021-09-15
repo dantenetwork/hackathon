@@ -22,7 +22,7 @@ struct deal {
  public:
   string cid;     // deal cid of IPFS network
   uint8_t state;  // current deal state, 0 = deal opened, 1= filled, 2 = closed,
-                  // 3 = invalid (storage provider reported file size is larger
+                  // 3 = invalid (miner reported file size is larger
                   // than size of deal) , default as 0
   bool slashed;   // is slashed, default as false
   u128 size;      // deal files size
@@ -30,18 +30,17 @@ struct deal {
   u128 duration;  // deal duration (blocks)
   uint64_t closed_block_num;  // the block number that deal will closed
   Address sender;             // deal sender
-  uint8_t
-      storage_provider_required;  // the amount of storage providers required
-  u128 total_reward;              // deal total rewards
-  u128 reward_balance;  // reward balance after storage provider claimed
-  vector<string> storage_provider_list;  // storage provider list
+  uint8_t miner_required;     // the amount of miners required
+  u128 total_reward;          // deal total rewards
+  u128 reward_balance;        // reward balance after miner claimed
+  vector<string> miner_list;  // miner list
   string primary_key() const { return cid; }
   Address by_sender() const { return sender; }
 
-  PLATON_SERIALIZE(deal,
-                   (cid)(state)(slashed)(size)(price)(duration)(
-                       closed_block_num)(sender)(storage_provider_required)(
-                       total_reward)(reward_balance)(storage_provider_list));
+  PLATON_SERIALIZE(
+      deal,
+      (cid)(state)(slashed)(size)(price)(duration)(closed_block_num)(sender)(
+          miner_required)(total_reward)(reward_balance)(miner_list));
 };
 
 struct stored_deal {
@@ -53,10 +52,10 @@ struct stored_deal {
 
 struct storage_proof {
  public:
-  uint64_t last_proof_block_num;  // last storage proof when provider submitted
+  uint64_t last_proof_block_num;  // last storage proof when miner submitted
   uint64_t
       last_claimed_block_num;  // block number when last deal reward claimed
-  vector<stored_deal> stored_deals;  // deals that provider stored
+  vector<stored_deal> stored_deals;  // deals that miner stored
 
   PLATON_SERIALIZE(
       storage_proof,
@@ -84,12 +83,12 @@ CONTRACT market : public Contract {
                                            IndexType::NormalIndex>>>
       deal_table;
 
-  // Storage proof map of storage provider
+  // Storage proof map of miner
   // <enclave_public_key, storage_proof>
   platon::db::Map<"storage_proof"_n, string, storage_proof> storage_proof_map;
 
   /**
-   * If the storage provider fills a new deal, the storage proof record will be
+   * If the miner fills a new deal, the storage proof record will be
    * stored in the temporary fresh_deal_map, which will be deleted after the
    * next reward is claimed
    */
@@ -163,11 +162,10 @@ CONTRACT market : public Contract {
    * @param size - deal files size
    * @param price - deal price per block
    * @param duration - deal duration (blocks)
-   * @param storage_provider_required - amount of storage providers required
+   * @param miner_required - amount of miners required
    */
   ACTION void add_deal(const string& cid, const u128& size, const u128& price,
-                       const u128& duration,
-                       const uint8_t& storage_provider_required);
+                       const u128& duration, const uint8_t& miner_required);
 
   /**
    * Renewal deal
@@ -178,7 +176,7 @@ CONTRACT market : public Contract {
 
   /**
    * Withdraw deal
-   * @param enclave_public_key - storage provider enclave_public_key
+   * @param enclave_public_key - miner enclave_public_key
    * @param cid - deal cid of IPFS network
    */
   ACTION bool withdraw_deal(const string& enclave_public_key,
@@ -205,25 +203,25 @@ CONTRACT market : public Contract {
   CONST vector<string> get_opened_deal(const uint8_t& skip);
 
   /**
-   * Storage provider fill deal and signature is verified by verify_contract
-   * add enclave_public_key into storage_provider_list of deal_table
+   * miner fill deal and signature is verified by verify_contract
+   * add enclave_public_key into miner_list of deal_table
    * @param enclave_public_key - SGX enclave public key
-   * @param deals - deals which storage provider stored
+   * @param deals - deals which miner stored
    */
   ACTION bool fill_deal(const string& enclave_public_key,
                         const vector<stored_deal>& deals);
 
   /**
-   * Storage provider update storage proof and ensure signature is verified by
+   * miner update storage proof and ensure signature is verified by
    * verify_contract
    * @param enclave_public_key - SGX enclave public key
-   * @param deals - deals which storage provider stored
+   * @param deals - deals which miner stored
    */
   ACTION bool update_storage_proof(const string& enclave_public_key,
                                    const vector<stored_deal>& deals);
 
   /**
-   * Get storage provider last proof
+   * Get miner last proof
    * @param enclave_public_key - SGX enclave public key
    */
   CONST storage_proof get_storage_proof(const string& enclave_public_key);

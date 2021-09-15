@@ -5,6 +5,7 @@ const blockchain = require('./blockchain.js');
 
 const chainId = 210309;
 const tokenContractAddress = 'lat143nf803rkuk0j6p9204rgwkj6tv7u72a5jz7s0';
+const miningContractAddress = 'lat143nf803rkuk0j6p9204rgwkj6tv7u72a5jz7s0';
 
 // deploy market contract account address, lat1qavfd7zwaknrxyx0drcmv0vr5zehgthhaqq6ul
 const marketPrivateKey = "0x4940cf212544505a0fad3e3932734220af101da915321489708f69bc908fda65"; // private key, Testnet only
@@ -115,7 +116,7 @@ async function deployVerifyContract() {
   // deploy param
   let data = verifyContract.deploy({
     data: bin,
-    arguments: [tokenContractAddress, tokenContractAddress]
+    arguments: [tokenContractAddress, tokenContractAddress,miningContractAddress]
   }).encodeABI();
 
   // transaction param

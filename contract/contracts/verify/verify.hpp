@@ -77,11 +77,14 @@ CONTRACT verify : public Contract {
   // dante token contract
   StorageType<"token_contract"_n, Address> token_contract;
 
-  // network total capacity
-  StorageType<"total_capacity"_n, u128> total_capacity;
-
   // dante market contract
   StorageType<"market_contract"_n, Address> market_contract;
+
+  // dante mining contract
+  StorageType<"mining_contract"_n, Address> mining_contract;
+
+  // network total capacity
+  StorageType<"total_capacity"_n, u128> total_capacity;
 
   // miner table
   platon::db::Map<"miner"_n, string, miner> miner_map;
@@ -110,9 +113,11 @@ CONTRACT verify : public Contract {
    * Contract init
    * @param token_contract_address - DAT PRC20 token contract address
    * @param market_contract_address - DAT market contract address
+   * @param mining_contract_address - mining contract address
    */
   ACTION void init(const Address& token_contract_address,
-                   const Address& market_contract_address);
+                   const Address& market_contract_address,
+                   const Address& mining_contract_address);
 
   /**
    * Change contract owner
@@ -153,8 +158,7 @@ CONTRACT verify : public Contract {
    * @param reward_address - miner address which receive rewards
    */
   ACTION void register_miner(const string& enclave_public_key,
-                             const Address& reward_address,
-                             const string& enclave_signature);
+                             const Address& reward_address);
 
   /**
    * Verify SGX signature
@@ -162,7 +166,7 @@ CONTRACT verify : public Contract {
    * @param hashed_value - hashed value of original data
    * @param enclave_signature - SGX signature
    */
-  ACTION bool verify_signature(const string& message,
+  ACTION bool verify_signature(const string& enclave_public_key,
                                const string& hashed_value,
                                const string& enclave_signature);
 
@@ -170,25 +174,19 @@ CONTRACT verify : public Contract {
    * Update miner by enclave_public_key & enclave_signature
    * @param enclave_public_key - SGX enclave public key
    * @param reward_address - miner address which receive rewards
-   * @param enclave_signature - SGX signature
    */
-  ACTION void update_miner(
-      const string& enclave_public_key, const Address& reward_address,
-      const string& hashed_value, const string& enclave_signature);
+  ACTION void update_miner(const string& enclave_public_key,
+                           const Address& reward_address);
 
   /**
    * Unregister miner by enclave_public_key & enclave_signature
    * @param enclave_public_key - SGX enclave public key
-   * @param enclave_signature - SGX signature
    */
-  ACTION void unregister_miner(const string& enclave_public_key,
-                               const string& hashed_value,
-                               const string& enclave_signature);
+  ACTION void unregister_miner(const string& enclave_public_key);
 
   /**
    * check if enclave_public_key is registered or not
    * @param enclave_public_key - SGX enclave public key
-   * @param enclave_signature - SGX signature
    */
   CONST bool is_registered(const string& enclave_public_key);
 
@@ -197,6 +195,7 @@ CONTRACT verify : public Contract {
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
    * @param stored_files - file list which miner stored
+   * @param hashed_value - hashed value of original data
    * @param enclave_signature - SGX signature
    */
   ACTION void fill_deal(
@@ -206,12 +205,11 @@ CONTRACT verify : public Contract {
 
   /**
    * Withdraw storage service from deal
+   * @param enclave_public_key - SGX enclave public key
    * @param cid - deal cid
-   * @param enclave_signature - SGX signature
    */
-  ACTION void withdraw_deal(const string& enclave_public_key, const string& cid,
-                            const string& hashed_value,
-                            const string& enclave_signature);
+  ACTION void withdraw_deal(const string& enclave_public_key,
+                            const string& cid);
 
   /**
    * Update enclave storage proof
@@ -219,6 +217,7 @@ CONTRACT verify : public Contract {
    * @param enclave_timestamp - SGX timestamp
    * @param enclave_plot_size - miner plot size
    * @param stored_files - file list which miner stored
+   * @param hashed_value - hashed value of original data
    * @param enclave_signature - SGX signature
    */
   ACTION void update_storage_proof(

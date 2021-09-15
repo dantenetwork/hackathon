@@ -17,6 +17,7 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @action init
 @param token_contract_address - PRC20 token contract address
 @param market_contract_address - market contract address
+@param mining_contract_address - mining contract address
 ```
 
 #### Change contract owner
@@ -57,22 +58,28 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @action register_miner
 @param enclave_public_key - SGX enclave public key
 @param reward_address - miner address which receive rewards
+```
+
+#### Verify signature
+```
+@action verify_signature
+@param enclave_public_key - SGX enclave public key
+@param hashed_value - hashed value of original data
 @param enclave_signature - SGX signature
 ```
 
-#### Update miner by enclave_public_key & enclave_signature
+#### Update miner
 ```
 @action update_miner
 @param enclave_public_key - SGX enclave public key
 @param reward_address - miner address which receive rewards
-@param enclave_signature - SGX signature
 ```
 
-#### Unregister miner by enclave_public_key & enclave_signature
+
+#### Unregister miner
 ```
 @action unregister_miner
 @param enclave_public_key - SGX enclave public key
-@param enclave_signature - SGX signature
 ```
 
 #### Submit enclave new deal proof to fill deal
@@ -81,16 +88,25 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @param enclave_public_key - SGX enclave public key
 @param enclave_timestamp - SGX timestamp
 @param stored_files - file list which storage provider stored
+@param hashed_value - hashed value of original data
 @param enclave_signature - SGX signature
 ```
 
-#### Submit enclave storage proof
+#### Withdraw storage service from deal
 ```
-@action submit_storage_proof
+@action withdraw_deal
+@param enclave_public_key - SGX enclave public key
+@param cid - deal cid
+```
+
+#### Update enclave storage proof
+```
+@action update_storage_proof
 @param enclave_public_key - SGX enclave public key
 @param enclave_timestamp - SGX timestamp
 @param enclave_plot_size - storage provider plot size
 @param stored_files - file list which storage provider stored
+@param hashed_value - hashed value of original data
 @param enclave_signature - SGX signature
 ```
 
@@ -108,6 +124,11 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 #### Query total capacity
 ```
 @action get_total_capacity
+```
+
+#### Query miner count
+```
+@action get_miner_count
 ```
 
 #### Submit miner info

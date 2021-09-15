@@ -59,7 +59,21 @@ lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 @param size - deal files size
 @param price - deal price per block
 @param duration - deal duration (blocks)
-@param storage_provider_required - amount of storage providers required
+@param miner_required - amount of miners required
+```
+
+#### Renewal deal
+```
+@action renewal_deal
+@param cid - deal cid of IPFS network
+@param duration - deal duration (blocks)
+```
+
+#### Withdraw deal
+```
+@action withdraw_deal
+@param enclave_public_key - miner enclave_public_key
+@param cid - deal cid of IPFS network
 ```
 
 #### Get deal by cid
@@ -105,6 +119,11 @@ lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 ```
 @action claim_deal_reward
 @param enclave_public_key - SGX enclave public key
+```
+
+### Get deal count
+```
+@action get_deal_count
 ```
 
 ### Contract event list
