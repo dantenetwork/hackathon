@@ -12,6 +12,9 @@ void market::init(const Address& token_contract_address,
 
   // set verify contract address
   verify_contract.self() = verify_contract_address;
+
+  // set deal count
+  deal_count.self() = 0;
 }
 
 // Change contract owner
@@ -118,6 +121,8 @@ void market::add_deal(const string& cid,
     deal.total_reward = total_reward;
     deal.reward_balance = total_reward;
   });
+
+  deal_count.self() += 1;
 
   PLATON_EMIT_EVENT1(AddDeal, sender, cid, size);
 }
@@ -512,6 +517,7 @@ u128 market::each_deal_reward(const string& enclave_public_key,
       current_deal_reward = reward_balance;
       deal_table.erase(current_deal);
 
+      deal_count.self() -= 1;
     } else {
       // update reward balance
       deal_table.modify(current_deal, [&](auto& deal) {
@@ -525,6 +531,10 @@ u128 market::each_deal_reward(const string& enclave_public_key,
     DEBUG("claim reward failed, enclave_public_key is not in provider_list");
     return 0;
   }
+}
+
+uint64_t market::get_deal_count() {
+  return deal_count.self();
 }
 
 }  // namespace hackathon

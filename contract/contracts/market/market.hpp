@@ -71,6 +71,9 @@ CONTRACT market : public Contract {
   // DANTE verify contract
   StorageType<"verify_contract"_n, Address> verify_contract;
 
+  // total deal count
+  StorageType<"deal_count"_n, uint64_t> deal_count;
+
   // Deal table
   // UniqueIndex: cid, NormalIndex: sender
   MultiIndex<
@@ -239,6 +242,11 @@ CONTRACT market : public Contract {
    */
   u128 each_deal_reward(const string& enclave_public_key, const string& cid,
                         uint64_t reward_blocks);
+
+  /**
+   * Query deal count
+   */
+  CONST uint64_t get_deal_count();
 };
 
 PLATON_DISPATCH(
@@ -246,5 +254,6 @@ PLATON_DISPATCH(
     (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(
         set_verify_contract)(get_verify_contract)(add_deal)(renewal_deal)(
         withdraw_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal)(
-        fill_deal)(update_storage_proof)(get_storage_proof)(claim_deal_reward))
+        fill_deal)(update_storage_proof)(get_storage_proof)(claim_deal_reward)(
+        get_deal_count))
 }  // namespace hackathon

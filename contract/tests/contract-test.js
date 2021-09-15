@@ -109,10 +109,16 @@ describe('dante market&verify unit test', function () {
       expect(onchainMiner[0]).to.equal(enclave_public_key);// enclave_public_key
       expect(onchainMiner[2]).to.equal(reward_address);// reward_address
       expect(onchainMiner[3]).to.equal(testAccount);// testAccount
+
+      // ensure miner count = 1
+      const minerCount = await blockchain.contractCall(verifyContract, 'get_miner_count');
+      expect(parseInt(minerCount)).to.equal(1);
+
     } catch (e) {
       console.error(e);
     }
   });
+  
 
   it('verify verify_signature', async function () {
     try {
@@ -126,7 +132,8 @@ describe('dante market&verify unit test', function () {
     } catch (e) {
       console.log(e);
     }
-   });
+  });
+  
   
   it('market add_deal', async function () {
     try {
@@ -172,6 +179,11 @@ describe('dante market&verify unit test', function () {
       onchainDealByCid = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
       // console.log('deal info:');
       // console.log(onchainDealByCid);
+
+      // ensure deal count = 1
+      const minerCount = await blockchain.contractCall(marketContract, 'get_deal_count');
+      expect(parseInt(minerCount)).to.equal(1);
+      
     } catch (e) {
       console.error(e);
     }

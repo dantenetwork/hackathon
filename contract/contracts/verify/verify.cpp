@@ -14,7 +14,11 @@ void verify::init(const Address& token_contract_address,
   // set market contract
   market_contract.self() = market_contract_address;
 
+  // set total capacity
   total_capacity.self() = 0;
+
+  // set miner count
+  miner_count.self() = 0;
 }
 
 // Change contract owner
@@ -104,6 +108,8 @@ void verify::register_miner(const string& enclave_public_key,
   info.sender = sender;
   miner_map.insert(enclave_public_key, info);
 
+  miner_count.self() += 1;
+
   PLATON_EMIT_EVENT1(RegisterMiner, enclave_public_key);
 }
 
@@ -132,28 +138,6 @@ bool verify::verify_signature(const string& enclave_public_key,
   //       ", recovered_address: " + recovered_address.toString());
   return true;  // TODO temporary return true for DEBUG
 }
-
-// // Test signature
-// void verify::test(const string& message, const string& enclave_signature) {
-//   // DEBUG("message: " + message);
-//   // DEBUG("enclave_signature: " + enclave_signature);
-//   message = "Hello World";
-//   enclave_signature =
-//       "0xf28b8fde3ea610e59590da237b9e99871390fd458baae8d30e2da070ac9850f70cb89a"
-//       "8fb817d73a3709b375c3aee82a5b64fae5743cbd95feff1bb6965f040b00";
-
-//   byte hashed_value[32];
-//   platon::platon_sha256(asBytes(message), hashed_value);
-
-//   Address recovered_address;
-//   auto ret =
-//       platon::platon_ecrecover(h256(hashed_value, sizeof(hashed_value)),
-//                                fromHex(enclave_signature),
-//                                recovered_address);
-
-//   DEBUG("ret: " + std::to_string(ret));
-//   DEBUG("recovered_address: " + recovered_address.toString());
-// }
 
 // Modify miner info by enclave_public_key
 void verify::update_miner(const string& enclave_public_key,
@@ -185,6 +169,8 @@ void verify::unregister_miner(const string& enclave_public_key,
                 "Only original sender can unregister miner");
 
   miner_map.erase(enclave_public_key);
+
+  miner_count.self() -= 1;
 
   PLATON_EMIT_EVENT0(UnregisterMiner, enclave_public_key);
 }
@@ -296,6 +282,11 @@ miner verify::get_miner(const string& enclave_public_key) {
 // Query total capacity
 u128 verify::get_total_capacity() {
   return total_capacity.self();
+}
+
+// Query miner count
+uint64_t verify::get_miner_count() {
+  return miner_count.self();
 }
 
 // Submit miner info

@@ -19,7 +19,7 @@ namespace hackathon {
 const u128 kTokenUnit = 1000000000000000000;  // DAT token decimal
 const u128 kLockedAmount =
     Energon(1000 * kTokenUnit)
-        .Get();  // 1000 DAT,the DAT token that storage provider need locked
+        .Get();  // 1000 DAT,the DAT token that miner need locked
 
 struct miner {
  public:
@@ -50,7 +50,7 @@ struct miner_info {
   string peer_id;       // peer id of miner from IPFS network
   string country_code;  // country code
                         // (https://en.wikipedia.org/wiki/ISO_3166-1_numeric)
-  string url;           // the website url of storage provider
+  string url;           // the website url of miner
 
   PLATON_SERIALIZE(miner_info, (sender)(name)(peer_id)(country_code)(url))
 };
@@ -85,6 +85,9 @@ CONTRACT verify : public Contract {
 
   // miner table
   platon::db::Map<"miner"_n, string, miner> miner_map;
+
+  // total miner count
+  StorageType<"miner_count"_n, uint64_t> miner_count;
 
   // proof_of_capacity table
   platon::db::Map<"storage_proof"_n, string, storage_proof> storage_proof_map;
@@ -193,7 +196,7 @@ CONTRACT verify : public Contract {
    * Submit enclave new deal proof to fill deal
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
-   * @param stored_files - file list which storage provider stored
+   * @param stored_files - file list which miner stored
    * @param enclave_signature - SGX signature
    */
   ACTION void fill_deal(
@@ -214,8 +217,8 @@ CONTRACT verify : public Contract {
    * Update enclave storage proof
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
-   * @param enclave_plot_size - storage provider plot size
-   * @param stored_files - file list which storage provider stored
+   * @param enclave_plot_size - miner plot size
+   * @param stored_files - file list which miner stored
    * @param enclave_signature - SGX signature
    */
   ACTION void update_storage_proof(
@@ -240,12 +243,17 @@ CONTRACT verify : public Contract {
   CONST u128 get_total_capacity();
 
   /**
+   * Query miner count
+   */
+  CONST uint64_t get_miner_count();
+
+  /**
    * Submit miner info
    * @param name - miner name
    * @param peer_id - peer id of miner from IPFS network
    * @param country_code - country
    * code(https://en.wikipedia.org/wiki/ISO_3166-1_numeric)
-   * @param url - the website url of storage provider
+   * @param url - the website url of miner
    */
   ACTION void submit_miner_info(const string& name, const string& peer_id,
                                 const string& country_code, const string& url);
@@ -269,6 +277,6 @@ PLATON_DISPATCH(
         set_market_contract)(get_market_contract)(register_miner)(update_miner)(
         unregister_miner)(is_registered)(verify_signature)(fill_deal)(
         withdraw_deal)(update_storage_proof)(get_storage_proof)(get_miner)(
-        get_total_capacity)(submit_miner_info)(get_miner_info)(
+        get_total_capacity)(get_miner_count)(submit_miner_info)(get_miner_info)(
         get_miner_reward_address))
 }  // namespace hackathon
