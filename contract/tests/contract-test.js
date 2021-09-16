@@ -7,6 +7,7 @@ const Web3 = require('web3');
 const web3 = new Web3('http://127.0.0.1:6789');
 const blockchain = require('./blockchain.js');
 const config = require('config');
+const exp = require('constants');
 
 // test account address, lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex
 const testAccountPrivateKey = '0x34382ebae7d7c628e13f14b4314c9b0149db7bbbc06428ae89de9883ffc7c341';// private key, Testnet only
@@ -25,7 +26,8 @@ let tokenContractAddress = config.get('tokenContractAddress');
 const tempTokenContractAddress = tokenContractAddress;
 
 const ONE_TOKEN = '1000000000000000000';
-const THOUSAND_TOKEN = '1000000000000000000000';
+const THOUSAND_TOKENS = '1000000000000000000000';
+const FIVE_HUNDRED_TOKENS = '500000000000000000000';
 
 const enclave_public_key = '0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8';
 const cid = 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdb';
@@ -61,16 +63,16 @@ describe('dante market&verify unit test', function () {
       console.log('test account '+testAccount + ' balance: ' + balance);
 
       // approve verify contract
-      await blockchain.sendTransaction(tokenContract, 'approve', testAccountPrivateKey, [verifyContractAddress, THOUSAND_TOKEN]);
+      await blockchain.sendTransaction(tokenContract, 'approve', testAccountPrivateKey, [verifyContractAddress, THOUSAND_TOKENS]);
 
-      // expect allowance of testAccount address = THOUSAND_TOKEN
+      // expect allowance of testAccount address = THOUSAND_TOKENS
       let allowance = await blockchain.contractCall(tokenContract, 'allowance', [testAccount, verifyContractAddress]);
       console.log(testAccount+' approved ' + verifyContractAddress+', allowance: ' + allowance);
       
       // approve market contract
-      await blockchain.sendTransaction(tokenContract, 'approve', testAccountPrivateKey, [marketContractAddress, THOUSAND_TOKEN]);
+      await blockchain.sendTransaction(tokenContract, 'approve', testAccountPrivateKey, [marketContractAddress, THOUSAND_TOKENS]);
 
-      // expect allowance of testAccount address = THOUSAND_TOKEN
+      // expect allowance of testAccount address = THOUSAND_TOKENS
       allowance = await blockchain.contractCall(tokenContract, 'allowance', [testAccount, marketContractAddress]);
       console.log(testAccount+' approved ' + marketContractAddress+', allowance: ' + allowance);
       
@@ -85,35 +87,48 @@ describe('dante market&verify unit test', function () {
       // test data
       const reward_address = 'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex';
       miner = [enclave_public_key, reward_address];
-
+      
       // detect miner exists or not
-      let onchainMiner = await blockchain.contractCall(verifyContract, 'get_miner', [enclave_public_key]);
-      if (onchainMiner[0] == enclave_public_key) {
+      let ret = await blockchain.contractCall(verifyContract, 'get_miner', [enclave_public_key]);
+      if (ret[0] == enclave_public_key) {
         console.log('the miner ' + enclave_public_key + ' is already exists');
         return;
       }
 
-      // send transaction
       await blockchain.sendTransaction(verifyContract, 'register_miner', testAccountPrivateKey, miner);
 
-      // quer miner info
-      onchainMiner = await blockchain.contractCall(verifyContract, 'get_miner', [enclave_public_key]);
-      console.log(onchainMiner);
+      await blockchain.sendTransaction(verifyContract, 'pledge_miner', testAccountPrivateKey, [enclave_public_key,THOUSAND_TOKENS]);
 
-      // expect onchain info = test data
-      assert.isArray(onchainMiner);
-      expect(onchainMiner[0]).to.equal(enclave_public_key);// enclave_public_key
-      expect(onchainMiner[2]).to.equal(reward_address);// reward_address
-      expect(onchainMiner[3]).to.equal(testAccount);// testAccount
+      // quer miner info
+      ret = await blockchain.contractCall(verifyContract, 'get_miner', [enclave_public_key]);
+      
+      expect(ret[0]).to.equal(enclave_public_key);// enclave_public_key
+      expect(ret[2]).to.equal(reward_address);// reward_address
+      expect(ret[3]).to.equal(testAccount);// testAccount
+      expect(ret[4]).to.equal(THOUSAND_TOKENS);
+      expect(ret[5]).to.equal(1024 * 1024 * 1024 * 1000 + '');
 
       // ensure miner count = 1
       const minerCount = await blockchain.contractCall(verifyContract, 'get_miner_count');
       expect(parseInt(minerCount)).to.equal(1);
 
+      await blockchain.sendTransaction(verifyContract, 'unpledge_miner', testAccountPrivateKey, [enclave_public_key, FIVE_HUNDRED_TOKENS]);
+      
+      // quer miner info
+      ret = await blockchain.contractCall(verifyContract, 'get_miner', [enclave_public_key]);
+      // console.log(ret);
+
+      expect(ret[0]).to.equal(enclave_public_key);// enclave_public_key
+      expect(ret[2]).to.equal(reward_address);// reward_address
+      expect(ret[3]).to.equal(testAccount);// testAccount
+      expect(ret[4]).to.equal(FIVE_HUNDRED_TOKENS);
+      expect(ret[5]).to.equal(1024 * 1024 * 1024 * 500 + '');
+
     } catch (e) {
       console.error(e);
     }
   });
+  
 
   it('verify verify_signature', async function () {
     try {
@@ -212,95 +227,95 @@ describe('dante market&verify unit test', function () {
   });
 
 
+  // update storage proof
+  it('verify update_storage_proof', async function () {
+    // 发送交易
+    try {
+      this.timeout(0);
+      const enclave_timestamp = new Date().getTime();
+      const enclave_idle_size = 1048576 * 2;
+      const enclave_stored_size = 0;
+      const enclave_stored_files = [];
+      const hashed_value = 'hashed_value';
+      const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
+
+      const param = [enclave_public_key, enclave_timestamp, enclave_idle_size, enclave_stored_size, enclave_stored_files, hashed_value, enclave_signature];
+
+      await blockchain.sendTransaction(verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
+
+      let ret = await blockchain.contractCall(verifyContract, 'get_total_capacity');
+      console.log('total capacity:');
+      console.log(ret);
+      expect(ret).to.equal(enclave_idle_size+'');
+
+      ret = await blockchain.contractCall(verifyContract, 'get_storage_proof', [enclave_public_key]);
+      // console.log('proof info:');
+      // console.log(ret);
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  
   // fill deal
   it('verify fill_deal', async function () {
     // 发送交易
     try {
       this.timeout(0);
       const enclave_timestamp = new Date().getTime();
+      const enclave_stored_size = 1048576;
       const enclave_stored_files = [[cid, size]];
-      const hashed_value = '';
+      const hashed_value = 'hashed_value';
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
-      const param = [enclave_public_key, enclave_timestamp, enclave_stored_files,hashed_value, enclave_signature];
+      const param = [enclave_public_key, enclave_timestamp, enclave_stored_size, enclave_stored_files, hashed_value, enclave_signature];
+      console.log(param);
 
-      const ret = await blockchain.sendTransaction(verifyContract, 'fill_deal', testAccountPrivateKey, param);
+      await blockchain.sendTransaction(verifyContract, 'fill_deal', testAccountPrivateKey, param);
+
+      let ret = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
       // console.log(ret);
 
-      onchainDealByCid = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
-      // console.log(onchainDealByCid);
-
     } catch (e) {
       console.log(e);
     }
   });
-
-
-  // update storage proof
-  it('verify update_storage_proof', async function () {
-    // 发送交易
-    try {
-      this.timeout(0);
-      const enclave_timestamp = new Date().getTime();
-      const enclave_plot_size = 1000000;
-      const enclave_stored_files = [[cid, size]];
-      const hashed_value = '';
-      const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
-
-      const param = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files,hashed_value, enclave_signature];
-
-      await blockchain.sendTransaction(verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
-
-      let ret = await blockchain.contractCall(verifyContract, 'get_total_capacity');
-      console.log('total capacity:');
-      console.log(ret);
-      expect(ret).to.equal(enclave_plot_size+'');
-
-      ret = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
-      console.log('deal info:');
-      console.log(ret);
-
-      ret = await blockchain.contractCall(marketContract, 'get_storage_proof', [enclave_public_key]);
-      console.log('proof info:');
-      console.log(ret);
-    } catch (e) {
-      console.log(e);
-    }
-  });
-
+  
   // update storage proof
   it('verify update_storage_proof', async function () {
     // 发送交易
     try {
       this.timeout(0);
       console.log('--------------------------- update storage proof again ---------------------------');
-      const enclave_timestamp = new Date().getTime();
-      const enclave_plot_size = 20000000;
+      const enclave_timestamp = new Date().getTime()+'';
+      const enclave_idle_size = 1048576;
+      const enclave_stored_size = 1048576;
       const enclave_stored_files = [[cid, size]];
-      const hashed_value = '';
+      const hashed_value = 'hashed_value';
       const enclave_signature = '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
-      const param = [enclave_public_key, enclave_timestamp, enclave_plot_size, enclave_stored_files,hashed_value, enclave_signature];
+      const param = [enclave_public_key, enclave_timestamp, enclave_idle_size, enclave_stored_size, enclave_stored_files, hashed_value, enclave_signature];
 
       await blockchain.sendTransaction(verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
 
       let ret = await blockchain.contractCall(verifyContract, 'get_total_capacity');
       console.log('total capacity:');
       console.log(ret);
-      expect(ret).to.equal(enclave_plot_size+'');
+      expect(ret).to.equal(enclave_idle_size+enclave_stored_size+'');
 
       ret = await blockchain.contractCall(marketContract, 'get_deal_by_cid', [cid]);
       console.log('deal info:');
       console.log(ret);
 
-      ret = await blockchain.contractCall(marketContract, 'get_storage_proof', [enclave_public_key]);
+      ret = await blockchain.contractCall(verifyContract, 'get_storage_proof', [enclave_public_key]);
       console.log('proof info:');
       console.log(ret);
     } catch (e) {
       console.log(e);
     }
   });
-
+  return;
+  
   // withdraw deal
   it('verify withdraw_deal', async function () {
     // 发送交易
