@@ -183,17 +183,39 @@ void verify::fill_deal(const string& enclave_public_key,
                        const string& enclave_signature) {
   verify_signature(enclave_public_key, hashed_value, enclave_signature);
 
-  miner info = miner_map[enclave_public_key];
+  miner current_miner = miner_map[enclave_public_key];
   Address sender = platon_caller();
-  platon_assert(sender == info.sender,
+  platon_assert(sender == current_miner.sender,
                 "Only original sender of miner can fill deal");
 
-  // call add_storage_provider of market.cpp
-  auto result = platon_call_with_return_value<bool>(
+  platon_assert(storage_proof_map.contains(enclave_public_key),
+                "Fill deal failed, miner storage proof is empty");
+
+  storage_proof proof = storage_proof_map[enclave_public_key];
+
+  platon_assert(
+      (proof.enclave_stored_size + enclave_stored_size) <=
+          current_miner.miner_pledged_storage_size,
+      "Fill deal failed, miner stored size can't larger than pledged storage "
+      "size");
+
+  // update miner idle size
+  if (proof.enclave_idle_size > enclave_stored_size) {
+    proof.enclave_idle_size -= enclave_stored_size;
+  } else {
+    proof.enclave_idle_size = 0;
+  }
+
+  // update miner stored size
+  proof.enclave_stored_size += enclave_stored_size;
+  storage_proof_map[enclave_public_key] = proof;
+
+  // call fill_deal of market.cpp
+  auto fill_deal_result = platon_call_with_return_value<bool>(
       market_contract.self(), uint32_t(0), uint32_t(0), "fill_deal",
       enclave_public_key, stored_files);
 
-  platon_assert(result.first && result.second, "Fill Deal failed");
+  platon_assert(fill_deal_result.second, "Fill Deal failed");
 
   PLATON_EMIT_EVENT0(FillDeal, enclave_public_key);
 }
