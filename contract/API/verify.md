@@ -8,7 +8,7 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 ```
 
 ### Test cases for verify contract
-[tests/contract-test.js](../tests/contract-test.js)
+[tests/verify.js](../tests/contract-test.js)
 
 ### API list
 

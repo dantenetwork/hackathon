@@ -286,14 +286,12 @@ vector<string> market::get_opened_deal(const uint8_t& skip) {
 }
 
 // fill deal
-u128 market::fill_deal(const string& enclave_public_key,
+bool market::fill_deal(const string& enclave_public_key,
                        const vector<stored_deal>& deals) {
   // only verify contract allows call this function
   require_verify_contract_auth();
   require_miner_registered(enclave_public_key);
   uint64_t current_block_num = platon_block_number();
-
-  u128 total_reward = 0;
 
   vector<stored_deal>::const_iterator it;
   DEBUG(enclave_public_key + " fill deal at " +
@@ -304,43 +302,58 @@ u128 market::fill_deal(const string& enclave_public_key,
     auto current_deal = deal_table.find<"cid"_n>(it->cid);
 
     // ensure deal cid is exists
-    platon_assert(current_deal != deal_table.cend(),
-                  "fill deal failed, deal is not exists");
+    if (current_deal == deal_table.cend()) {
+      DEBUG("fill deal failed, deal is not exists");
+      return false;
+    }
 
     // ensure deal state = 0
-    platon_assert(current_deal->state == 0, "fill deal failed, deal state is ",
-                  std::to_string(current_deal->state));
+    if (current_deal->state != 0) {
+      DEBUG("fill deal failed, deal state is ",
+            std::to_string(current_deal->state));
+      return false;
+    }
+
+    // miner reported file size is larger than size of deal
+    if (current_deal->size > it->size) {
+      deal_table.modify(current_deal, [&](auto& deal) { deal.state = 3; });
+      DEBUG("miner reported file size is larger than size of deal");
+      return false;
+    }
 
     // add enclave_public_key into deal's miner_list
     vector<string> miner_list = current_deal->miner_list;
 
     // ensure current miner in the list
-    vector<string>::iterator itr =
-        std::find(miner_list.begin(), miner_list.end(), enclave_public_key);
-    platon_assert(itr == miner_list.end(), "Miner is already on the list");
+    if (std::find(miner_list.begin(), miner_list.end(), enclave_public_key) !=
+        miner_list.end()) {
+      DEBUG("miner is already on the list");
+      return false;
+    } else {
+      // update state to 1 (filled) if miner_list size is match with
+      // required
+      uint8_t deal_state = current_deal->state;
+      if (current_deal->miner_list.size() + 1 == current_deal->miner_required) {
+        DEBUG("change deal state to 1");
+        deal_state = 1;
+      }
 
-    // update state to 1 (filled) if miner_list size is match with
-    // required
-    uint8_t deal_state = current_deal->state;
-    if (current_deal->miner_list.size() + 1 == current_deal->miner_required) {
-      DEBUG("change deal state to 1");
-      deal_state = 1;
+      // add new enclave_public_key into miner_list
+      miner_list.push_back(enclave_public_key);
+
+      // update deal
+      deal_table.modify(current_deal, [&](auto& deal) {
+        deal.miner_list = miner_list;
+        deal.state = deal_state;
+      });
+
+      // add storage proof of deal into fresh_deal
+      fresh_deal_map.insert(it->cid, platon_block_number());
     }
-
-    // add new enclave_public_key into miner_list
-    miner_list.push_back(enclave_public_key);
-
-    // update deal
-    deal_table.modify(current_deal, [&](auto& deal) {
-      deal.miner_list = miner_list;
-      deal.state = deal_state;
-    });
-
-    // add storage proof of deal into fresh_deal
-    fresh_deal_map.insert(it->cid, platon_block_number());
   }
+
   PLATON_EMIT_EVENT0(FillDeal, enclave_public_key);
-  return total_reward;
+  return true;
 }
 
 // update miner proof
