@@ -208,7 +208,7 @@ CONTRACT market : public Contract {
    * @param enclave_public_key - SGX enclave public key
    * @param deals - deals which miner stored
    */
-  ACTION u128 fill_deal(const string& enclave_public_key,
+  ACTION bool fill_deal(const string& enclave_public_key,
                         const vector<stored_deal>& deals);
 
   /**
