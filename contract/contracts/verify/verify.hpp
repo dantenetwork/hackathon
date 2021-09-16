@@ -17,12 +17,9 @@ namespace hackathon {
  */
 
 const u128 kTokenUnit = 1000000000000000000;  // DAT token decimal
-
-const u128 kBytesPerPledgedDAT =
-    1024 * 1024 * 1024;  // storage space for each pledged DAT(1TB)
-const int64_t kMinerPledgePercent =
-    10;  // ensure miner_pledged_amount / (miner_pledged_amount + stake_amount)
-         // >= 10%
+const u128 kLockedAmount =
+    Energon(1000 * kTokenUnit)
+        .Get();  // 1000 DAT,the DAT token that miner need locked
 
 struct miner {
  public:
@@ -31,32 +28,11 @@ struct miner {
       enclave_lat_address;  // convert enclave public key to lat format address
   Address reward_address;   // miner address which receive rewards
   Address sender;           // miner address which send transaction
-  u128 miner_pledged_token = 0;         // miner pledged DAT token
-  u128 miner_pledged_storage_size = 0;  // miner pledged storage size
   string primary_key() const { return enclave_public_key; }
 
-  PLATON_SERIALIZE(miner,
-                   (enclave_public_key)(enclave_lat_address)(reward_address)(
-                       sender)(miner_pledged_token)(miner_pledged_storage_size))
-};
-
-struct cid_file {
- public:
-  string cid;  // deal cid
-  u128 size;   // file size of deal
-  PLATON_SERIALIZE(cid_file, (cid)(size));
-};
-
-struct storage_proof {
- public:
-  uint64_t enclave_timestamp = 0;  // SGX enclave timestamp
-  u128 enclave_idle_size = 0;      // SGX enclave idle size
-  u128 enclave_stored_size = 0;    // SGX enclave file stored size
-  string enclave_signature;        // SGX enclave signature
-
-  PLATON_SERIALIZE(storage_proof,
-                   (enclave_timestamp)(enclave_idle_size)(enclave_stored_size)(
-                       enclave_signature))
+  PLATON_SERIALIZE(
+      miner,
+      (enclave_public_key)(enclave_lat_address)(reward_address)(sender))
 };
 
 /**
@@ -79,6 +55,23 @@ struct miner_info {
   PLATON_SERIALIZE(miner_info, (sender)(name)(peer_id)(country_code)(url))
 };
 
+struct cid_file {
+ public:
+  string cid;  // deal cid
+  u128 size;   // file size of deal
+  PLATON_SERIALIZE(cid_file, (cid)(size));
+};
+
+struct storage_proof {
+ public:
+  int64_t enclave_timestamp;  // SGX enclave timestamp
+  u128 enclave_plot_size;     // SGX enclave committed plot size
+  string enclave_signature;   // SGX enclave signature
+
+  PLATON_SERIALIZE(storage_proof,
+                   (enclave_timestamp)(enclave_plot_size)(enclave_signature))
+};
+
 CONTRACT verify : public Contract {
  protected:
   // dante token contract
@@ -99,7 +92,7 @@ CONTRACT verify : public Contract {
   // total miner count
   StorageType<"miner_count"_n, uint64_t> miner_count;
 
-  // miner storage proof
+  // proof_of_capacity table
   platon::db::Map<"storage_proof"_n, string, storage_proof> storage_proof_map;
 
   // miner_info map
@@ -108,8 +101,6 @@ CONTRACT verify : public Contract {
   // Verify contract events
  public:
   PLATON_EVENT0(RegisterMiner, string);
-  PLATON_EVENT0(PledgeMiner, string);
-  PLATON_EVENT0(UnpledgeMiner, string);
   PLATON_EVENT0(UpdateMiner, string);
   PLATON_EVENT0(UnregisterMiner, string);
   PLATON_EVENT0(FillDeal, string);
@@ -170,22 +161,6 @@ CONTRACT verify : public Contract {
                              const Address& reward_address);
 
   /**
-   * Pledge DAT token
-   * @param enclave_public_key - SGX enclave public key
-   * @param amount - token amount
-   */
-  ACTION void pledge_miner(const string& enclave_public_key,
-                           const u128& amount);
-
-  /**
-   * Unpledge DAT token
-   * @param enclave_public_key - SGX enclave public key
-   * @param amount - token amount
-   */
-  ACTION void unpledge_miner(const string& enclave_public_key,
-                             const u128& amount);
-
-  /**
    * Verify SGX signature
    * @param enclave_public_key - SGX enclave_public_key
    * @param hashed_value - hashed value of original data
@@ -219,15 +194,14 @@ CONTRACT verify : public Contract {
    * Submit enclave new deal proof to fill deal
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
-   * @param enclave_stored_size - miner new file size
    * @param stored_files - file list which miner stored
    * @param hashed_value - hashed value of original data
    * @param enclave_signature - SGX signature
    */
   ACTION void fill_deal(
-      const string& enclave_public_key, const uint64_t& enclave_timestamp,
-      const u128& enclave_stored_size, const vector<cid_file> stored_files,
-      const string& hashed_value, const string& enclave_signature);
+      const string& enclave_public_key, const int64_t& enclave_timestamp,
+      const vector<cid_file> stored_files, const string& hashed_value,
+      const string& enclave_signature);
 
   /**
    * Withdraw storage service from deal
@@ -241,17 +215,15 @@ CONTRACT verify : public Contract {
    * Update enclave storage proof
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
-   * @param enclave_idle_size - miner idle size
-   * @param enclave_stored_size - miner file stored size
+   * @param enclave_plot_size - miner plot size
    * @param stored_files - file list which miner stored
    * @param hashed_value - hashed value of original data
    * @param enclave_signature - SGX signature
    */
   ACTION void update_storage_proof(
-      const string& enclave_public_key, const uint64_t& enclave_timestamp,
-      const u128& enclave_idle_size, const u128& enclave_stored_size,
-      const vector<cid_file> stored_files, const string& hashed_value,
-      const string& enclave_signature);
+      const string& enclave_public_key, const int64_t& enclave_timestamp,
+      const u128& enclave_plot_size, const vector<cid_file> stored_files,
+      const string& hashed_value, const string& enclave_signature);
 
   /**
    * Query last enclave proof
@@ -301,9 +273,9 @@ CONTRACT verify : public Contract {
 PLATON_DISPATCH(
     verify,
     (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(
-        set_market_contract)(get_market_contract)(register_miner)(pledge_miner)(
-        unpledge_miner)(update_miner)(unregister_miner)(is_registered)(
-        verify_signature)(fill_deal)(withdraw_deal)(update_storage_proof)(
-        get_storage_proof)(get_miner)(get_total_capacity)(get_miner_count)(
-        submit_miner_info)(get_miner_info)(get_miner_reward_address))
+        set_market_contract)(get_market_contract)(register_miner)(update_miner)(
+        unregister_miner)(is_registered)(verify_signature)(fill_deal)(
+        withdraw_deal)(update_storage_proof)(get_storage_proof)(get_miner)(
+        get_total_capacity)(get_miner_count)(submit_miner_info)(get_miner_info)(
+        get_miner_reward_address))
 }  // namespace hackathon

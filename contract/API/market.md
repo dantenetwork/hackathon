@@ -8,7 +8,7 @@ lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 ```
 
 ### Test cases for market contract
-[tests/contract-test.js](../tests/contract-test.js)
+[tests/market.js](../tests/contract-test.js)
 
 ### API list
 
