@@ -286,7 +286,7 @@ vector<string> market::get_opened_deal(const uint8_t& skip) {
 }
 
 // fill deal
-u128 market::fill_deal(const string& enclave_public_key,
+bool market::fill_deal(const string& enclave_public_key,
                        const vector<stored_deal>& deals) {
   // only verify contract allows call this function
   require_verify_contract_auth();

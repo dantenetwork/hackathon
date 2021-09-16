@@ -272,7 +272,7 @@ void verify::fill_deal(const string& enclave_public_key,
   storage_proof_map[enclave_public_key] = proof;
 
   // call fill_deal of market.cpp
-  auto fill_deal_result = platon_call_with_return_value<u128>(
+  auto fill_deal_result = platon_call_with_return_value<bool>(
       market_contract.self(), uint32_t(0), uint32_t(0), "fill_deal",
       enclave_public_key, stored_files);
 
