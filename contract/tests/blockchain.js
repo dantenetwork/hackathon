@@ -12,11 +12,15 @@ module.exports = {
       const to = targetContract.options.address;
       const nonce = web3.utils.numberToHex(await web3.platon.getTransactionCount(account)); // 获取生成 nonce
       const data = targetContract.methods[methodName].apply(targetContract.methods, arguments).encodeABI(); // encode ABI
-      // const gas = await web3.platon.estimateGas({ from: account, to, data });
+      // const estimateGas = await web3.platon.estimateGas({ from: account, to, data });
       const gas = web3.utils.numberToHex(parseInt((await web3.platon.getBlock("latest")).gasLimit - 1));
+      const gasPrice = await web3.platon.getGasPrice();
+      // console.log('gas: '+gas);
+      // console.log('gasPrice: '+gasPrice);
+      // console.log('estimateGas: '+estimateGas);
 
       // 准备交易数据
-      const tx = { account, to, chainId, data, nonce, gas };
+      const tx = { account, to, chainId, data, nonce, gas, gasPrice };
       // console.log(tx);
 
       // 签名交易
