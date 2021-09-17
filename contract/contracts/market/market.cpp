@@ -226,7 +226,6 @@ vector<string> market::get_deal_by_sender(const Address& sender,
   uint8_t index = 0;   // the index of current deal in iterator
   uint8_t total = 20;  // return 20 deals per request
 
-  // iterate vector iterator
   for (auto it = vect_iter.cbegin(sender);
        it != vect_iter.cend(sender) && total > 0; it++, index++) {
     // DEBUG("index: " + std::to_string(index));
@@ -248,7 +247,6 @@ vector<string> market::get_opened_deal(const uint8_t& skip) {
   uint8_t index = 0;   // the index of current deal in iterator
   uint8_t total = 20;  // return 20 deals per request
 
-  // iterate vector iterator
   for (auto it = deal_table.cbegin(); it != deal_table.cend() && total > 0;
        it++, index++) {
     // DEBUG("index: " + std::to_string(index));
@@ -278,7 +276,6 @@ bool market::fill_deal(const string& enclave_public_key,
   DEBUG(enclave_public_key + " fill deal at " +
         std::to_string(current_block_num));
 
-  // iterate vector iterator
   for (it = deals.begin(); it != deals.end(); ++it) {
     auto current_deal = deal_table.find<"cid"_n>(it->cid);
 

@@ -20,9 +20,9 @@ const u128 kTokenUnit = 1000000000000000000;  // DAT token decimal
 
 const u128 kBytesPerPledgedDAT =
     1024 * 1024 * 1024;  // storage space for each pledged DAT(1TB)
-const int64_t kMinerPledgePercent =
-    10;  // ensure miner_pledged_amount / (miner_pledged_amount + stake_amount)
-         // >= 10%
+const uint8_t kMaxHolderStakeToMinerRatio =
+    9;  // ensure total token amount that DAT holder stake to miner can't
+        // larger than miner_pledged_storage_size * 9
 
 struct miner {
  public:
@@ -33,11 +33,17 @@ struct miner {
   Address sender;           // miner address which send transaction
   u128 miner_pledged_token = 0;         // miner pledged DAT token
   u128 miner_pledged_storage_size = 0;  // miner pledged storage size
+  u128 miner_staked_token =
+      0;  // total token amount that DAT holder staked to miner
+  u128 miner_staked_storage_size =
+      0;                           // miner_staked_token * kBytesPerPledgedDAT
+  uint8_t staker_bonus_ratio = 0;  // staker's bonus rate
   string primary_key() const { return enclave_public_key; }
 
-  PLATON_SERIALIZE(miner,
-                   (enclave_public_key)(enclave_lat_address)(reward_address)(
-                       sender)(miner_pledged_token)(miner_pledged_storage_size))
+  PLATON_SERIALIZE(
+      miner,
+      (enclave_public_key)(enclave_lat_address)(reward_address)(sender)(
+          miner_pledged_token)(miner_staked_token)(miner_pledged_storage_size))
 };
 
 struct cid_file {
@@ -79,6 +85,18 @@ struct miner_info {
   PLATON_SERIALIZE(miner_info, (sender)(name)(peer_id)(country_code)(url))
 };
 
+// DAT token holder stake record
+struct stake {
+  Address from;               // DAT holder address
+  string enclave_public_key;  // miner enclave public key
+  u128 amount;                // DAT stake amount
+  uint64_t stake_block_num;   // stake block num
+  Address by_from() const { return from; }
+  string by_enclave_public_key() const { return enclave_public_key; }
+
+  PLATON_SERIALIZE(stake, (from)(enclave_public_key)(amount)(stake_block_num));
+};
+
 CONTRACT verify : public Contract {
  protected:
   // dante token contract
@@ -102,8 +120,22 @@ CONTRACT verify : public Contract {
   // miner storage proof
   platon::db::Map<"storage_proof"_n, string, storage_proof> storage_proof_map;
 
-  // miner_info map
+  // miner info map
   platon::db::Map<"miner_info"_n, Address, miner_info> miner_info_map;
+
+  // Stake table
+  // UniqueIndex: from, NormalIndex: miner
+  MultiIndex<
+      "stake"_n, stake,
+      IndexedBy<"from"_n, IndexMemberFun<stake, Address, &stake::by_from,
+                                         IndexType::NormalIndex>>,
+      IndexedBy<"enclave_public_key"_n,
+                IndexMemberFun<stake, string, &stake::by_enclave_public_key,
+                               IndexType::NormalIndex>>>
+      stake_table;
+
+  // LAT token holder reward balance
+  platon::db::Map<"staker_reward"_n, Address, u128> staker_reward_map;
 
   // Verify contract events
  public:
@@ -116,6 +148,9 @@ CONTRACT verify : public Contract {
   PLATON_EVENT0(WithdrawDeal, string);
   PLATON_EVENT0(SubmitStorageProof, string);
   PLATON_EVENT0(SubmitMinerInfo, Address);
+  PLATON_EVENT0(StakeToken, Address);
+  PLATON_EVENT0(UnstakeToken, Address);
+  PLATON_EVENT0(ClaimStakeReward, Address);
 
  public:
   /**
@@ -296,6 +331,42 @@ CONTRACT verify : public Contract {
    * @param enclave_public_key - SGX enclave public key
    */
   Address get_miner_reward_address(const string& enclave_public_key);
+
+  /**
+   * DAT token holder stake token to miner
+   * @param enclave_public_key - SGX enclave public key
+   * @param amount - token amount
+   */
+  ACTION void stake_token(const string& enclave_public_key, const u128& amount);
+
+  /**
+   * DAT token holder unstake token from miner
+   * @param enclave_public_key - SGX enclave public key
+   * @param amount - token amount
+   */
+  ACTION void unstake_token(const string& enclave_public_key,
+                            const u128& amount);
+
+  /**
+   * DAT token holder claim stake reward
+   */
+  ACTION void claim_stake_reward();
+
+  /**
+   * Get stake record by from
+   * @param from - the account which stake token to miner
+   * @param skip - how many records should be skipped
+   */
+  CONST vector<stake> get_stake_by_from(const Address& from,
+                                        const uint8_t& skip);
+
+  /**
+   * Get stake record by miner
+   * @param enclave_public_key - miner enclave public key
+   * @param skip - how many records should be skipped
+   */
+  CONST vector<stake> get_stake_by_miner(const string& enclave_public_key,
+                                         const uint8_t& skip);
 };
 
 PLATON_DISPATCH(
@@ -305,5 +376,7 @@ PLATON_DISPATCH(
         unpledge_miner)(update_miner)(unregister_miner)(is_registered)(
         verify_signature)(fill_deal)(withdraw_deal)(update_storage_proof)(
         get_storage_proof)(get_miner)(get_total_capacity)(get_miner_count)(
-        submit_miner_info)(get_miner_info)(get_miner_reward_address))
+        submit_miner_info)(get_miner_info)(get_miner_reward_address)(
+        stake_token)(unstake_token)(claim_stake_reward)(get_stake_by_from)(
+        get_stake_by_miner))
 }  // namespace hackathon
