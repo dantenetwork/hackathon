@@ -388,4 +388,145 @@ Address verify::get_miner_reward_address(const string& enclave_public_key) {
                 "The enclave_public_key is not exists");
   return miner_map[enclave_public_key].reward_address;
 }
+
+// DAT token holder stake token to miner
+void verify::stake_token(const string& enclave_public_key, const u128& amount) {
+  // transfer register DAT from verify contract to sender
+  Address self = platon_address();
+  Address sender = platon_caller();
+  auto transfer_result = platon_call_with_return_value<bool>(
+      token_contract.self(), uint32_t(0), uint32_t(0), "transferFrom", sender,
+      self, amount);
+
+  // ensure cross contract called successfully
+  platon_assert(transfer_result.first && transfer_result.second,
+                "Stake to miner failed");
+
+  // add stake record
+  stake_table.emplace([&](auto& stake) {
+    stake.from = sender;
+    stake.enclave_public_key = enclave_public_key;
+    stake.amount = amount;
+    stake.stake_block_num = platon_block_number();
+  });
+
+  DEBUG(sender.toString() + " stake to miner " + enclave_public_key + " " +
+        std::to_string(amount));
+
+  PLATON_EMIT_EVENT0(StakeToken, sender);
+}
+
+// DAT token holder unstake token from miner
+void verify::unstake_token(const string& enclave_public_key,
+                           const u128& amount) {
+  verify::claim_stake_reward();
+
+  Address sender = platon_caller();
+
+  auto vect_iter = stake_table.get_index<"from"_n>();
+
+  // if user has staked multi times, then all records have to be processed.
+  u128 remaining_amount = amount;
+
+  for (auto itr = vect_iter.cbegin(sender);
+       itr != vect_iter.cend(sender) && remaining_amount > 0; itr++) {
+    // if staked amount is less than unstake amount, erase stake record and
+    // update remaining_amount
+    if (itr->amount <= remaining_amount) {
+      vect_iter.erase(itr);
+      remaining_amount -= itr->amount;
+    } else {
+      // if staked amount of current record is larger than unstake amount,
+      // update remaining_amount to 0
+      vect_iter.modify(
+          itr, [&](auto& record) { record.amount -= remaining_amount; });
+      remaining_amount = 0;
+    }
+  }
+
+  // transfer token to DAT token holder
+  auto transfer_result = platon_call_with_return_value<bool>(
+      token_contract.self(), uint32_t(0), uint32_t(0), "transfer", sender,
+      amount);
+
+  DEBUG(sender.toString() + " unstake token " + std::to_string(amount));
+
+  PLATON_EMIT_EVENT0(UnstakeToken, sender);
+}
+
+// DAT token holder claim stake reward
+void verify::claim_stake_reward() {
+  Address sender = platon_caller();
+  if (!staker_reward_map.contains(sender)) {
+    return;
+  }
+
+  u128 reward_balance = staker_reward_map[sender];
+  if (reward_balance == 0) {
+    return;
+  }
+
+  auto transfer_result = platon_call_with_return_value<bool>(
+      token_contract.self(), uint32_t(0), uint32_t(0), "transfer", sender,
+      reward_balance);
+
+  // ensure cross contract called successfully
+  platon_assert(transfer_result.first && transfer_result.second,
+                "Claim stake reward failed");
+
+  staker_reward_map[sender] = 0;
+
+  DEBUG(sender.toString() + " claim stake reward " +
+        std::to_string(reward_balance));
+
+  PLATON_EMIT_EVENT0(ClaimStakeReward, sender);
+}
+
+// Get stake record by from
+vector<stake> verify::get_stake_by_from(const Address& from,
+                                        const uint8_t& skip) {
+  vector<stake> stake_records;
+  auto vect_iter = stake_table.get_index<"from"_n>();
+  uint8_t index = 0;   // the index of current stake record in iterator
+  uint8_t total = 20;  // return 20 stake_records per request
+
+  for (auto itr = vect_iter.cbegin(from);
+       itr != vect_iter.cend(from) && total > 0; itr++, index++) {
+    // detect stake_deal.from == from
+    if (index >= skip && itr->from == from) {
+      stake ret;
+      ret.from = itr->from;
+      ret.enclave_public_key = itr->enclave_public_key;
+      ret.amount = itr->amount;
+      ret.stake_block_num = itr->stake_block_num;
+      stake_records.push_back(ret);
+      total--;
+    }
+  }
+  return stake_records;
+}
+
+// Get stake record by miner
+vector<stake> verify::get_stake_by_miner(const string& enclave_public_key,
+                                         const uint8_t& skip) {
+  vector<stake> stake_records;
+  auto vect_iter = stake_table.get_index<"enclave_public_key"_n>();
+  uint8_t index = 0;   // the index of current stake record in iterator
+  uint8_t total = 20;  // return 20 stake_records per request
+
+  for (auto itr = vect_iter.cbegin(enclave_public_key);
+       itr != vect_iter.cend(enclave_public_key) && total > 0; itr++, index++) {
+    // detect stake_deal.enclave_public_key == enclave_public_key
+    if (index >= skip && itr->enclave_public_key == enclave_public_key) {
+      stake ret;
+      ret.from = itr->from;
+      ret.enclave_public_key = itr->enclave_public_key;
+      ret.amount = itr->amount;
+      ret.stake_block_num = itr->stake_block_num;
+      stake_records.push_back(ret);
+      total--;
+    }
+  }
+  return stake_records;
+}
 }  // namespace hackathon
