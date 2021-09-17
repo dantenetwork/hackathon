@@ -104,17 +104,6 @@ void verify::pledge_miner(const string& enclave_public_key,
   platon_assert(sender == current_miner.sender,
                 "Only original sender can pledge miner");
 
-  // check sender DAT balance
-  auto balance_result = platon_call_with_return_value<u128>(
-      token_contract.self(), uint32_t(0), uint32_t(0), "balanceOf", sender);
-
-  // ensure cross contract called successfully
-  platon_assert(balance_result.second, "Query balance failed");
-  // ensure sender balance is >= deal reward
-  u128 balance = balance_result.first;
-  platon_assert(balance >= amount,
-                "Sender balance is less than " + std::to_string(amount));
-
   // transfer register DAT from sender to verify contract
   Address self = platon_address();
   auto transfer_result = platon_call_with_return_value<bool>(

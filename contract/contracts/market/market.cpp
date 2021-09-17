@@ -83,20 +83,10 @@ void market::add_deal(const string& cid,
   u128 deal_price = hackathon::safeMul(price, duration);
   u128 total_reward = hackathon::safeMul(deal_price, miner_required);
 
-  // query sender DAT balance
-  Address sender = platon_caller();
-  auto balance_result = platon_call_with_return_value<u128>(
-      token_contract.self(), uint32_t(0), uint32_t(0), "balanceOf", sender);
-
-  // ensure cross contract called successfully
-  platon_assert(balance_result.first, "Query balance failed");
-  // ensure sender balance is >= deal reward
-  platon_assert(balance_result.first >= total_reward,
-                sender.toString() + " balance is less than " +
-                    std::to_string(total_reward));
-
   // transfer DAT from sender to market contract
   Address self = platon_address();
+  Address sender = platon_caller();
+
   auto transfer_result = platon_call_with_return_value<bool>(
       token_contract.self(), uint32_t(0), uint32_t(0), "transferFrom", sender,
       self, total_reward);
@@ -148,17 +138,6 @@ void market::renewal_deal(const string& cid, const u128& duration) {
   // calculate deal price
   u128 deal_price = hackathon::safeMul(price, duration);
   u128 total_reward = hackathon::safeMul(deal_price, miner_required);
-
-  // query sender DAT balance
-  auto balance_result = platon_call_with_return_value<u128>(
-      token_contract.self(), uint32_t(0), uint32_t(0), "balanceOf", sender);
-
-  // ensure cross contract called successfully
-  platon_assert(balance_result.first, "Query balance failed");
-  // ensure sender balance is >= deal reward
-  platon_assert(balance_result.first >= total_reward,
-                sender.toString() + " balance is less than " +
-                    std::to_string(total_reward));
 
   // transfer DAT from sender to market contract
   Address self = platon_address();
