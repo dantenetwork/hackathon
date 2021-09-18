@@ -18,6 +18,8 @@ namespace hackathon {
  * platon-hackathon's core functionality.
  */
 
+const uint8_t kMaxDealEachSender = 10;  // max deal count for each sender
+
 struct deal {
  public:
   string cid;     // deal cid of IPFS network

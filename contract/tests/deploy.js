@@ -5,7 +5,7 @@ const blockchain = require('./blockchain.js');
 
 const chainId = 210309;
 const tokenContractAddress = 'lat1npeyahnmfn7s0dwwsc0pywq6jduev7kjf2r5tx';
-const miningContractAddress = 'lat1npeyahnmfn7s0dwwsc0pywq6jduev7kjf2r5tx';
+const miningContractAddress = 'lat15rgru7frz4hcz2cqggjl87stpvauezh2v9p7at';
 
 // deploy market contract account address, lat1qavfd7zwaknrxyx0drcmv0vr5zehgthhaqq6ul
 const marketPrivateKey = "0x4940cf212544505a0fad3e3932734220af101da915321489708f69bc908fda65"; // private key, Testnet only
@@ -49,8 +49,12 @@ let gas;
   address = await blockchain.contractCall(verifyContract, 'get_market_contract', []);
   console.log('marketContractAddress of verify contract: ' + address);
 
+  // get_mining_contract
+  address = await blockchain.contractCall(verifyContract, 'get_mining_contract', []);
+  console.log('miningContractAddress of verify contract: ' + address);
+
   const contractAddressFile = './config/default.json';
-  const contractAddress = {"tokenContractAddress":tokenContractAddress, "marketContractAddress": marketContractAddress, "verifyContractAddress": verifyContractAddress };
+  const contractAddress = {"tokenContractAddress":tokenContractAddress, "marketContractAddress": marketContractAddress, "verifyContractAddress": verifyContractAddress,"miningContractAddress":miningContractAddress };
   fs.writeFileSync(contractAddressFile, JSON.stringify(contractAddress));
   console.log('contract address is updated.');
 })();

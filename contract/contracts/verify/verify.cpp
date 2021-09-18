@@ -55,7 +55,6 @@ string verify::get_token_contract() {
 bool verify::set_market_contract(const Address& address) {
   platon_assert(platon::is_owner(), "Only owner can change token contract");
   market_contract.self() = address;
-
   return true;
 }
 
@@ -64,9 +63,22 @@ string verify::get_market_contract() {
   return market_contract.self().toString();
 }
 
+// Change mining contract address
+bool verify::set_mining_contract(const Address& address) {
+  platon_assert(platon::is_owner(), "Only owner can change mining contract");
+  mining_contract.self() = address;
+  return true;
+}
+
+// Query mining contract
+string verify::get_mining_contract() {
+  return mining_contract.self().toString();
+}
+
 // Register miner by enclave_public_key
 void verify::register_miner(const string& enclave_public_key,
-                            const Address& reward_address) {
+                            const Address& reward_address,
+                            const uint8_t& staker_reward_ratio) {
   platon_assert(!miner_map.contains(enclave_public_key),
                 "The enclave_public_key is already exists");
 
@@ -81,15 +93,30 @@ void verify::register_miner(const string& enclave_public_key,
   auto enclave_lat_address = Address(public_key_sha3.begin() + 12, 20);
   DEBUG("enclave_public_key lat address: " + enclave_lat_address.toString());
 
+  platon_assert(staker_reward_ratio <= 100,
+                "staker_reward_ratio can't larger than 100");
+
   // register miner
   miner info;
   info.enclave_public_key = enclave_public_key;
   info.enclave_lat_address = enclave_lat_address;
   info.reward_address = reward_address;
   info.sender = platon_caller();
+  info.staker_reward_ratio = staker_reward_ratio;
   miner_map.insert(enclave_public_key, info);
 
   miner_count.self() += 1;
+
+  // pass register block num to mining contract
+  auto register_result = platon_call_with_return_value<bool>(
+      mining_contract.self(), uint32_t(0), uint32_t(0), "set_register_block",
+      enclave_lat_address, platon_block_number());
+
+  DEBUG("set register block result: " + std::to_string(register_result.first) +
+        " " + std::to_string(register_result.second));
+
+  // platon_assert(register_result.first && register_result.second,
+  //               "Set register block failed");
 
   PLATON_EMIT_EVENT1(RegisterMiner, enclave_public_key);
 }
@@ -104,6 +131,13 @@ void verify::pledge_miner(const string& enclave_public_key,
   platon_assert(sender == current_miner.sender,
                 "Only original sender can pledge miner");
 
+  if (current_miner.miner_staked_token > 0) {
+    platon_assert(
+        current_miner.miner_pledged_token + amount >=
+            current_miner.miner_staked_token / kMaxHolderStakeToMinerRatio,
+        "Miner total pledge token can't less than staked token");
+  }
+
   // transfer register DAT from sender to verify contract
   Address self = platon_address();
   auto transfer_result = platon_call_with_return_value<bool>(
@@ -117,6 +151,7 @@ void verify::pledge_miner(const string& enclave_public_key,
   auto storage_size = (amount / kTokenUnit) * kBytesPerPledgedDAT;
 
   DEBUG("pledge miner " + enclave_public_key + " " + std::to_string(amount));
+  DEBUG("storage_size" + std::to_string(storage_size));
   // update miner pledged info
   current_miner.miner_pledged_token += amount;
   current_miner.miner_pledged_storage_size += storage_size;
@@ -125,8 +160,7 @@ void verify::pledge_miner(const string& enclave_public_key,
   PLATON_EMIT_EVENT0(PledgeMiner, enclave_public_key);
 }
 
-void verify::unpledge_miner(const string& enclave_public_key,
-                            const u128& amount) {
+void verify::unpledge_miner(const string& enclave_public_key) {
   platon_assert(miner_map.contains(enclave_public_key),
                 "The enclave_public_key is not exists");
   miner current_miner = miner_map[enclave_public_key];
@@ -134,30 +168,26 @@ void verify::unpledge_miner(const string& enclave_public_key,
   platon_assert(sender == current_miner.sender,
                 "Only original sender can unpledge miner");
 
-  platon_assert(amount < current_miner.miner_pledged_token,
-                "Unpledge token can't larger than pledged token");
-
   storage_proof proof = storage_proof_map[enclave_public_key];
-  platon_assert(proof.enclave_stored_size == 0,
+  platon_assert(proof.enclave_task_size == 0,
                 "Please withdraw all deals before unpledge miner");
 
-  // update current miner info
-  current_miner.miner_pledged_token -= amount;
-  auto unpledge_size = (amount / kTokenUnit) * kBytesPerPledgedDAT;
-  current_miner.miner_pledged_storage_size -= unpledge_size;
-  miner_map[enclave_public_key] = current_miner;
-
-  // transfer register DAT from verify contract to sender
+  // transfer pledged DAT from verify contract to sender
   Address self = platon_address();
   auto transfer_result = platon_call_with_return_value<bool>(
       token_contract.self(), uint32_t(0), uint32_t(0), "transfer", sender,
-      amount);
+      current_miner.miner_pledged_token);
 
   // ensure cross contract called successfully
   platon_assert(transfer_result.first && transfer_result.second,
                 "Unpledge miner failed");
 
-  DEBUG("unpledge miner " + enclave_public_key + " " + std::to_string(amount));
+  // update current miner info
+  current_miner.miner_pledged_token = 0;
+  current_miner.miner_pledged_storage_size = 0;
+  miner_map[enclave_public_key] = current_miner;
+
+  DEBUG("unpledge miner " + enclave_public_key);
   PLATON_EMIT_EVENT0(UnpledgeMiner, enclave_public_key);
 }
 
@@ -189,15 +219,20 @@ bool verify::verify_signature(const string& enclave_public_key,
 
 // Modify miner info by enclave_public_key
 void verify::update_miner(const string& enclave_public_key,
-                          const Address& reward_address) {
+                          const Address& reward_address,
+                          const uint8_t& staker_reward_ratio) {
   platon_assert(miner_map.contains(enclave_public_key),
                 "The enclave_public_key is not exists");
   miner info = miner_map[enclave_public_key];
   Address sender = platon_caller();
   platon_assert(sender == info.sender, "Only original sender can update miner");
 
+  platon_assert(staker_reward_ratio <= 100,
+                "staker_reward_ratio can't larger than 100");
+
   // update miner
   info.reward_address = reward_address;
+  info.staker_reward_ratio = staker_reward_ratio;
   miner_map[enclave_public_key] = info;
 
   PLATON_EMIT_EVENT0(UpdateMiner, enclave_public_key);
@@ -207,10 +242,18 @@ void verify::update_miner(const string& enclave_public_key,
 void verify::unregister_miner(const string& enclave_public_key) {
   platon_assert(miner_map.contains(enclave_public_key),
                 "The enclave_public_key is not exists");
-  miner info = miner_map[enclave_public_key];
+  miner current_miner = miner_map[enclave_public_key];
   Address sender = platon_caller();
-  platon_assert(sender == info.sender,
+  platon_assert(sender == current_miner.sender,
                 "Only original sender can unregister miner");
+
+  // pass register block num to mining contract
+  auto unregister_result = platon_call_with_return_value<bool>(
+      mining_contract.self(), uint32_t(0), uint32_t(0), "erase_register_block",
+      current_miner.enclave_lat_address);
+
+  platon_assert(unregister_result.first && unregister_result.second,
+                "Erase register block failed");
 
   miner_map.erase(enclave_public_key);
 
@@ -227,8 +270,8 @@ bool verify::is_registered(const string& enclave_public_key) {
 // Submit enclave new deal proof
 void verify::fill_deal(const string& enclave_public_key,
                        const uint64_t& enclave_timestamp,
-                       const u128& enclave_stored_size,
-                       const vector<cid_file> stored_files,
+                       const u128& enclave_task_size,
+                       const vector<cid_file> task_files,
                        const string& hashed_value,
                        const string& enclave_signature) {
   verify_signature(enclave_public_key, hashed_value, enclave_signature);
@@ -243,27 +286,31 @@ void verify::fill_deal(const string& enclave_public_key,
 
   storage_proof proof = storage_proof_map[enclave_public_key];
 
+  DEBUG("proof.enclave_task_size: " + std::to_string(proof.enclave_task_size));
+  DEBUG("enclave_task_size: " + std::to_string(enclave_task_size));
+  DEBUG("current_miner.miner_pledged_storage_size: " +
+        std::to_string(current_miner.miner_pledged_storage_size));
   platon_assert(
-      (proof.enclave_stored_size + enclave_stored_size) <=
+      (proof.enclave_task_size + enclave_task_size) <=
           current_miner.miner_pledged_storage_size,
-      "Fill deal failed, miner stored size can't larger than pledged storage "
+      "Fill deal failed, miner task size can't larger than pledged storage "
       "size");
 
   // update miner idle size
-  if (proof.enclave_idle_size > enclave_stored_size) {
-    proof.enclave_idle_size -= enclave_stored_size;
+  if (proof.enclave_idle_size > enclave_task_size) {
+    proof.enclave_idle_size -= enclave_task_size;
   } else {
     proof.enclave_idle_size = 0;
   }
 
-  // update miner stored size
-  proof.enclave_stored_size += enclave_stored_size;
+  // update miner task size
+  proof.enclave_task_size += enclave_task_size;
   storage_proof_map[enclave_public_key] = proof;
 
   // call fill_deal of market.cpp
   auto fill_deal_result = platon_call_with_return_value<bool>(
       market_contract.self(), uint32_t(0), uint32_t(0), "fill_deal",
-      enclave_public_key, stored_files);
+      enclave_public_key, task_files);
 
   platon_assert(fill_deal_result.second, "Fill Deal failed");
 
@@ -292,8 +339,8 @@ void verify::withdraw_deal(const string& enclave_public_key,
 void verify::update_storage_proof(const string& enclave_public_key,
                                   const uint64_t& enclave_timestamp,
                                   const u128& enclave_idle_size,
-                                  const u128& enclave_stored_size,
-                                  const vector<cid_file> stored_files,
+                                  const u128& enclave_task_size,
+                                  const vector<cid_file> task_files,
                                   const string& hashed_value,
                                   const string& enclave_signature) {
   verify_signature(enclave_public_key, hashed_value, enclave_signature);
@@ -313,27 +360,90 @@ void verify::update_storage_proof(const string& enclave_public_key,
 
     // ensure timestamp is larger than previous timestamp
     platon_assert(proof.enclave_timestamp < enclave_timestamp,
-                  "Timestamp is smaller than previous timestamp of proof");
-    miner_previous_size = proof.enclave_idle_size + proof.enclave_stored_size;
+                  "Timestamp can't smaller than previous timestamp");
+    miner_previous_size = proof.enclave_idle_size + proof.enclave_task_size;
   }
 
   proof.enclave_timestamp = enclave_timestamp;
   proof.enclave_idle_size = enclave_idle_size;
-  proof.enclave_stored_size = enclave_stored_size;
+  proof.enclave_task_size = enclave_task_size;
   proof.enclave_signature = enclave_signature;
   storage_proof_map[enclave_public_key] = proof;
+
+  u128 miner_enclave_size = enclave_task_size + enclave_idle_size;
+
+  total_capacity.self() -= miner_previous_size;
+  total_capacity.self() += miner_enclave_size;
+
+  //////////////////////////////////////////
+  // submit storage proof to market contract
+  //////////////////////////////////////////
 
   // call update_storage_proof of market.cpp
   auto result = platon_call_with_return_value<bool>(
       market_contract.self(), uint32_t(0), uint32_t(0), "update_storage_proof",
-      enclave_public_key, stored_files);
+      enclave_public_key, task_files);
 
   platon_assert(result.first && result.second, "Update storage proof failed");
 
-  u128 miner_enclave_size = enclave_stored_size + enclave_idle_size;
+  //////////////////////////////////////////////
+  // submit storage proof to mining contract  //
+  //////////////////////////////////////////////
 
-  total_capacity.self() -= miner_previous_size;
-  total_capacity.self() += miner_enclave_size;
+  miner current_miner = miner_map[enclave_public_key];
+  // ensure miner_reward_capacity is less than max_reward_capacity
+  // if miner pledge token is 0 after unpledged, so miner staked size is 0
+
+  u128 miner_reward_capacity = enclave_idle_size + enclave_task_size;
+  u128 pledged_staked_capacity =
+      std::min(current_miner.miner_pledged_storage_size +
+                   current_miner.miner_staked_storage_size,
+               current_miner.miner_pledged_storage_size *
+                   (kMaxHolderStakeToMinerRatio + 1));
+
+  miner_reward_capacity =
+      std::min(miner_reward_capacity, pledged_staked_capacity);
+
+  // ensure miner_task_reward_capacity is less than max_task_reward_capacity
+  u128 miner_task_reward_capacity =
+      std::min(enclave_task_size, current_miner.miner_pledged_storage_size);
+
+  // call update_storage of mining.cpp
+  auto mining_result = platon_call_with_return_value<claim_info>(
+      mining_contract.self(), uint32_t(0), uint32_t(0), "update_storage",
+      current_miner.enclave_lat_address, miner_reward_capacity,
+      miner_task_reward_capacity);
+
+  platon_assert(mining_result.second, "call mining contract failed");
+
+  //////////////////////////////////////////
+  // calculate staking reward
+  //////////////////////////////////////////
+  u128 reward = mining_result.first.rewards;
+
+  if (reward == 0) {
+    return;
+  }
+
+  uint64_t block_num = mining_result.first.cur_period_end_block;
+
+  // calculate miner reward
+  u128 miner_reward = reward * 100 / current_miner.staker_reward_ratio;
+  reward_balance_map[current_miner.reward_address] += miner_reward;
+
+  // calculate staker reward
+  u128 staker_reward = reward - miner_reward;
+  u128 reward_for_each_token = staker_reward / current_miner.miner_staked_token;
+
+  auto vect_iter = stake_table.get_index<"enclave_public_key"_n>();
+
+  for (auto itr = vect_iter.cbegin(enclave_public_key);
+       itr != vect_iter.cend(enclave_public_key); itr++) {
+    // ensure that only valid staker is rewarded
+    if (itr->stake_block_num <= block_num) {
+      reward_balance_map[itr->from] += itr->amount * reward_for_each_token;
+    }
+  }
 
   PLATON_EMIT_EVENT0(SubmitStorageProof, enclave_public_key);
 }
@@ -413,6 +523,19 @@ void verify::stake_token(const string& enclave_public_key, const u128& amount) {
   DEBUG(sender.toString() + " stake to miner " + enclave_public_key + " " +
         std::to_string(amount));
 
+  miner current_miner = miner_map[enclave_public_key];
+
+  // update miner staked token & miner staked storage size
+  platon_assert(
+      current_miner.miner_staked_token + amount <=
+          current_miner.miner_pledged_token * kMaxHolderStakeToMinerRatio,
+      "Stake token can't larger than miner_pledged_token * 9");
+
+  current_miner.miner_staked_token += amount;
+  current_miner.miner_staked_storage_size +=
+      (amount / kTokenUnit) * kBytesPerPledgedDAT;
+
+  miner_map[enclave_public_key] = current_miner;
   PLATON_EMIT_EVENT0(StakeToken, sender);
 }
 
@@ -451,17 +574,24 @@ void verify::unstake_token(const string& enclave_public_key,
 
   DEBUG(sender.toString() + " unstake token " + std::to_string(amount));
 
+  miner current_miner = miner_map[enclave_public_key];
+  current_miner.miner_staked_token -= amount;
+  current_miner.miner_staked_storage_size -=
+      (amount / kTokenUnit) * kBytesPerPledgedDAT;
+
+  miner_map[enclave_public_key] = current_miner;
+
   PLATON_EMIT_EVENT0(UnstakeToken, sender);
 }
 
 // DAT token holder claim stake reward
 void verify::claim_stake_reward() {
   Address sender = platon_caller();
-  if (!staker_reward_map.contains(sender)) {
+  if (!reward_balance_map.contains(sender)) {
     return;
   }
 
-  u128 reward_balance = staker_reward_map[sender];
+  u128 reward_balance = reward_balance_map[sender];
   if (reward_balance == 0) {
     return;
   }
@@ -474,7 +604,7 @@ void verify::claim_stake_reward() {
   platon_assert(transfer_result.first && transfer_result.second,
                 "Claim stake reward failed");
 
-  staker_reward_map[sender] = 0;
+  reward_balance_map[sender] = 0;
 
   DEBUG(sender.toString() + " claim stake reward " +
         std::to_string(reward_balance));

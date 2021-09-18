@@ -79,13 +79,18 @@ void market::add_deal(const string& cid,
   auto vect_iter = deal_table.find<"cid"_n>(cid);
   platon_assert(vect_iter == deal_table.cend(), "Cid is already exists");
 
+  Address sender = platon_caller();
+  auto count = deal_table.count<"sender"_n>(sender);
+  platon_assert(count < kMaxDealEachSender,
+                "Total deal count of sender can't larger than " +
+                    std::to_string(kMaxDealEachSender));
+
   // calculate deal price
   u128 deal_price = hackathon::safeMul(price, duration);
   u128 total_reward = hackathon::safeMul(deal_price, miner_required);
 
   // transfer DAT from sender to market contract
   Address self = platon_address();
-  Address sender = platon_caller();
 
   auto transfer_result = platon_call_with_return_value<bool>(
       token_contract.self(), uint32_t(0), uint32_t(0), "transferFrom", sender,

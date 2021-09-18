@@ -36,14 +36,15 @@ struct miner {
   u128 miner_staked_token =
       0;  // total token amount that DAT holder staked to miner
   u128 miner_staked_storage_size =
-      0;                           // miner_staked_token * kBytesPerPledgedDAT
-  uint8_t staker_bonus_ratio = 0;  // staker's bonus rate
+      0;                            // miner_staked_token * kBytesPerPledgedDAT
+  uint8_t staker_reward_ratio = 0;  // staker's reward ratio
   string primary_key() const { return enclave_public_key; }
 
   PLATON_SERIALIZE(
       miner,
       (enclave_public_key)(enclave_lat_address)(reward_address)(sender)(
-          miner_pledged_token)(miner_staked_token)(miner_pledged_storage_size))
+          miner_pledged_token)(miner_pledged_storage_size)(miner_staked_token)(
+          miner_staked_storage_size)(staker_reward_ratio))
 };
 
 struct cid_file {
@@ -57,11 +58,11 @@ struct storage_proof {
  public:
   uint64_t enclave_timestamp = 0;  // SGX enclave timestamp
   u128 enclave_idle_size = 0;      // SGX enclave idle size
-  u128 enclave_stored_size = 0;    // SGX enclave file stored size
+  u128 enclave_task_size = 0;      // SGX enclave file task size
   string enclave_signature;        // SGX enclave signature
 
   PLATON_SERIALIZE(storage_proof,
-                   (enclave_timestamp)(enclave_idle_size)(enclave_stored_size)(
+                   (enclave_timestamp)(enclave_idle_size)(enclave_task_size)(
                        enclave_signature))
 };
 
@@ -97,6 +98,13 @@ struct stake {
   PLATON_SERIALIZE(stake, (from)(enclave_public_key)(amount)(stake_block_num));
 };
 
+struct claim_info {
+  u128 rewards;
+  uint64_t cur_period_end_block;
+
+  PLATON_SERIALIZE(claim_info, (rewards)(cur_period_end_block))
+};
+
 CONTRACT verify : public Contract {
  protected:
   // dante token contract
@@ -123,6 +131,9 @@ CONTRACT verify : public Contract {
   // miner info map
   platon::db::Map<"miner_info"_n, Address, miner_info> miner_info_map;
 
+  // reward list
+  platon::db::Map<"reward_balance"_n, Address, u128> reward_balance_map;
+
   // Stake table
   // UniqueIndex: from, NormalIndex: miner
   MultiIndex<
@@ -133,9 +144,6 @@ CONTRACT verify : public Contract {
                 IndexMemberFun<stake, string, &stake::by_enclave_public_key,
                                IndexType::NormalIndex>>>
       stake_table;
-
-  // LAT token holder reward balance
-  platon::db::Map<"staker_reward"_n, Address, u128> staker_reward_map;
 
   // Verify contract events
  public:
@@ -197,12 +205,24 @@ CONTRACT verify : public Contract {
   CONST string get_market_contract();
 
   /**
+   * Change mining contract
+   * @param address - Change DAT mining contract address
+   */
+  ACTION bool set_mining_contract(const Address& address);
+
+  /**
+   * Query mining contract
+   */
+  CONST string get_mining_contract();
+
+  /**
    * Register miner by enclave_public_key
    * @param enclave_public_key - SGX enclave public key
    * @param reward_address - miner address which receive rewards
    */
   ACTION void register_miner(const string& enclave_public_key,
-                             const Address& reward_address);
+                             const Address& reward_address,
+                             const uint8_t& staker_reward_ratio);
 
   /**
    * Pledge DAT token
@@ -217,8 +237,7 @@ CONTRACT verify : public Contract {
    * @param enclave_public_key - SGX enclave public key
    * @param amount - token amount
    */
-  ACTION void unpledge_miner(const string& enclave_public_key,
-                             const u128& amount);
+  ACTION void unpledge_miner(const string& enclave_public_key);
 
   /**
    * Verify SGX signature
@@ -236,7 +255,8 @@ CONTRACT verify : public Contract {
    * @param reward_address - miner address which receive rewards
    */
   ACTION void update_miner(const string& enclave_public_key,
-                           const Address& reward_address);
+                           const Address& reward_address,
+                           const uint8_t& staker_reward_ratio);
 
   /**
    * Unregister miner by enclave_public_key & enclave_signature
@@ -254,14 +274,14 @@ CONTRACT verify : public Contract {
    * Submit enclave new deal proof to fill deal
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
-   * @param enclave_stored_size - miner new file size
-   * @param stored_files - file list which miner stored
+   * @param enclave_task_size - miner new file size
+   * @param task_files - file list which miner task
    * @param hashed_value - hashed value of original data
    * @param enclave_signature - SGX signature
    */
   ACTION void fill_deal(
       const string& enclave_public_key, const uint64_t& enclave_timestamp,
-      const u128& enclave_stored_size, const vector<cid_file> stored_files,
+      const u128& enclave_task_size, const vector<cid_file> task_files,
       const string& hashed_value, const string& enclave_signature);
 
   /**
@@ -277,15 +297,15 @@ CONTRACT verify : public Contract {
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
    * @param enclave_idle_size - miner idle size
-   * @param enclave_stored_size - miner file stored size
-   * @param stored_files - file list which miner stored
+   * @param enclave_task_size - miner file task size
+   * @param task_files - file list which miner task
    * @param hashed_value - hashed value of original data
    * @param enclave_signature - SGX signature
    */
   ACTION void update_storage_proof(
       const string& enclave_public_key, const uint64_t& enclave_timestamp,
-      const u128& enclave_idle_size, const u128& enclave_stored_size,
-      const vector<cid_file> stored_files, const string& hashed_value,
+      const u128& enclave_idle_size, const u128& enclave_task_size,
+      const vector<cid_file> task_files, const string& hashed_value,
       const string& enclave_signature);
 
   /**
@@ -354,7 +374,7 @@ CONTRACT verify : public Contract {
 
   /**
    * Get stake record by from
-   * @param from - the account which stake token to miner
+   * @param from - DAT token holder
    * @param skip - how many records should be skipped
    */
   CONST vector<stake> get_stake_by_from(const Address& from,
@@ -372,11 +392,11 @@ CONTRACT verify : public Contract {
 PLATON_DISPATCH(
     verify,
     (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(
-        set_market_contract)(get_market_contract)(register_miner)(pledge_miner)(
-        unpledge_miner)(update_miner)(unregister_miner)(is_registered)(
-        verify_signature)(fill_deal)(withdraw_deal)(update_storage_proof)(
-        get_storage_proof)(get_miner)(get_total_capacity)(get_miner_count)(
-        submit_miner_info)(get_miner_info)(get_miner_reward_address)(
-        stake_token)(unstake_token)(claim_stake_reward)(get_stake_by_from)(
-        get_stake_by_miner))
+        set_market_contract)(get_market_contract)(set_mining_contract)(
+        get_mining_contract)(register_miner)(pledge_miner)(unpledge_miner)(
+        update_miner)(unregister_miner)(is_registered)(verify_signature)(
+        fill_deal)(withdraw_deal)(update_storage_proof)(get_storage_proof)(
+        get_miner)(get_total_capacity)(get_miner_count)(submit_miner_info)(
+        get_miner_info)(get_miner_reward_address)(stake_token)(unstake_token)(
+        claim_stake_reward)(get_stake_by_from)(get_stake_by_miner))
 }  // namespace hackathon
