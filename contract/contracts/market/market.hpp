@@ -45,23 +45,23 @@ struct deal {
           miner_required)(total_reward)(reward_balance)(miner_list));
 };
 
-struct stored_deal {
+struct filled_deal {
  public:
   string cid;  // deal cid
   u128 size;   // file size of deal
-  PLATON_SERIALIZE(stored_deal, (cid)(size));
+  PLATON_SERIALIZE(filled_deal, (cid)(size));
 };
 
 struct storage_proof {
  public:
   uint64_t last_proof_block_num;  // last storage proof when miner submitted
   uint64_t
-      last_claimed_block_num;  // block number when last deal reward claimed
-  vector<stored_deal> stored_deals;  // deals that miner stored
+      last_claimed_block_num;   // block number when last deal reward claimed
+  vector<string> filled_deals;  // deals that miner stored
 
   PLATON_SERIALIZE(
       storage_proof,
-      (last_proof_block_num)(last_claimed_block_num)(stored_deals));
+      (last_proof_block_num)(last_claimed_block_num)(filled_deals));
 };
 
 CONTRACT market : public Contract {
@@ -210,17 +210,19 @@ CONTRACT market : public Contract {
    * @param enclave_public_key - SGX enclave public key
    * @param deals - deals which miner stored
    */
-  ACTION bool fill_deal(const string& enclave_public_key,
-                        const vector<stored_deal>& deals);
+  // ACTION bool fill_deal(const string& enclave_public_key,
+  //                       const vector<filled_deal>& deals);
 
   /**
    * miner update storage proof and ensure signature is verified by
    * verify_contract
    * @param enclave_public_key - SGX enclave public key
-   * @param deals - deals which miner stored
+   * @param added_files - deals which miner added
+   * @param deleted_files - deals which miner deleted
    */
-  ACTION bool update_storage_proof(const string& enclave_public_key,
-                                   const vector<stored_deal>& deals);
+  ACTION int64_t update_storage_proof(
+      const string& enclave_public_key, const vector<filled_deal>& added_files,
+      const vector<filled_deal>& deleted_files, u128& miner_remaining_quota);
 
   /**
    * Get miner last proof
@@ -247,6 +249,16 @@ CONTRACT market : public Contract {
    * Query deal count
    */
   CONST uint64_t get_deal_count();
+
+  /**
+   * Query all deals filled by miner
+   */
+  CONST vector<string> get_deals_by_miner(const string& enclave_public_key);
+
+  /**
+   * Query deal count filled by miner
+   */
+  CONST uint32_t get_deal_count_by_miner(const string& enclave_public_key);
 };
 
 PLATON_DISPATCH(
@@ -254,6 +266,6 @@ PLATON_DISPATCH(
     (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(
         set_verify_contract)(get_verify_contract)(add_deal)(renewal_deal)(
         withdraw_deal)(get_deal_by_cid)(get_deal_by_sender)(get_opened_deal)(
-        fill_deal)(update_storage_proof)(get_storage_proof)(claim_deal_reward)(
-        get_deal_count))
+        update_storage_proof)(get_storage_proof)(claim_deal_reward)(
+        get_deal_count)(get_deals_by_miner)(get_deal_count_by_miner))
 }  // namespace hackathon
