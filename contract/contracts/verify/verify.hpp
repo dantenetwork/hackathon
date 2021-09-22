@@ -279,10 +279,10 @@ CONTRACT verify : public Contract {
    * @param hashed_value - hashed value of original data
    * @param enclave_signature - SGX signature
    */
-  ACTION void fill_deal(
-      const string& enclave_public_key, const uint64_t& enclave_timestamp,
-      const u128& enclave_task_size, const vector<cid_file> task_files,
-      const string& hashed_value, const string& enclave_signature);
+  // ACTION void fill_deal(
+  //     const string& enclave_public_key, const uint64_t& enclave_timestamp,
+  //     const u128& enclave_task_size, const vector<cid_file> task_files,
+  //     const string& hashed_value, const string& enclave_signature);
 
   /**
    * Withdraw storage service from deal
@@ -297,16 +297,14 @@ CONTRACT verify : public Contract {
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
    * @param enclave_idle_size - miner idle size
-   * @param enclave_task_size - miner file task size
-   * @param task_files - file list which miner task
-   * @param hashed_value - hashed value of original data
+   * @param added_files - file list which miner added
+   * @param deleted_files - file list which miner deleted
    * @param enclave_signature - SGX signature
    */
   ACTION void update_storage_proof(
       const string& enclave_public_key, const uint64_t& enclave_timestamp,
-      const u128& enclave_idle_size, const u128& enclave_task_size,
-      const vector<cid_file> task_files, const string& hashed_value,
-      const string& enclave_signature);
+      const u128& enclave_idle_size, const vector<cid_file> added_files,
+      const vector<cid_file> deleted_files, const string& enclave_signature);
 
   /**
    * Query last enclave proof
@@ -395,8 +393,8 @@ PLATON_DISPATCH(
         set_market_contract)(get_market_contract)(set_mining_contract)(
         get_mining_contract)(register_miner)(pledge_miner)(unpledge_miner)(
         update_miner)(unregister_miner)(is_registered)(verify_signature)(
-        fill_deal)(withdraw_deal)(update_storage_proof)(get_storage_proof)(
-        get_miner)(get_total_capacity)(get_miner_count)(submit_miner_info)(
-        get_miner_info)(get_miner_reward_address)(stake_token)(unstake_token)(
+        withdraw_deal)(update_storage_proof)(get_storage_proof)(get_miner)(
+        get_total_capacity)(get_miner_count)(submit_miner_info)(get_miner_info)(
+        get_miner_reward_address)(stake_token)(unstake_token)(
         claim_stake_reward)(get_stake_by_from)(get_stake_by_miner))
 }  // namespace hackathon
