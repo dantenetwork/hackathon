@@ -336,6 +336,7 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
   vector<string> filled_deals;
   storage_proof proof;
   if (storage_proof_map.contains(enclave_public_key)) {
+    proof = storage_proof_map[enclave_public_key];
     filled_deals = proof.filled_deals;
   }
   uint64_t current_block_num = platon_block_number();
@@ -396,7 +397,7 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
           });
 
           // add storage proof of deal into fresh_deal
-          fresh_deal_map.insert(itr->cid, platon_block_number());
+          fresh_deal_map.insert(itr->cid, current_block_num);
 
           // add cid into miner filled_deals
           filled_deals.push_back(itr->cid);
@@ -442,6 +443,7 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
     task_size_changed -= itr->size;
   }
 
+  DEBUG("task_size_changed: " + std::to_string(task_size_changed));
   proof.filled_deals = filled_deals;
   proof.last_proof_block_num = current_block_num;
 
@@ -488,8 +490,6 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
     return false;
   }
 
-  DEBUG("------------------------");
-
   u128 total_reward = 0;
 
   // check each stored deal's price, calculate the reward
@@ -512,7 +512,6 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
 
   if (total_reward > 0) {
     DEBUG("total_reward: " + std::to_string(total_reward));
-    DEBUG("------------------------");
     // query miner reward address
     auto address_result = platon_call_with_return_value<Address>(
         verify_contract.self(), uint32_t(0), uint32_t(0),
