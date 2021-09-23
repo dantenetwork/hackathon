@@ -200,28 +200,44 @@ void verify::unpledge_miner(const string& enclave_public_key) {
 
 // verify intel SGX signature
 bool verify::verify_signature(const string& enclave_public_key,
-                              const string& hashed_value,
+                              const uint64_t& enclave_timestamp,
+                              const u128& enclave_idle_size,
+                              const vector<cid_file> added_files,
+                              const vector<cid_file> deleted_files,
                               const string& enclave_signature) {
-  platon_assert(miner_map.contains(enclave_public_key),
-                "The enclave_public_key is not exists");
-  auto miner = miner_map[enclave_public_key];
-  Address enclave_lat_address = miner.enclave_lat_address;
+  DEBUG("starting...");
+  // fill param
+  string param = enclave_public_key + std::to_string(enclave_timestamp) +
+                 std::to_string(enclave_idle_size);
+  DEBUG("param: " + param);
+  for (vector<cid_file>::const_iterator added_itr = added_files.begin();
+       added_itr != added_files.end(); ++added_itr) {
+    param += added_itr->cid;
+    param += std::to_string(added_itr->size);
+  }
+  DEBUG("param: " + param);
+  for (vector<cid_file>::const_iterator deleted_itr = deleted_files.begin();
+       deleted_itr != deleted_files.end(); ++deleted_itr) {
+    param += deleted_itr->cid;
+    param += std::to_string(deleted_itr->size);
+  }
 
+  DEBUG("ending...");
+  DEBUG("param: " + param);
+  byte result[32];
+  platon::platon_sha256(asBytes(param), result);
+
+  DEBUG("hash: " + toHex(result, result + 32, "0x"));
+
+  string hashed_value = "";
   // recover public key
   Address recovered_address;
   auto ret =
-      platon::platon_ecrecover(h256(hashed_value, sizeof(hashed_value)),
+      platon::platon_ecrecover(h256(result, sizeof(result)),
                                fromHex(enclave_signature), recovered_address);
-
-  // check ecrecover result
-  if (ret == 0 && enclave_lat_address == recovered_address) {
-    DEBUG("verify_signature success");
-    return true;
-  }
-  // DEBUG("verify_signature failed, enclave_lat_address: " +
-  //       enclave_lat_address.toString() +
-  //       ", recovered_address: " + recovered_address.toString());
-  return true;  // TODO temporary return true for DEBUG
+  DEBUG(ret);
+  DEBUG(recovered_address.toString());
+  return true;
 }
 
 // Modify miner info by enclave_public_key
@@ -277,56 +293,6 @@ bool verify::is_registered(const string& enclave_public_key) {
   return miner_map.contains(enclave_public_key);
 }
 
-// Submit enclave new deal proof
-// void verify::fill_deal(const string& enclave_public_key,
-//                        const uint64_t& enclave_timestamp,
-//                        const u128& enclave_task_size,
-//                        const vector<cid_file> added_files,
-//                        const string& enclave_signature) {
-//   verify_signature(enclave_public_key, hashed_value, enclave_signature);
-
-//   miner current_miner = miner_map[enclave_public_key];
-//   Address sender = platon_caller();
-//   platon_assert(sender == current_miner.sender,
-//                 "Only original sender of miner can fill deal");
-
-//   platon_assert(storage_proof_map.contains(enclave_public_key),
-//                 "Fill deal failed, miner storage proof is empty");
-
-//   storage_proof proof = storage_proof_map[enclave_public_key];
-
-//   DEBUG("proof.enclave_task_size: " +
-//   std::to_string(proof.enclave_task_size)); DEBUG("enclave_task_size: " +
-//   std::to_string(enclave_task_size));
-//   DEBUG("current_miner.miner_pledged_storage_size: " +
-//         std::to_string(current_miner.miner_pledged_storage_size));
-//   platon_assert(
-//       (proof.enclave_task_size + enclave_task_size) <=
-//           current_miner.miner_pledged_storage_size,
-//       "Fill deal failed, miner task size can't larger than pledged storage "
-//       "size");
-
-//   // update miner idle size
-//   if (proof.enclave_idle_size > enclave_task_size) {
-//     proof.enclave_idle_size -= enclave_task_size;
-//   } else {
-//     proof.enclave_idle_size = 0;
-//   }
-
-//   // update miner task size
-//   proof.enclave_task_size += enclave_task_size;
-//   storage_proof_map[enclave_public_key] = proof;
-
-//   // call fill_deal of market.cpp
-//   auto fill_deal_result = platon_call_with_return_value<bool>(
-//       market_contract.self(), uint32_t(0), uint32_t(0), "fill_deal",
-//       enclave_public_key, task_files);
-
-//   platon_assert(fill_deal_result.second, "Fill deal failed");
-
-//   PLATON_EMIT_EVENT0(FillDeal, enclave_public_key);
-// }
-
 // Withdraw storage service from deal
 void verify::withdraw_deal(const string& enclave_public_key,
                            const string& cid) {
@@ -353,7 +319,8 @@ void verify::update_storage_proof(const string& enclave_public_key,
                                   const vector<cid_file> deleted_files,
                                   const string& enclave_signature) {
   string hashed_value = "";
-  verify_signature(enclave_public_key, hashed_value, enclave_signature);
+  verify_signature(enclave_public_key, enclave_timestamp, enclave_idle_size,
+                   added_files, deleted_files, enclave_signature);
 
   miner info = miner_map[enclave_public_key];
   Address sender = platon_caller();

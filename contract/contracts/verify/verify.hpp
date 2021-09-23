@@ -241,13 +241,17 @@ CONTRACT verify : public Contract {
 
   /**
    * Verify SGX signature
-   * @param enclave_public_key - SGX enclave_public_key
-   * @param hashed_value - hashed value of original data
+   * @param enclave_public_key - SGX enclave public key
+   * @param enclave_timestamp - SGX timestamp
+   * @param enclave_idle_size - miner idle size
+   * @param added_files - file list which miner added
+   * @param deleted_files - file list which miner deleted
    * @param enclave_signature - SGX signature
    */
-  ACTION bool verify_signature(const string& enclave_public_key,
-                               const string& hashed_value,
-                               const string& enclave_signature);
+  ACTION bool verify_signature(
+      const string& enclave_public_key, const uint64_t& enclave_timestamp,
+      const u128& enclave_idle_size, const vector<cid_file> added_files,
+      const vector<cid_file> deleted_files, const string& enclave_signature);
 
   /**
    * Update miner by enclave_public_key & enclave_signature
@@ -269,20 +273,6 @@ CONTRACT verify : public Contract {
    * @param enclave_public_key - SGX enclave public key
    */
   CONST bool is_registered(const string& enclave_public_key);
-
-  /**
-   * Submit enclave new deal proof to fill deal
-   * @param enclave_public_key - SGX enclave public key
-   * @param enclave_timestamp - SGX timestamp
-   * @param enclave_task_size - miner new file size
-   * @param task_files - file list which miner task
-   * @param hashed_value - hashed value of original data
-   * @param enclave_signature - SGX signature
-   */
-  // ACTION void fill_deal(
-  //     const string& enclave_public_key, const uint64_t& enclave_timestamp,
-  //     const u128& enclave_task_size, const vector<cid_file> task_files,
-  //     const string& hashed_value, const string& enclave_signature);
 
   /**
    * Withdraw storage service from deal
