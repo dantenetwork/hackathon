@@ -38,15 +38,15 @@ const THOUSAND_TOKENS = '1000000000000000000000';
 const FIVE_HUNDRED_TOKENS = '500000000000000000000';
 
 const enclave_public_key =
-    '0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8';
-const cid = 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdb';
+    '9817f8165b81f259d928ce2ddbfc9b02070b87ce9562a055acbbdcf97e66be79b8d410fb8fd0479c195485a648b417fda808110efcfba45d65c4a32677da3a48';
+const cid = ' bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdb';
 const size = 1024 * 1024;
 const enclave_idle_size = 1024 * 1024 * 1024;
 
 
 
 // test case
-describe('dante market&verify unit test', function() {
+describe('dante market && verify unit test', function() {
   before(async function() {
     // market contract abi
     let marketRawData = fs.readFileSync('../build/contracts/market.abi.json');
@@ -72,6 +72,16 @@ describe('dante market&verify unit test', function() {
     // 发送交易
     try {
       this.timeout(0);
+
+      await blockchain.sendTransaction(
+          verifyContract, 'test', testAccountPrivateKey, [
+            '0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8',
+            '1632303751', '109951162777600',
+            [['QmdHUb7ttiCvFGqf8D3L5PH7iomPx86ZAarH8xKrjwgqZT', 123456]],
+            [['QmRDgkoY5w9ot2qpe2NN1KCqJNwGJihZpb95hhXNNgKRAv', 654321]],
+            '9011e60df9828abbc22a5d179889693d1f1af3651087ef16f837d233a68b271839f2feb57844359f7ccefce234f6b1098e29fbd4e651e3031afc46706deb866101'
+          ]);
+      return;
 
       // Query allowance of testAccount address
       let balance = await blockchain.contractCall(
@@ -106,6 +116,7 @@ describe('dante market&verify unit test', function() {
       console.log(error);
     }
   });
+  return;
 
   it('verify register_miner', async function() {
     try {
