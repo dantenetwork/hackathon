@@ -151,7 +151,7 @@ void verify::pledge_miner(const string& enclave_public_key,
   auto storage_size = (amount / kTokenUnit) * kBytesPerPledgedDAT;
 
   DEBUG("pledge miner " + enclave_public_key + " " + std::to_string(amount));
-  DEBUG("storage_size" + std::to_string(storage_size));
+  DEBUG("storage_size " + std::to_string(storage_size));
   // update miner pledged info
   current_miner.miner_pledged_token += amount;
   current_miner.miner_pledged_storage_size += storage_size;
@@ -375,6 +375,7 @@ void verify::update_storage_proof(const string& enclave_public_key,
     miner_previous_size = proof.enclave_idle_size + proof.enclave_task_size;
   }
   // minus previous miner size
+  DEBUG("miner_previous_size: " + std::to_string(miner_previous_size));
   total_capacity.self() -= miner_previous_size;
   proof.enclave_timestamp = enclave_timestamp;
   // proof.enclave_task_size = enclave_task_size;
@@ -392,8 +393,7 @@ void verify::update_storage_proof(const string& enclave_public_key,
       market_contract.self(), uint32_t(0), uint32_t(0), "update_storage_proof",
       enclave_public_key, added_files, deleted_files, miner_remaining_quota);
 
-  platon_assert(market_result.first && market_result.second,
-                "Update storage proof failed");
+  platon_assert(market_result.second, "Update storage proof failed");
 
   int64_t task_size_changed = market_result.first;
 
