@@ -3,6 +3,18 @@
     "anonymous": false,
     "input": [
       {
+        "name": "arg1",
+        "type": "string"
+      }
+    ],
+    "name": "UpdateStorageProof",
+    "topic": 0,
+    "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
         "name": "topic",
         "type": "FixedHash<20>"
       },
@@ -23,20 +35,152 @@
     "constant": false,
     "input": [
       {
-        "name": "address",
-        "type": "FixedHash<20>"
+        "name": "enclave_public_key",
+        "type": "string"
+      },
+      {
+        "name": "cid",
+        "type": "string"
       }
     ],
-    "name": "set_token_contract",
+    "name": "withdraw_deal",
     "output": "bool",
     "type": "Action"
   },
   {
-    "constant": true,
-    "input": [],
-    "name": "get_token_contract",
-    "output": "string",
+    "anonymous": false,
+    "input": [
+      {
+        "name": "topic",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "arg1",
+        "type": "string"
+      }
+    ],
+    "name": "ClaimDealReward",
+    "topic": 1,
+    "type": "Event"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "cid",
+        "type": "string"
+      },
+      {
+        "name": "duration",
+        "type": "uint128"
+      }
+    ],
+    "name": "renewal_deal",
+    "output": "void",
     "type": "Action"
+  },
+  {
+    "baseclass": [],
+    "fields": [
+      {
+        "name": "cid",
+        "type": "string"
+      },
+      {
+        "name": "state",
+        "type": "uint8"
+      },
+      {
+        "name": "slashed",
+        "type": "bool"
+      },
+      {
+        "name": "size",
+        "type": "uint128"
+      },
+      {
+        "name": "price",
+        "type": "uint128"
+      },
+      {
+        "name": "duration",
+        "type": "uint128"
+      },
+      {
+        "name": "end_block_num",
+        "type": "uint64"
+      },
+      {
+        "name": "sender",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "miner_required",
+        "type": "uint8"
+      },
+      {
+        "name": "total_reward",
+        "type": "uint128"
+      },
+      {
+        "name": "reward_balance",
+        "type": "uint128"
+      },
+      {
+        "name": "miner_list",
+        "type": "string[]"
+      }
+    ],
+    "name": "deal",
+    "type": "struct"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "cid",
+        "type": "string"
+      }
+    ],
+    "name": "get_deal_by_cid",
+    "output": "deal",
+    "type": "Action"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "arg1",
+        "type": "string"
+      }
+    ],
+    "name": "FillDeal",
+    "topic": 0,
+    "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "arg1",
+        "type": "string"
+      }
+    ],
+    "name": "RenewalDeal",
+    "topic": 0,
+    "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "arg1",
+        "type": "string"
+      }
+    ],
+    "name": "WithdrawDeal",
+    "topic": 0,
+    "type": "Event"
   },
   {
     "constant": false,
@@ -77,74 +221,18 @@
     "constant": false,
     "input": [
       {
-        "name": "cid",
-        "type": "string"
-      },
-      {
-        "name": "size",
-        "type": "uint128"
-      },
-      {
-        "name": "price",
-        "type": "uint128"
-      },
-      {
-        "name": "duration",
-        "type": "uint128"
-      },
-      {
-        "name": "storage_provider_required",
-        "type": "uint8"
-      }
-    ],
-    "name": "add_deal",
-    "output": "void",
-    "type": "Action"
-  },
-  {
-    "anonymous": false,
-    "input": [
-      {
-        "name": "arg1",
-        "type": "string"
-      }
-    ],
-    "name": "FillDeal",
-    "topic": 0,
-    "type": "Event"
-  },
-  {
-    "anonymous": false,
-    "input": [
-      {
-        "name": "arg1",
-        "type": "string"
-      }
-    ],
-    "name": "UpdateStorageProof",
-    "topic": 0,
-    "type": "Event"
-  },
-  {
-    "anonymous": false,
-    "input": [
-      {
-        "name": "topic",
+        "name": "address",
         "type": "FixedHash<20>"
-      },
-      {
-        "name": "arg1",
-        "type": "string"
       }
     ],
-    "name": "ClaimDealReward",
-    "topic": 1,
-    "type": "Event"
+    "name": "set_token_contract",
+    "output": "bool",
+    "type": "Action"
   },
   {
     "constant": true,
     "input": [],
-    "name": "get_verify_contract",
+    "name": "get_token_contract",
     "output": "string",
     "type": "Action"
   },
@@ -161,19 +249,18 @@
     "type": "Action"
   },
   {
-    "baseclass": [],
-    "fields": [
+    "constant": true,
+    "input": [],
+    "name": "get_verify_contract",
+    "output": "string",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
       {
         "name": "cid",
         "type": "string"
-      },
-      {
-        "name": "state",
-        "type": "uint8"
-      },
-      {
-        "name": "slashed",
-        "type": "bool"
       },
       {
         "name": "size",
@@ -188,39 +275,12 @@
         "type": "uint128"
       },
       {
-        "name": "sender",
-        "type": "FixedHash<20>"
-      },
-      {
-        "name": "storage_provider_required",
+        "name": "miner_required",
         "type": "uint8"
-      },
-      {
-        "name": "total_reward",
-        "type": "uint128"
-      },
-      {
-        "name": "reward_balance",
-        "type": "uint128"
-      },
-      {
-        "name": "storage_provider_list",
-        "type": "string[]"
       }
     ],
-    "name": "deal",
-    "type": "struct"
-  },
-  {
-    "constant": true,
-    "input": [
-      {
-        "name": "cid",
-        "type": "string"
-      }
-    ],
-    "name": "get_deal_by_cid",
-    "output": "deal",
+    "name": "add_deal",
+    "output": "void",
     "type": "Action"
   },
   {
@@ -263,7 +323,7 @@
         "type": "uint128"
       }
     ],
-    "name": "cid_file",
+    "name": "filled_deal",
     "type": "struct"
   },
   {
@@ -274,12 +334,20 @@
         "type": "string"
       },
       {
-        "name": "deals",
-        "type": "cid_file[]"
+        "name": "added_files",
+        "type": "filled_deal[]"
+      },
+      {
+        "name": "deleted_files",
+        "type": "filled_deal[]"
+      },
+      {
+        "name": "miner_remaining_quota",
+        "type": "uint128"
       }
     ],
-    "name": "fill_deal",
-    "output": "bool",
+    "name": "update_storage_proof",
+    "output": "int64",
     "type": "Action"
   },
   {
@@ -288,13 +356,9 @@
       {
         "name": "enclave_public_key",
         "type": "string"
-      },
-      {
-        "name": "deals",
-        "type": "cid_file[]"
       }
     ],
-    "name": "update_storage_proof",
+    "name": "claim_deal_reward",
     "output": "bool",
     "type": "Action"
   },
@@ -310,11 +374,11 @@
         "type": "uint64"
       },
       {
-        "name": "deals",
-        "type": "cid_file[]"
+        "name": "filled_deals",
+        "type": "string[]"
       }
     ],
-    "name": "storage_provider",
+    "name": "storage_proof",
     "type": "struct"
   },
   {
@@ -325,20 +389,39 @@
         "type": "string"
       }
     ],
-    "name": "get_storage_provider_proof",
-    "output": "storage_provider",
+    "name": "get_storage_proof",
+    "output": "storage_proof",
     "type": "Action"
   },
   {
-    "constant": false,
+    "constant": true,
+    "input": [],
+    "name": "get_deal_count",
+    "output": "uint64",
+    "type": "Action"
+  },
+  {
+    "constant": true,
     "input": [
       {
         "name": "enclave_public_key",
         "type": "string"
       }
     ],
-    "name": "claim_deal_reward",
-    "output": "bool",
+    "name": "get_deals_by_miner",
+    "output": "string[]",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      }
+    ],
+    "name": "get_deal_count_by_miner",
+    "output": "uint32",
     "type": "Action"
   }
 ]

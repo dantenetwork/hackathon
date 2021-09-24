@@ -1,4 +1,4 @@
-const marketContract = new (require('../blockchain.js'))();
+const blockchain = new (require('../blockchain.js'))();
 
 module.exports = {
   /**
@@ -7,15 +7,19 @@ module.exports = {
    */
   async status(cid) {
     if (!cid) {
-      console.log('{dante-client status} expected 1 param,but got 0');
+      console.log('{dante-client status} expect [cid]');
       return;
     }
-    let dealStatus = await marketContract.contractCall('marketContract', 'get_deal_by_cid', [cid]);
+    let dealStatus = await blockchain.contractCall(
+        'marketContract', 'get_deal_by_cid', [cid]);
 
-    const table = ['cid', 'state', 'slashed', 'size', 'price', 'duration', 'sender', 'storage_provider_required', 'total_reward', 'reward_balance', 'storage_provider_list'];
+    console.log(cid);
+    const table = [
+      'cid', 'state', 'slashed', 'size', 'price', 'duration', 'end_block_num',
+      'sender', 'miner_required', 'total_reward', 'reward_balance', 'miner_list'
+    ];
 
-    const emptyAddress = 'lat1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq542u6a';
-    if (dealStatus[6] == emptyAddress) {
+    if (dealStatus[0] == '') {
       console.log('cid ' + cid + ' is not exists');
       return;
     }
@@ -30,32 +34,36 @@ module.exports = {
    */
   async getProof(enclavePublicKey) {
     if (!enclavePublicKey) {
-      console.log('{dante-client getProof} expected 1 params,but only got 0');
+      console.log('{dante-client getProof} expected [enclavePublicKey]');
       return;
     }
-    console.log(enclavePublicKey);
-    const minerInfo = await marketContract.contractCall('marketContract', 'get_storage_provider_proof', [enclavePublicKey]);
 
-    const table = ['last_proof_block_num', 'last_claimed_block_num', 'deals'];
+    const verify_storage_proof_formate = [
+      'enclave_timestamp', 'enclave_idle_size', 'enclave_task_size',
+      'enclave_signature'
+    ];
+    const market_storage_proof_formate =
+        ['last_proof_block_num', 'last_claimed_block_num', 'filled_deals'];
 
-    console.log('-------------------------------');
-    console.log('Miner Proof Info:');
-    // print proof info
-    for (let i = 0; i < minerInfo.length; i++) {
-      if (i == 2) {
-        console.log(table[i] + ': ');
-        console.log('');
-        const deals = minerInfo[i];
-        // print each deal info
-        for (let j = 0; j < deals.length; j++) {
-          console.log('cid: ' + deals[j][0]);
-          console.log('size: ' + deals[j][1]);
-          console.log('');
-        }
-      } else {
-        console.log(table[i] + ': ' + minerInfo[i]);
-      }
-    }
-    return minerInfo;
+    // storage proof on verify contract
+    ret = await blockchain.contractCall(
+        'verifyContract', 'get_storage_proof', [enclavePublicKey]);
+    console.log('verify contract proof info:');
+    let output = [];
+    ret.forEach(function(value, item) {
+      output.push({[verify_storage_proof_formate[item]]: value});
+    });
+    console.log(output);
+
+    // storage proof on market contract
+    output = [];
+    ret = await blockchain.contractCall(
+        'marketContract', 'get_storage_proof', [enclavePublicKey]);
+    console.log('market contract proof info:');
+
+    ret.forEach(function(value, item) {
+      output.push({[market_storage_proof_formate[item]]: value});
+    });
+    console.log(output);
   }
 }

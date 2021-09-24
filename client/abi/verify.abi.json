@@ -4,101 +4,46 @@
     "input": [
       {
         "name": "arg1",
-        "type": "string"
+        "type": "FixedHash<20>"
       }
     ],
-    "name": "UpdateMiner",
+    "name": "StakeToken",
     "topic": 0,
     "type": "Event"
-  },
-  {
-    "constant": false,
-    "input": [
-      {
-        "name": "address",
-        "type": "FixedHash<20>"
-      }
-    ],
-    "name": "set_owner",
-    "output": "bool",
-    "type": "Action"
-  },
-  {
-    "constant": true,
-    "input": [],
-    "name": "get_owner",
-    "output": "string",
-    "type": "Action"
-  },
-  {
-    "constant": false,
-    "input": [
-      {
-        "name": "token_contract_address",
-        "type": "FixedHash<20>"
-      },
-      {
-        "name": "market_contract_address",
-        "type": "FixedHash<20>"
-      }
-    ],
-    "name": "init",
-    "output": "void",
-    "type": "Action"
-  },
-  {
-    "constant": false,
-    "input": [
-      {
-        "name": "message",
-        "type": "string"
-      },
-      {
-        "name": "enclave_signature",
-        "type": "string"
-      }
-    ],
-    "name": "test",
-    "output": "void",
-    "type": "Action"
   },
   {
     "baseclass": [],
     "fields": [
       {
-        "name": "cid",
-        "type": "string"
-      },
-      {
-        "name": "size",
-        "type": "uint128"
-      }
-    ],
-    "name": "cid_file",
-    "type": "struct"
-  },
-  {
-    "constant": false,
-    "input": [
-      {
-        "name": "enclave_public_key",
-        "type": "string"
-      },
-      {
         "name": "enclave_timestamp",
-        "type": "string"
+        "type": "uint64"
       },
       {
-        "name": "stored_files",
-        "type": "cid_file[]"
+        "name": "enclave_idle_size",
+        "type": "uint128"
+      },
+      {
+        "name": "enclave_task_size",
+        "type": "uint128"
       },
       {
         "name": "enclave_signature",
         "type": "string"
       }
     ],
-    "name": "fill_deal",
-    "output": "void",
+    "name": "storage_proof",
+    "type": "struct"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      }
+    ],
+    "name": "get_storage_proof",
+    "output": "storage_proof",
     "type": "Action"
   },
   {
@@ -110,6 +55,42 @@
       }
     ],
     "name": "RegisterMiner",
+    "topic": 0,
+    "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "arg1",
+        "type": "string"
+      }
+    ],
+    "name": "PledgeMiner",
+    "topic": 0,
+    "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "arg1",
+        "type": "string"
+      }
+    ],
+    "name": "UnpledgeMiner",
+    "topic": 0,
+    "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "arg1",
+        "type": "string"
+      }
+    ],
+    "name": "UpdateMiner",
     "topic": 0,
     "type": "Event"
   },
@@ -145,6 +126,18 @@
         "type": "string"
       }
     ],
+    "name": "WithdrawDeal",
+    "topic": 0,
+    "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "arg1",
+        "type": "string"
+      }
+    ],
     "name": "SubmitStorageProof",
     "topic": 0,
     "type": "Event"
@@ -160,6 +153,85 @@
     "name": "SubmitMinerInfo",
     "topic": 0,
     "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "arg1",
+        "type": "FixedHash<20>"
+      }
+    ],
+    "name": "UnstakeToken",
+    "topic": 0,
+    "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "arg1",
+        "type": "FixedHash<20>"
+      }
+    ],
+    "name": "ClaimStakeReward",
+    "topic": 0,
+    "type": "Event"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "token_contract_address",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "market_contract_address",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "mining_contract_address",
+        "type": "FixedHash<20>"
+      }
+    ],
+    "name": "init",
+    "output": "void",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "address",
+        "type": "FixedHash<20>"
+      }
+    ],
+    "name": "set_owner",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      },
+      {
+        "name": "amount",
+        "type": "uint128"
+      }
+    ],
+    "name": "unstake_token",
+    "output": "void",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [],
+    "name": "get_owner",
+    "output": "string",
+    "type": "Action"
   },
   {
     "constant": false,
@@ -203,6 +275,25 @@
     "constant": false,
     "input": [
       {
+        "name": "address",
+        "type": "FixedHash<20>"
+      }
+    ],
+    "name": "set_mining_contract",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [],
+    "name": "get_mining_contract",
+    "output": "string",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
         "name": "enclave_public_key",
         "type": "string"
       },
@@ -211,8 +302,8 @@
         "type": "FixedHash<20>"
       },
       {
-        "name": "enclave_signature",
-        "type": "string"
+        "name": "staker_reward_ratio",
+        "type": "uint8"
       }
     ],
     "name": "register_miner",
@@ -227,12 +318,91 @@
         "type": "string"
       },
       {
-        "name": "reward_address",
-        "type": "FixedHash<20>"
+        "name": "amount",
+        "type": "uint128"
+      }
+    ],
+    "name": "pledge_miner",
+    "output": "void",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      }
+    ],
+    "name": "unpledge_miner",
+    "output": "void",
+    "type": "Action"
+  },
+  {
+    "baseclass": [],
+    "fields": [
+      {
+        "name": "cid",
+        "type": "string"
+      },
+      {
+        "name": "size",
+        "type": "uint128"
+      }
+    ],
+    "name": "filled_deal",
+    "type": "struct"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      },
+      {
+        "name": "enclave_timestamp",
+        "type": "uint64"
+      },
+      {
+        "name": "enclave_idle_size",
+        "type": "uint128"
+      },
+      {
+        "name": "added_files",
+        "type": "filled_deal[]"
+      },
+      {
+        "name": "deleted_files",
+        "type": "filled_deal[]"
       },
       {
         "name": "enclave_signature",
         "type": "string"
+      },
+      {
+        "name": "enclave_lat_address",
+        "type": "FixedHash<20>"
+      }
+    ],
+    "name": "verify_signature",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      },
+      {
+        "name": "reward_address",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "staker_reward_ratio",
+        "type": "uint8"
       }
     ],
     "name": "update_miner",
@@ -245,13 +415,37 @@
       {
         "name": "enclave_public_key",
         "type": "string"
-      },
-      {
-        "name": "enclave_signature",
-        "type": "string"
       }
     ],
     "name": "unregister_miner",
+    "output": "void",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      }
+    ],
+    "name": "is_registered",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      },
+      {
+        "name": "cid",
+        "type": "string"
+      }
+    ],
+    "name": "withdraw_deal",
     "output": "void",
     "type": "Action"
   },
@@ -264,22 +458,26 @@
       },
       {
         "name": "enclave_timestamp",
-        "type": "string"
+        "type": "uint64"
       },
       {
-        "name": "enclave_plot_size",
+        "name": "enclave_idle_size",
         "type": "uint128"
       },
       {
-        "name": "stored_files",
-        "type": "cid_file[]"
+        "name": "added_files",
+        "type": "filled_deal[]"
+      },
+      {
+        "name": "deleted_files",
+        "type": "filled_deal[]"
       },
       {
         "name": "enclave_signature",
         "type": "string"
       }
     ],
-    "name": "submit_storage_proof",
+    "name": "update_storage_proof",
     "output": "void",
     "type": "Action"
   },
@@ -287,39 +485,12 @@
     "baseclass": [],
     "fields": [
       {
-        "name": "enclave_timestamp",
+        "name": "enclave_public_key",
         "type": "string"
       },
       {
-        "name": "enclave_plot_size",
-        "type": "uint128"
-      },
-      {
-        "name": "enclave_signature",
-        "type": "string"
-      }
-    ],
-    "name": "storage_proof",
-    "type": "struct"
-  },
-  {
-    "constant": true,
-    "input": [
-      {
-        "name": "enclave_public_key",
-        "type": "string"
-      }
-    ],
-    "name": "get_storage_proof",
-    "output": "storage_proof",
-    "type": "Action"
-  },
-  {
-    "baseclass": [],
-    "fields": [
-      {
-        "name": "enclave_public_key",
-        "type": "string"
+        "name": "enclave_lat_address",
+        "type": "FixedHash<20>"
       },
       {
         "name": "reward_address",
@@ -328,6 +499,26 @@
       {
         "name": "sender",
         "type": "FixedHash<20>"
+      },
+      {
+        "name": "miner_pledged_token",
+        "type": "uint128"
+      },
+      {
+        "name": "miner_pledged_storage_size",
+        "type": "uint128"
+      },
+      {
+        "name": "miner_staked_token",
+        "type": "uint128"
+      },
+      {
+        "name": "miner_staked_storage_size",
+        "type": "uint128"
+      },
+      {
+        "name": "staker_reward_ratio",
+        "type": "uint8"
       }
     ],
     "name": "miner",
@@ -377,6 +568,13 @@
     "type": "Action"
   },
   {
+    "constant": true,
+    "input": [],
+    "name": "get_miner_count",
+    "output": "uint64",
+    "type": "Action"
+  },
+  {
     "baseclass": [],
     "fields": [
       {
@@ -413,6 +611,84 @@
     ],
     "name": "get_miner_info",
     "output": "miner_info",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      },
+      {
+        "name": "amount",
+        "type": "uint128"
+      }
+    ],
+    "name": "stake_token",
+    "output": "void",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [],
+    "name": "claim_stake_reward",
+    "output": "void",
+    "type": "Action"
+  },
+  {
+    "baseclass": [],
+    "fields": [
+      {
+        "name": "from",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      },
+      {
+        "name": "amount",
+        "type": "uint128"
+      },
+      {
+        "name": "stake_block_num",
+        "type": "uint64"
+      }
+    ],
+    "name": "stake",
+    "type": "struct"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "from",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "skip",
+        "type": "uint8"
+      }
+    ],
+    "name": "get_stake_by_from",
+    "output": "stake[]",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      },
+      {
+        "name": "skip",
+        "type": "uint8"
+      }
+    ],
+    "name": "get_stake_by_miner",
+    "output": "stake[]",
     "type": "Action"
   }
 ]

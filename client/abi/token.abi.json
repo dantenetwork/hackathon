@@ -1,19 +1,26 @@
 [
   {
-    "anonymous": false,
+    "constant": true,
+    "input": [],
+    "name": "getOwner",
+    "output": "string",
+    "type": "Action"
+  },
+  {
+    "constant": false,
     "input": [
       {
-        "name": "topic",
+        "name": "_account",
         "type": "FixedHash<20>"
       },
       {
-        "name": "arg1",
+        "name": "_value",
         "type": "uint128"
       }
     ],
-    "name": "Burn",
-    "topic": 1,
-    "type": "Event"
+    "name": "burn",
+    "output": "bool",
+    "type": "Action"
   },
   {
     "constant": true,
@@ -144,10 +151,30 @@
       },
       {
         "name": "arg1",
-        "type": "uint128"
+        "type": "string"
+      },
+      {
+        "name": "arg2",
+        "type": "string"
       }
     ],
     "name": "Mint",
+    "topic": 1,
+    "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "topic",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "arg1",
+        "type": "uint128"
+      }
+    ],
+    "name": "Burn",
     "topic": 1,
     "type": "Event"
   },
@@ -175,58 +202,6 @@
     "constant": false,
     "input": [
       {
-        "name": "_to",
-        "type": "FixedHash<20>"
-      },
-      {
-        "name": "_value",
-        "type": "uint128"
-      }
-    ],
-    "name": "transfer",
-    "output": "bool",
-    "type": "Action"
-  },
-  {
-    "constant": false,
-    "input": [
-      {
-        "name": "_from",
-        "type": "FixedHash<20>"
-      },
-      {
-        "name": "_to",
-        "type": "FixedHash<20>"
-      },
-      {
-        "name": "_value",
-        "type": "uint128"
-      }
-    ],
-    "name": "transferFrom",
-    "output": "bool",
-    "type": "Action"
-  },
-  {
-    "constant": false,
-    "input": [
-      {
-        "name": "_spender",
-        "type": "FixedHash<20>"
-      },
-      {
-        "name": "_value",
-        "type": "uint128"
-      }
-    ],
-    "name": "approve",
-    "output": "bool",
-    "type": "Action"
-  },
-  {
-    "constant": false,
-    "input": [
-      {
         "name": "_account",
         "type": "FixedHash<20>"
       },
@@ -245,49 +220,10 @@
       {
         "name": "_account",
         "type": "FixedHash<20>"
-      },
-      {
-        "name": "_value",
-        "type": "uint128"
-      }
-    ],
-    "name": "burn",
-    "output": "bool",
-    "type": "Action"
-  },
-  {
-    "constant": false,
-    "input": [
-      {
-        "name": "_account",
-        "type": "FixedHash<20>"
       }
     ],
     "name": "setOwner",
     "output": "bool",
-    "type": "Action"
-  },
-  {
-    "constant": true,
-    "input": [
-      {
-        "name": "_owner",
-        "type": "FixedHash<20>"
-      },
-      {
-        "name": "_spender",
-        "type": "FixedHash<20>"
-      }
-    ],
-    "name": "allowance",
-    "output": "uint128",
-    "type": "Action"
-  },
-  {
-    "constant": true,
-    "input": [],
-    "name": "getOwner",
-    "output": "string",
     "type": "Action"
   },
   {

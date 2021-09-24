@@ -30,7 +30,7 @@ struct deal {
   u128 size;      // deal files size
   u128 price;     // deal price per block
   u128 duration;  // deal duration (blocks)
-  uint64_t closed_block_num;  // the block number that deal will closed
+  uint64_t end_block_num;     // the block number that deal will be end
   Address sender;             // deal sender
   uint8_t miner_required;     // the amount of miners required
   u128 total_reward;          // deal total rewards
@@ -41,7 +41,7 @@ struct deal {
 
   PLATON_SERIALIZE(
       deal,
-      (cid)(state)(slashed)(size)(price)(duration)(closed_block_num)(sender)(
+      (cid)(state)(slashed)(size)(price)(duration)(end_block_num)(sender)(
           miner_required)(total_reward)(reward_balance)(miner_list));
 };
 
