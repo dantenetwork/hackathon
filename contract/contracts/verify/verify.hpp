@@ -47,11 +47,11 @@ struct miner {
           miner_staked_storage_size)(staker_reward_ratio))
 };
 
-struct cid_file {
+struct filled_deal {
  public:
   string cid;  // deal cid
   u128 size;   // file size of deal
-  PLATON_SERIALIZE(cid_file, (cid)(size));
+  PLATON_SERIALIZE(filled_deal, (cid)(size));
 };
 
 struct storage_proof {
@@ -250,8 +250,9 @@ CONTRACT verify : public Contract {
    */
   ACTION bool verify_signature(
       const string& enclave_public_key, const uint64_t& enclave_timestamp,
-      const u128& enclave_idle_size, const vector<cid_file> added_files,
-      const vector<cid_file> deleted_files, const string& enclave_signature);
+      const u128& enclave_idle_size, const vector<filled_deal> added_files,
+      const vector<filled_deal> deleted_files, const string& enclave_signature,
+      const Address& enclave_lat_address);
 
   /**
    * Update miner by enclave_public_key & enclave_signature
@@ -293,8 +294,8 @@ CONTRACT verify : public Contract {
    */
   ACTION void update_storage_proof(
       const string& enclave_public_key, const uint64_t& enclave_timestamp,
-      const u128& enclave_idle_size, const vector<cid_file> added_files,
-      const vector<cid_file> deleted_files, const string& enclave_signature);
+      const u128& enclave_idle_size, const vector<filled_deal> added_files,
+      const vector<filled_deal> deleted_files, const string& enclave_signature);
 
   /**
    * Query last enclave proof

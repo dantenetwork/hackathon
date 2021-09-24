@@ -202,32 +202,28 @@ void verify::unpledge_miner(const string& enclave_public_key) {
 bool verify::verify_signature(const string& enclave_public_key,
                               const uint64_t& enclave_timestamp,
                               const u128& enclave_idle_size,
-                              const vector<cid_file> added_files,
-                              const vector<cid_file> deleted_files,
-                              const string& enclave_signature) {
-  DEBUG("starting...");
+                              const vector<filled_deal> added_files,
+                              const vector<filled_deal> deleted_files,
+                              const string& enclave_signature,
+                              const Address& enclave_lat_address) {
   // fill param
   string param = enclave_public_key + std::to_string(enclave_timestamp) +
                  std::to_string(enclave_idle_size);
-  DEBUG("param: " + param);
-  for (vector<cid_file>::const_iterator added_itr = added_files.begin();
+
+  for (vector<filled_deal>::const_iterator added_itr = added_files.begin();
        added_itr != added_files.end(); ++added_itr) {
     param += added_itr->cid;
     param += std::to_string(added_itr->size);
   }
-  DEBUG("param: " + param);
-  for (vector<cid_file>::const_iterator deleted_itr = deleted_files.begin();
+
+  for (vector<filled_deal>::const_iterator deleted_itr = deleted_files.begin();
        deleted_itr != deleted_files.end(); ++deleted_itr) {
     param += deleted_itr->cid;
     param += std::to_string(deleted_itr->size);
   }
 
-  DEBUG("ending...");
-  DEBUG("param: " + param);
   byte result[32];
   platon::platon_sha256(asBytes(param), result);
-
-  DEBUG("hash: " + toHex(result, result + 32, "0x"));
 
   string hashed_value = "";
   // recover public key
@@ -237,7 +233,9 @@ bool verify::verify_signature(const string& enclave_public_key,
                                fromHex(enclave_signature), recovered_address);
   DEBUG(ret);
   DEBUG(recovered_address.toString());
-  return true;
+  // platon_assert(ret == 0 && recovered_address == enclave_lat_address,
+  //               "Verify signature failed");
+  return true;  // TODO ,temporary return true for DEBUG
 }
 
 // Modify miner info by enclave_public_key
@@ -315,22 +313,24 @@ void verify::withdraw_deal(const string& enclave_public_key,
 void verify::update_storage_proof(const string& enclave_public_key,
                                   const uint64_t& enclave_timestamp,
                                   const u128& enclave_idle_size,
-                                  const vector<cid_file> added_files,
-                                  const vector<cid_file> deleted_files,
+                                  const vector<filled_deal> added_files,
+                                  const vector<filled_deal> deleted_files,
                                   const string& enclave_signature) {
-  string hashed_value = "";
-  verify_signature(enclave_public_key, enclave_timestamp, enclave_idle_size,
-                   added_files, deleted_files, enclave_signature);
+  platon_assert(miner_map.contains(enclave_public_key),
+                "The enclave_public_key is not exists");
 
-  miner info = miner_map[enclave_public_key];
+  miner current_miner = miner_map[enclave_public_key];
   Address sender = platon_caller();
-  platon_assert(sender == info.sender,
+  platon_assert(sender == current_miner.sender,
                 "Only original sender of miner can update storage proof");
+
+  verify_signature(enclave_public_key, enclave_timestamp, enclave_idle_size,
+                   added_files, deleted_files, enclave_signature,
+                   current_miner.enclave_lat_address);
 
   // update miner proof
   u128 miner_previous_size = 0;
   storage_proof proof;
-  miner current_miner = miner_map[enclave_public_key];
 
   // if previous storage_proof exists
   if (storage_proof_map.contains(enclave_public_key)) {

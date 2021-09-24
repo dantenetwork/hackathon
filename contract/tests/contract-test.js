@@ -1,5 +1,4 @@
 const chai = require('chai');
-const {on} = require('cluster');
 const assert = chai.assert;
 const expect = chai.expect;
 const fs = require('fs');
@@ -7,7 +6,7 @@ const Web3 = require('web3');
 const web3 = new Web3('http://127.0.0.1:6789');
 const blockchain = require('./blockchain.js');
 const config = require('config');
-const exp = require('constants');
+const {parse} = require('path');
 
 // test account address, lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex
 // private key,Testnet only
@@ -37,13 +36,16 @@ const ONE_TOKEN = '1000000000000000000';
 const THOUSAND_TOKENS = '1000000000000000000000';
 const FIVE_HUNDRED_TOKENS = '500000000000000000000';
 
+// test deal info
 const enclave_public_key =
-    '9817f8165b81f259d928ce2ddbfc9b02070b87ce9562a055acbbdcf97e66be79b8d410fb8fd0479c195485a648b417fda808110efcfba45d65c4a32677da3a48';
+    '0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8';
+const enclave_lat_address = 'lat10e0525sfrf53yh2aljmm3sn9jq5njk7lrkx9a3';
 const cid = ' bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdb';
 const size = 1024 * 1024;
 const enclave_idle_size = 1024 * 1024 * 1024;
-
-
+const price = 1000000000000000;
+const duration = 500;
+const provider_required = 2;
 
 // test case
 describe('dante market && verify unit test', function() {
@@ -72,17 +74,6 @@ describe('dante market && verify unit test', function() {
     // 发送交易
     try {
       this.timeout(0);
-
-      await blockchain.sendTransaction(
-          verifyContract, 'test', testAccountPrivateKey, [
-            '0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8',
-            '1632303751', '109951162777600',
-            [['QmdHUb7ttiCvFGqf8D3L5PH7iomPx86ZAarH8xKrjwgqZT', 123456]],
-            [['QmRDgkoY5w9ot2qpe2NN1KCqJNwGJihZpb95hhXNNgKRAv', 654321]],
-            '9011e60df9828abbc22a5d179889693d1f1af3651087ef16f837d233a68b271839f2feb57844359f7ccefce234f6b1098e29fbd4e651e3031afc46706deb866101'
-          ]);
-      return;
-
       // Query allowance of testAccount address
       let balance = await blockchain.contractCall(
           tokenContract, 'balanceOf', [testAccount]);
@@ -116,7 +107,7 @@ describe('dante market && verify unit test', function() {
       console.log(error);
     }
   });
-  return;
+
 
   it('verify register_miner', async function() {
     try {
@@ -138,6 +129,7 @@ describe('dante market && verify unit test', function() {
 
       if (ret[0] == enclave_public_key) {
         console.log('the miner ' + enclave_public_key + ' is already exists');
+        return;
       } else {
         await blockchain.sendTransaction(
             verifyContract, 'register_miner', testAccountPrivateKey, miner);
@@ -188,14 +180,22 @@ describe('dante market && verify unit test', function() {
     try {
       this.timeout(0);
 
-      const hashed_value =
-          '0xa1de988600a42c4b4ab089b619297c17d53cffae5d5120d82d8a92d0bb3b78f2';
+      const enclave_public_key =
+          '0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8';
+      const enclave_timestamp = '1632303751';
+      const enclave_idle_size = 109951162777600;
+      const added_files =
+          [['QmdHUb7ttiCvFGqf8D3L5PH7iomPx86ZAarH8xKrjwgqZT', 123456]];
+      const deleted_files =
+          [['QmRDgkoY5w9ot2qpe2NN1KCqJNwGJihZpb95hhXNNgKRAv', 654321]];
       const enclave_signature =
-          '0xf28b8fde3ea610e59590da237b9e99871390fd458baae8d30e2da070ac9850f70cb89a8fb817d73a3709b375c3aee82a5b64fae5743cbd95feff1bb6965f040b00';
+          '9011e60df9828abbc22a5d179889693d1f1af3651087ef16f837d233a68b271839f2feb57844359f7ccefce234f6b1098e29fbd4e651e3031afc46706deb866101';
 
-      const param = [enclave_public_key, hashed_value, enclave_signature];
       await blockchain.sendTransaction(
-          verifyContract, 'verify_signature', testAccountPrivateKey, param);
+          verifyContract, 'verify_signature', testAccountPrivateKey, [
+            enclave_public_key, enclave_timestamp, enclave_idle_size,
+            added_files, deleted_files, enclave_signature, enclave_lat_address
+          ]);
     } catch (e) {
       console.log(e);
     }
@@ -206,11 +206,8 @@ describe('dante market && verify unit test', function() {
     try {
       this.timeout(0);
       // test data
-      const price = '10000000000000000';
-      const duration = 500;
-      const provider_required = 2;
 
-      const totalPrice = price * duration * provider_required;
+      const totalReward = price * duration * provider_required;
 
       dealInfo = [cid, size, price, duration, provider_required];
 
@@ -240,8 +237,8 @@ describe('dante market && verify unit test', function() {
       expect(onchainDealByCid[5]).to.equal(duration + '');
       expect(onchainDealByCid[7]).to.equal(testAccount);
       expect(onchainDealByCid[8]).to.equal(provider_required);
-      expect(parseInt(onchainDealByCid[9])).to.equal(totalPrice);
-      expect(parseInt(onchainDealByCid[10])).to.equal(totalPrice);
+      expect(parseInt(onchainDealByCid[9])).to.equal(totalReward);
+      expect(parseInt(onchainDealByCid[10])).to.equal(totalReward);
 
 
       onchainDealByCid = await blockchain.contractCall(
@@ -264,8 +261,15 @@ describe('dante market && verify unit test', function() {
     try {
       this.timeout(0);
       // test data
-      const duration = 500;
       dealInfo = [cid, duration];
+
+      const totalReward = price * duration * provider_required;
+
+      let onchainDealByCid = await blockchain.contractCall(
+          marketContract, 'get_deal_by_cid', [cid]);
+      const previousDuration = parseInt(onchainDealByCid[5]);
+      const previousTotalReward = parseInt(onchainDealByCid[9]);
+      const previousRewardBalance = parseInt(onchainDealByCid[10]);
 
       // send transaction
       const ret = await blockchain.sendTransaction(
@@ -281,10 +285,12 @@ describe('dante market && verify unit test', function() {
       assert.isArray(onchainDealByCid);
       expect(onchainDealByCid[0]).to.equal(cid);
       expect(onchainDealByCid[1]).to.equal(0);
-      expect(onchainDealByCid[5]).to.equal(duration * 2 + '');
+      expect(onchainDealByCid[5]).to.equal(previousDuration + duration + '');
       expect(onchainDealByCid[7]).to.equal(testAccount);
-      expect(onchainDealByCid[9]).to.equal('20000000000000000000');
-      expect(onchainDealByCid[10]).to.equal('20000000000000000000');
+      expect(onchainDealByCid[9])
+          .to.equal(previousTotalReward + totalReward + '');
+      expect(onchainDealByCid[10])
+          .to.equal(previousRewardBalance + totalReward + '');
     } catch (e) {
       console.log(e);
     }
@@ -310,11 +316,10 @@ describe('dante market && verify unit test', function() {
       await blockchain.sendTransaction(
           verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
 
-      let ret =
-          await blockchain.contractCall(verifyContract, 'get_total_capacity');
+      ret = await blockchain.contractCall(verifyContract, 'get_total_capacity');
       console.log('total capacity:');
       console.log(ret);
-      expect(ret).to.equal((enclave_idle_size + size) + '');
+      expect(ret).to.equal(enclave_idle_size + size + '');
     } catch (e) {
       console.log(e);
     }
