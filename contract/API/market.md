@@ -136,9 +136,9 @@ lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 
 ```
 PLATON_EVENT1(AddDeal, Address, string, u128);
-  PLATON_EVENT0(FillDeal, string);
-  PLATON_EVENT0(RenewalDeal, string);
-  PLATON_EVENT0(WithdrawDeal, string);
-  PLATON_EVENT0(UpdateStorageProof, string);
-  PLATON_EVENT1(ClaimDealReward, Address, string);
+PLATON_EVENT0(FillDeal, string);
+PLATON_EVENT0(RenewalDeal, string);
+PLATON_EVENT0(WithdrawDeal, string);
+PLATON_EVENT0(UpdateStorageProof, string);
+PLATON_EVENT1(ClaimDealReward, Address, string);
 ```
