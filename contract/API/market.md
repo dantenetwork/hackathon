@@ -95,23 +95,17 @@ lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 @param skip - how many deals should be skipped
 ```
 
-#### Storage provider fill deal(Verify Contract Only)
-```
-@action fill_deal
-@param enclave_public_key - SGX enclave public key
-@param deals - deals which storage provider stored
-```
-
-#### Storage provider update storage proof(Verify Contract Only)
+#### miner update storage proof and ensure signature is verified by verify_contract
 ```
 @action update_storage_proof
 @param enclave_public_key - SGX enclave public key
-@param deals - deals which storage provider stored
+@param added_files - deals which miner added
+@param deleted_files - deals which miner deleted
 ```
 
-#### Get storage provider last proof
+#### Get miner last proof
 ```
-@action get_storage_provider_proof
+@action get_storage_proof
 @param enclave_public_key - SGX enclave public key
 ```
 
@@ -121,16 +115,30 @@ lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 @param enclave_public_key - SGX enclave public key
 ```
 
-### Get deal count
+#### Get deal count
 ```
 @action get_deal_count
+```
+
+#### Get all deals filled by miner
+```
+@action get_deals_by_miner
+@param enclave_public_key - SGX enclave public key
+```
+
+#### Get the number of deals filled by miners
+```
+@action get_deal_count_by_miner
+@param enclave_public_key - SGX enclave public key
 ```
 
 ### Contract event list
 
 ```
-PLATON_EMIT_EVENT1(AddDeal, sender, cid, std::to_string(size));
-PLATON_EMIT_EVENT0(FillDeal, enclave_public_key);
-PLATON_EMIT_EVENT0(UpdateStorageProof, enclave_public_key);
-PLATON_EMIT_EVENT1(ClaimDealReward, platon_caller(), enclave_public_key);
+PLATON_EVENT1(AddDeal, Address, string, u128);
+  PLATON_EVENT0(FillDeal, string);
+  PLATON_EVENT0(RenewalDeal, string);
+  PLATON_EVENT0(WithdrawDeal, string);
+  PLATON_EVENT0(UpdateStorageProof, string);
+  PLATON_EVENT1(ClaimDealReward, Address, string);
 ```

@@ -53,43 +53,61 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @action get_market_contract
 ```
 
+### Change mining contract
+```
+@action set_mining_contract
+@param address - Change mining contract address
+```
+
+#### Query mining contract
+```
+@action get_mining_contract
+```
+
 #### Register miner by enclave_public_key
 ```
 @action register_miner
 @param enclave_public_key - SGX enclave public key
 @param reward_address - miner address which receive rewards
+@param staker_reward_ratio - staker reward ratio(0 - 100)
+```
+
+### Pledge DAT token
+```
+@action pledge_miner
+@param enclave_public_key - SGX enclave public key
+@param amount - token amount
+```
+
+#### Unpledge DAT token
+```
+@action unpledge_miner
+@param enclave_public_key - SGX enclave public key
 ```
 
 #### Verify signature
 ```
-@action verify_signature
-@param enclave_public_key - SGX enclave public key
-@param hashed_value - hashed value of original data
-@param enclave_signature - SGX signature
+* @param enclave_public_key - SGX enclave public key
+* @param enclave_timestamp - SGX timestamp
+* @param enclave_idle_size - miner idle size
+* @param added_files - file list which miner added
+* @param deleted_files - file list which miner deleted
+* @param enclave_signature - SGX signature
+* @param enclave_lat_address - LAT address that the signature should be matched
 ```
 
 #### Update miner
 ```
 @action update_miner
-@param enclave_public_key - SGX enclave public key
-@param reward_address - miner address which receive rewards
+* @param enclave_public_key - SGX enclave public key
+* @param reward_address - miner address which receive rewards
+* @param staker_reward_ratio - staker reward ratio(0 - 100)
 ```
-
 
 #### Unregister miner
 ```
 @action unregister_miner
 @param enclave_public_key - SGX enclave public key
-```
-
-#### Submit enclave new deal proof to fill deal
-```
-@action fill_deal
-@param enclave_public_key - SGX enclave public key
-@param enclave_timestamp - SGX timestamp
-@param stored_files - file list which storage provider stored
-@param hashed_value - hashed value of original data
-@param enclave_signature - SGX signature
 ```
 
 #### Withdraw storage service from deal
@@ -102,12 +120,12 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 #### Update enclave storage proof
 ```
 @action update_storage_proof
-@param enclave_public_key - SGX enclave public key
-@param enclave_timestamp - SGX timestamp
-@param enclave_plot_size - storage provider plot size
-@param stored_files - file list which storage provider stored
-@param hashed_value - hashed value of original data
-@param enclave_signature - SGX signature
+* @param enclave_public_key - SGX enclave public key
+* @param enclave_timestamp - SGX timestamp
+* @param enclave_idle_size - miner idle size
+* @param added_files - file list which miner added
+* @param deleted_files - file list which miner deleted
+* @param enclave_signature - SGX signature
 ```
 
 #### Query last enclave proof
@@ -146,12 +164,57 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @param sender - the account which submit miner info
 ```
 
+#### Get miner reward address by enclave_public_key
+```
+@action get_miner_reward_address
+@param enclave_public_key - SGX enclave public key
+```
+
+#### DAT token holder stake token to miner
+```
+@action stake_token
+@param enclave_public_key - SGX enclave public key
+@param amount - token amount
+```
+
+#### DAT token holder unstake token from miner
+```
+@action unstake_token
+@param enclave_public_key - SGX enclave public key
+@param amount - token amount
+```
+
+### DAT token holder claim stake reward
+```
+@action claim_stake_reward
+```
+
+#### Get stake record by from
+```
+@action get_stake_by_from
+@param from - DAT token holder
+@param skip - how many records should be skipped
+```
+
+#### Get stake record by miner
+```
+@action get_stake_by_miner
+@param enclave_public_key - miner enclave public key
+@param skip - how many records should be skipped
+```
+
 ### Contract event list
 ```
-PLATON_EMIT_EVENT1(RegisterMiner, enclave_public_key);
-PLATON_EMIT_EVENT0(UpdateMiner, enclave_public_key);
-PLATON_EMIT_EVENT0(UnregisterMiner, enclave_public_key);
-PLATON_EMIT_EVENT0(FillDeal, enclave_public_key);
-PLATON_EMIT_EVENT0(SubmitStorageProof, enclave_public_key);
-PLATON_EMIT_EVENT1(SubmitMinerInfo, platon_caller());
+PLATON_EVENT0(RegisterMiner, string);
+PLATON_EVENT0(PledgeMiner, string);
+PLATON_EVENT0(UnpledgeMiner, string);
+PLATON_EVENT0(UpdateMiner, string);
+PLATON_EVENT0(UnregisterMiner, string);
+PLATON_EVENT0(FillDeal, string);
+PLATON_EVENT0(WithdrawDeal, string);
+PLATON_EVENT0(SubmitStorageProof, string);
+PLATON_EVENT0(SubmitMinerInfo, Address);
+PLATON_EVENT0(StakeToken, Address);
+PLATON_EVENT0(UnstakeToken, Address);
+PLATON_EVENT0(ClaimStakeReward, Address);
 ```
