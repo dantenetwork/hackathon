@@ -133,7 +133,7 @@ CONTRACT market : public Contract {
   ACTION bool set_token_contract(const Address& address);
 
   /**
-   * Query token contract address
+   * Query token contract
    */
   CONST string get_token_contract();
 
@@ -205,15 +205,6 @@ CONTRACT market : public Contract {
   CONST vector<string> get_opened_deal(const uint8_t& skip);
 
   /**
-   * miner fill deal and signature is verified by verify_contract
-   * add enclave_public_key into miner_list of deal_table
-   * @param enclave_public_key - SGX enclave public key
-   * @param deals - deals which miner stored
-   */
-  // ACTION bool fill_deal(const string& enclave_public_key,
-  //                       const vector<filled_deal>& deals);
-
-  /**
    * miner update storage proof and ensure signature is verified by
    * verify_contract
    * @param enclave_public_key - SGX enclave public key
@@ -246,17 +237,19 @@ CONTRACT market : public Contract {
                         uint64_t reward_blocks);
 
   /**
-   * Query deal count
+   * Get deal count
    */
   CONST uint64_t get_deal_count();
 
   /**
-   * Query all deals filled by miner
+   * Get all deals filled by miner
+   * @param enclave_public_key - SGX enclave public key
    */
   CONST vector<string> get_deals_by_miner(const string& enclave_public_key);
 
   /**
-   * Query deal count filled by miner
+   * Get the number of deals filled by miners
+   * @param enclave_public_key - SGX enclave public key
    */
   CONST uint32_t get_deal_count_by_miner(const string& enclave_public_key);
 };

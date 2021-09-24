@@ -189,7 +189,7 @@ CONTRACT verify : public Contract {
   ACTION bool set_token_contract(const Address& address);
 
   /**
-   * Query token contract address
+   * Query token contract
    */
   CONST string get_token_contract();
 
@@ -219,6 +219,7 @@ CONTRACT verify : public Contract {
    * Register miner by enclave_public_key
    * @param enclave_public_key - SGX enclave public key
    * @param reward_address - miner address which receive rewards
+   * @param staker_reward_ratio - staker reward ratio(0 - 100)
    */
   ACTION void register_miner(const string& enclave_public_key,
                              const Address& reward_address,
@@ -235,7 +236,6 @@ CONTRACT verify : public Contract {
   /**
    * Unpledge DAT token
    * @param enclave_public_key - SGX enclave public key
-   * @param amount - token amount
    */
   ACTION void unpledge_miner(const string& enclave_public_key);
 
@@ -247,6 +247,8 @@ CONTRACT verify : public Contract {
    * @param added_files - file list which miner added
    * @param deleted_files - file list which miner deleted
    * @param enclave_signature - SGX signature
+   * @param enclave_lat_address - LAT address that the signature should be
+   * matched
    */
   ACTION bool verify_signature(
       const string& enclave_public_key, const uint64_t& enclave_timestamp,
@@ -255,16 +257,17 @@ CONTRACT verify : public Contract {
       const Address& enclave_lat_address);
 
   /**
-   * Update miner by enclave_public_key & enclave_signature
+   * Update miner
    * @param enclave_public_key - SGX enclave public key
    * @param reward_address - miner address which receive rewards
+   * @param staker_reward_ratio - staker reward ratio(0 - 100)
    */
   ACTION void update_miner(const string& enclave_public_key,
                            const Address& reward_address,
                            const uint8_t& staker_reward_ratio);
 
   /**
-   * Unregister miner by enclave_public_key & enclave_signature
+   * Unregister miner
    * @param enclave_public_key - SGX enclave public key
    */
   ACTION void unregister_miner(const string& enclave_public_key);
