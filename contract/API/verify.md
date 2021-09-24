@@ -53,7 +53,7 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @action get_market_contract
 ```
 
-### Change mining contract
+#### Change mining contract
 ```
 @action set_mining_contract
 @param address - Change mining contract address
@@ -72,7 +72,7 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @param staker_reward_ratio - staker reward ratio(0 - 100)
 ```
 
-### Pledge DAT token
+#### Pledge DAT token
 ```
 @action pledge_miner
 @param enclave_public_key - SGX enclave public key
@@ -185,7 +185,7 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @param amount - token amount
 ```
 
-### DAT token holder claim stake reward
+#### DAT token holder claim stake reward
 ```
 @action claim_stake_reward
 ```
