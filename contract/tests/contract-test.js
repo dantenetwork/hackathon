@@ -40,7 +40,7 @@ const FIVE_HUNDRED_TOKENS = '500000000000000000000';
 const enclave_public_key =
     '0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8';
 const enclave_lat_address = 'lat10e0525sfrf53yh2aljmm3sn9jq5njk7lrkx9a3';
-const cid = ' bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdb';
+const cid = 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdb';
 const size = 1024 * 1024;
 const enclave_idle_size = 1024 * 1024 * 1024;
 const price = 1000000000000000;

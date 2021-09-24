@@ -1,11 +1,12 @@
 {
   "Blockchain": {
     "chainId": 210309,
-    "nodeAddress": "http://192.168.1.64:6789",
+    "nodeAddress": "http://127.0.0.1:6789",
     "privateKey": "0x34382ebae7d7c628e13f14b4314c9b0149db7bbbc06428ae89de9883ffc7c341",
-    "marketContractAddress": "lat1nc48ufv43z3kh50084ktwpgku0lgy7ala3t7fp",
-    "verifyContractAddress": "lat1f6e0da2hmhhdm4kunlxnqdrvgusvuagp788wks",
-    "tokenContractAddress": "lat143nf803rkuk0j6p9204rgwkj6tv7u72a5jz7s0"
+    "tokenContractAddress": "lat1npeyahnmfn7s0dwwsc0pywq6jduev7kjf2r5tx",
+    "marketContractAddress": "lat1v6kz0qnkr54rjmgnggdpxvueahe5luqrg3ccxg",
+    "verifyContractAddress": "lat1l2xue9r8kdyyrv5httydpxurpmzlnz2qaxta92",
+    "miningContractAddress": "lat15rgru7frz4hcz2cqggjl87stpvauezh2v9p7at"
   },
   "IPFS": {
     "clientAddress": "http://47.241.69.26:5001"

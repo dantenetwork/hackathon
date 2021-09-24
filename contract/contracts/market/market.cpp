@@ -110,7 +110,7 @@ void market::add_deal(const string& cid,
     deal.size = size;
     deal.price = price;
     deal.duration = duration;
-    deal.closed_block_num = platon_block_number() + duration;
+    deal.end_block_num = platon_block_number() + duration;
     deal.sender = sender;
     deal.miner_required = miner_required;
     deal.total_reward = total_reward;
@@ -156,7 +156,7 @@ void market::renewal_deal(const string& cid, const u128& duration) {
   // renewal deal
   deal_table.modify(current_deal, [&](auto& deal) {
     deal.duration += duration;
-    deal.closed_block_num += duration;
+    deal.end_block_num += duration;
     deal.total_reward += total_reward;
     deal.reward_balance += total_reward;
   });
@@ -213,7 +213,7 @@ deal market::get_deal_by_cid(const string& cid) {
     ret.size = current_deal->size;
     ret.price = current_deal->price;
     ret.duration = current_deal->duration;
-    ret.closed_block_num = current_deal->closed_block_num;
+    ret.end_block_num = current_deal->end_block_num;
     ret.sender = current_deal->sender;
     ret.miner_required = current_deal->miner_required;
     ret.total_reward = current_deal->total_reward;
@@ -576,7 +576,7 @@ u128 market::each_deal_reward(const string& enclave_public_key,
     uint8_t deal_state = current_deal->state;
 
     if (current_deal_reward >= reward_balance &&
-        platon_block_number() >= current_deal->closed_block_num) {
+        platon_block_number() >= current_deal->end_block_num) {
       // erase deal
       current_deal_reward = reward_balance;
       deal_table.erase(current_deal);
