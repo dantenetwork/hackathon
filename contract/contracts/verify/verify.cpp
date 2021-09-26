@@ -152,6 +152,7 @@ void verify::pledge_miner(const string& enclave_public_key,
 
   DEBUG("pledge miner " + enclave_public_key + " " + std::to_string(amount));
   DEBUG("storage_size " + std::to_string(storage_size));
+
   // update miner pledged info
   current_miner.miner_pledged_token += amount;
   current_miner.miner_pledged_storage_size += storage_size;
@@ -377,6 +378,7 @@ void verify::update_storage_proof(const string& enclave_public_key,
   u128 miner_reward_capacity =
       proof.enclave_task_size + proof.enclave_idle_size;
 
+  DEBUG("miner_reward_capacity: " + std::to_string(miner_reward_capacity));
   total_capacity.self() += miner_reward_capacity;
 
   //////////////////////////////////////////////
@@ -565,6 +567,7 @@ void verify::unstake_token(const string& enclave_public_key,
 
   DEBUG(sender.toString() + " unstake token " + std::to_string(amount));
 
+  // update miner staked info
   miner current_miner = miner_map[enclave_public_key];
   current_miner.miner_staked_token -= amount;
   current_miner.miner_staked_storage_size -=
