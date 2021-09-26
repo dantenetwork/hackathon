@@ -178,28 +178,46 @@ bool market::withdraw_deal(const string& enclave_public_key,
   DEBUG(enclave_public_key + " withdraw deal at " +
         std::to_string(platon_block_number()));
 
-  // erase enclave_public_key into deal's miner_list
+  //////////////////////////////////////////////
+  ////  erase miner from deal's miner_list  ////
+  //////////////////////////////////////////////
   vector<string> miner_list = current_deal->miner_list;
 
-  // find miner enclave_public_key
-  vector<string>::iterator itr =
+  vector<string>::iterator miner_itr =
       std::find(miner_list.begin(), miner_list.end(), enclave_public_key);
 
-  if (itr != miner_list.end()) {
-    // erase enclave_public_key from miner_list
-    miner_list.erase(itr);
-
+  if (miner_itr != miner_list.end()) {
+    miner_list.erase(miner_itr);
     // update deal
     deal_table.modify(current_deal, [&](auto& deal) {
       deal.miner_list = miner_list;
       deal.state = 0;
     });
-
-    PLATON_EMIT_EVENT0(WithdrawDeal, enclave_public_key);
-    return true;
+  } else {
+    DEBUG("withdraw_deal failed, miner is not exists in deal's miner_list");
+    return false;
   }
-  DEBUG("withdraw_deal failed, miner is not exists");
-  return false;
+
+  //////////////////////////////////////////////
+  //  erase deal from miner's storage_proof  ///
+  //////////////////////////////////////////////
+  auto current_miner = storage_proof_map[enclave_public_key];
+  vector<string> deals = current_miner.filled_deals;
+
+  vector<string>::iterator deal_itr =
+      std::find(deals.begin(), deals.end(), cid);
+  if (deal_itr != deals.end()) {
+    // update miner
+    deals.erase(deal_itr);
+    current_miner.filled_deals = deals;
+    storage_proof_map[enclave_public_key] = current_miner;
+  } else {
+    DEBUG("withdraw_deal failed, deal is not exists in miner's filled_deal");
+    return false;
+  }
+
+  PLATON_EMIT_EVENT0(WithdrawDeal, enclave_public_key);
+  return true;
 }
 
 // get deal by cid
@@ -258,73 +276,6 @@ vector<string> market::get_opened_deal(const uint8_t& skip) {
   }
   return deal_cid;
 }
-
-// fill deal
-// bool market::fill_deal(const string& enclave_public_key,
-//                        const vector<filled_deal>& deals) {
-//   // only verify contract allows call this function
-//   require_verify_contract_auth();
-//   require_miner_registered(enclave_public_key);
-//   uint64_t current_block_num = platon_block_number();
-
-//   u128 total_reward = 0;
-
-//   vector<filled_deal>::const_iterator it;
-//   DEBUG(enclave_public_key + " fill deal at " +
-//         std::to_string(current_block_num));
-
-//   vector<string> current_miner_filled_deals =
-//       miner_filled_deals[enclave_public_key];
-
-//   for (it = deals.begin(); it != deals.end(); ++it) {
-//     auto current_deal = deal_table.find<"cid"_n>(it->cid);
-
-//     // ensure deal cid is exists
-//     platon_assert(current_deal != deal_table.cend(),
-//                   "fill deal failed, deal is not exists");
-
-//     // ensure deal state = 0
-//     platon_assert(current_deal->state == 0, "fill deal failed, deal state is
-//     ",
-//                   std::to_string(current_deal->state));
-
-//     // add enclave_public_key into deal's miner_list
-//     vector<string> miner_list = current_deal->miner_list;
-
-//     // ensure current miner in the list
-//     vector<string>::iterator itr =
-//         std::find(miner_list.begin(), miner_list.end(), enclave_public_key);
-//     platon_assert(itr == miner_list.end(), "Miner is already on the list");
-
-//     // update state to 1 (filled) if miner_list size is match with
-//     // required
-//     uint8_t deal_state = current_deal->state;
-//     if (current_deal->miner_list.size() + 1 == current_deal->miner_required)
-//     {
-//       DEBUG("change deal state to 1");
-//       deal_state = 1;
-//     }
-
-//     // add new enclave_public_key into miner_list
-//     miner_list.push_back(enclave_public_key);
-
-//     // update deal
-//     deal_table.modify(current_deal, [&](auto& deal) {
-//       deal.miner_list = miner_list;
-//       deal.state = deal_state;
-//     });
-
-//     // add storage proof of deal into fresh_deal
-//     fresh_deal_map.insert(it->cid, platon_block_number());
-
-//     // add cid into miner_map
-//     current_miner_filled_deals.push_back(it->cid);
-//   }
-
-//   miner_filled_deals[enclave_public_key] = current_miner_filled_deals;
-//   PLATON_EMIT_EVENT0(FillDeal, enclave_public_key);
-//   return total_reward;
-// }
 
 // update miner proof
 int64_t market::update_storage_proof(const string& enclave_public_key,

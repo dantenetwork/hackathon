@@ -45,7 +45,8 @@ const size = 1024 * 1024;
 const enclave_idle_size = 1024 * 1024 * 1024;
 const price = 1000000000000000;
 const duration = 500;
-const provider_required = 2;
+const provider_required = 1;
+const reward_address = testAccount;
 
 // test case
 describe('dante market && verify unit test', function() {
@@ -113,14 +114,6 @@ describe('dante market && verify unit test', function() {
     try {
       this.timeout(0);
 
-      // change mining contract to {{miningContractAddress}}
-      // const verifyContractPrivateKey =
-      // '0x43a5ab4b584ff12d2e81296d399636c0dca10480ca2087cadbc8ad246d0d32a6';
-      // await blockchain.sendTransaction(verifyContract, 'set_mining_contract',
-      // verifyContractPrivateKey, [miningContractAddress]);
-
-      // test data
-      const reward_address = testAccount;
       miner = [enclave_public_key, reward_address, 50];
 
       // detect miner exists or not
@@ -129,7 +122,6 @@ describe('dante market && verify unit test', function() {
 
       if (ret[0] == enclave_public_key) {
         console.log('the miner ' + enclave_public_key + ' is already exists');
-        return;
       } else {
         await blockchain.sendTransaction(
             verifyContract, 'register_miner', testAccountPrivateKey, miner);
@@ -139,7 +131,7 @@ describe('dante market && verify unit test', function() {
           verifyContract, 'pledge_miner', testAccountPrivateKey,
           [enclave_public_key, THOUSAND_TOKENS]);
 
-      // quer miner info
+      // query miner info
       ret = await blockchain.contractCall(
           verifyContract, 'get_miner', [enclave_public_key]);
 
@@ -153,22 +145,6 @@ describe('dante market && verify unit test', function() {
       const minerCount =
           await blockchain.contractCall(verifyContract, 'get_miner_count');
       expect(parseInt(minerCount)).to.equal(1);
-
-      return;
-      await blockchain.sendTransaction(
-          verifyContract, 'unpledge_miner', testAccountPrivateKey,
-          [enclave_public_key]);
-
-      // quer miner info
-      ret = await blockchain.contractCall(
-          verifyContract, 'get_miner', [enclave_public_key]);
-      // console.log(ret);
-
-      expect(ret[0]).to.equal(enclave_public_key);  // enclave_public_key
-      expect(ret[2]).to.equal(reward_address);      // reward_address
-      expect(ret[3]).to.equal(testAccount);         // testAccount
-      expect(ret[4]).to.equal('0');
-      expect(ret[5]).to.equal('0');
 
     } catch (e) {
       console.error(e);
@@ -222,7 +198,7 @@ describe('dante market && verify unit test', function() {
       const ret = await blockchain.sendTransaction(
           marketContract, 'add_deal', testAccountPrivateKey, dealInfo);
 
-      // quer deal info by cid
+      // query deal info by cid
       onchainDealByCid = await blockchain.contractCall(
           marketContract, 'get_deal_by_cid', [cid]);
       // console.log(onchainDealByCid);
@@ -239,12 +215,6 @@ describe('dante market && verify unit test', function() {
       expect(onchainDealByCid[8]).to.equal(provider_required);
       expect(parseInt(onchainDealByCid[9])).to.equal(totalReward);
       expect(parseInt(onchainDealByCid[10])).to.equal(totalReward);
-
-
-      onchainDealByCid = await blockchain.contractCall(
-          marketContract, 'get_deal_by_cid', [cid]);
-      // console.log('deal info:');
-      // console.log(onchainDealByCid);
 
       // ensure deal count = 1
       const minerCount =
@@ -275,7 +245,7 @@ describe('dante market && verify unit test', function() {
       const ret = await blockchain.sendTransaction(
           marketContract, 'renewal_deal', testAccountPrivateKey, dealInfo);
 
-      // quer deal info by cid
+      // query deal info by cid
       onchainDealByCid = await blockchain.contractCall(
           marketContract, 'get_deal_by_cid', [cid]);
       // console.log('deal info:');
@@ -313,13 +283,16 @@ describe('dante market && verify unit test', function() {
         deleted_files, enclave_signature
       ];
 
+      let totalCapacity = ret =
+          await blockchain.contractCall(verifyContract, 'get_total_capacity');
+
       await blockchain.sendTransaction(
           verifyContract, 'update_storage_proof', testAccountPrivateKey, param);
 
       ret = await blockchain.contractCall(verifyContract, 'get_total_capacity');
       console.log('total capacity:');
       console.log(ret);
-      expect(ret).to.equal(enclave_idle_size + size + '');
+      expect(ret).to.equal(parseInt(totalCapacity) + size + '');
     } catch (e) {
       console.log(e);
     }
@@ -358,28 +331,36 @@ describe('dante market && verify unit test', function() {
       console.log(e);
     }
   });
-  return;
 
   // withdraw deal
-  it('verify withdraw_deal', async function() {
+  it('verify withdraw_deal & unpledge_miner', async function() {
     // 发送交易
     try {
       this.timeout(0);
       const param = [enclave_public_key, cid];
 
-      const ret = await blockchain.sendTransaction(
+      await blockchain.sendTransaction(
           verifyContract, 'withdraw_deal', testAccountPrivateKey, param);
-      // console.log(ret);
 
-      onchainDealByCid = await blockchain.contractCall(
-          marketContract, 'get_deal_by_cid', [cid]);
-      console.log('deal info:');
-      console.log(onchainDealByCid);
+      await blockchain.sendTransaction(
+          verifyContract, 'unpledge_miner', testAccountPrivateKey,
+          [enclave_public_key]);
+
+      // query miner info
+      let ret = await blockchain.contractCall(
+          verifyContract, 'get_miner', [enclave_public_key]);
+
+      expect(ret[0]).to.equal(enclave_public_key);  // enclave_public_key
+      expect(ret[2]).to.equal(reward_address);      // reward_address
+      expect(ret[3]).to.equal(testAccount);         // testAccount
+      expect(ret[4]).to.equal('0');
+      expect(ret[5]).to.equal('0');
+
     } catch (e) {
       console.log(e);
     }
   });
-
+  return;
 
   // update miner
   it('verify update_miner', async function() {
@@ -393,7 +374,7 @@ describe('dante market && verify unit test', function() {
       const ret = await blockchain.sendTransaction(
           verifyContract, 'update_miner', testAccountPrivateKey, miner);
 
-      // quer miner info
+      // query miner info
       let onchainMiner = await blockchain.contractCall(
           verifyContract, 'get_miner', [enclave_public_key]);
       // console.log(onchainMiner);
@@ -422,7 +403,7 @@ describe('dante market && verify unit test', function() {
       const ret = await blockchain.sendTransaction(
           verifyContract, 'submit_miner_info', testAccountPrivateKey, miner);
 
-      // quer miner info
+      // query miner info
       let onchainMinerInfo = await blockchain.contractCall(
           verifyContract, 'get_miner_info', [testAccount]);
       // console.log(onchainMinerInfo);
@@ -451,7 +432,7 @@ describe('dante market && verify unit test', function() {
           [enclave_public_key]);
       // expect ret is object
 
-      // quer miner info
+      // query miner info
       let onchainMiner = await blockchain.contractCall(
           verifyContract, 'get_miner', [enclave_public_key]);
       // console.log(onchainMiner);
