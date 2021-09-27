@@ -413,31 +413,39 @@ void verify::update_storage_proof(const string& enclave_public_key,
   //          calculate staking reward        //
   //////////////////////////////////////////////
   u128 reward = mining_result.first.rewards;
+  DEBUG("mining reward: " + std::to_string(reward));
 
-  if (reward == 0) {
-    return;
-  }
+  if (reward > 0) {
+    uint64_t block_num = mining_result.first.cur_period_end_block;
 
-  uint64_t block_num = mining_result.first.cur_period_end_block;
+    // calculate miner reward
+    u128 miner_reward = reward / 100 * current_miner.staker_reward_ratio;
+    DEBUG("miner_reward: " + std::to_string(miner_reward));
+    reward_balance_map[current_miner.reward_address] += miner_reward;
 
-  // calculate miner reward
-  u128 miner_reward = reward * 100 / current_miner.staker_reward_ratio;
-  reward_balance_map[current_miner.reward_address] += miner_reward;
+    // calculate staker reward
+    u128 staker_reward = reward - miner_reward;
+    DEBUG("staker_reward: " + std::to_string(staker_reward));
+    u128 reward_for_each_token =
+        (staker_reward / current_miner.miner_staked_token) * kTokenUnit +
+        staker_reward % current_miner.miner_staked_token;
+    DEBUG("current_miner.miner_staked_token: " +
+          std::to_string(current_miner.miner_staked_token));
+    DEBUG("reward_for_each_token: " + std::to_string(reward_for_each_token));
 
-  // calculate staker reward
-  u128 staker_reward = reward - miner_reward;
-  u128 reward_for_each_token = staker_reward / current_miner.miner_staked_token;
+    auto vect_iter = stake_table.get_index<"enclave_public_key"_n>();
 
-  auto vect_iter = stake_table.get_index<"enclave_public_key"_n>();
-
-  for (auto itr = vect_iter.cbegin(enclave_public_key);
-       itr != vect_iter.cend(enclave_public_key); itr++) {
-    // ensure that only valid staker is rewarded
-    if (itr->stake_block_num <= block_num) {
-      reward_balance_map[itr->from] += itr->amount * reward_for_each_token;
+    for (auto itr = vect_iter.cbegin(enclave_public_key);
+         itr != vect_iter.cend(enclave_public_key); itr++) {
+      // ensure only valid staker is rewarded
+      if (itr->stake_block_num <= block_num) {
+        reward_balance_map[itr->from] += itr->amount / reward_for_each_token;
+        DEBUG("receiver: " + itr->from.toString() + " staked: " +
+              std::to_string(itr->amount / kTokenUnit) + " reward: " +
+              std::to_string(itr->amount / reward_for_each_token));
+      }
     }
   }
-
   PLATON_EMIT_EVENT0(SubmitStorageProof, enclave_public_key);
 }
 
