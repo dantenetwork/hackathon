@@ -409,43 +409,60 @@ void verify::update_storage_proof(const string& enclave_public_key,
 
   platon_assert(mining_result.second, "call mining contract failed");
 
-  //////////////////////////////////////////////
-  //          calculate staking reward        //
-  //////////////////////////////////////////////
+  Energon contract_balance = platon_balance(platon_address());
+  DEBUG("verify_contract balance: " + std::to_string(contract_balance.Get()));
+
+  // //////////////////////////////////////////////
+  // //          calculate staking reward        //
+  // //////////////////////////////////////////////
   u128 reward = mining_result.first.rewards;
   DEBUG("mining reward: " + std::to_string(reward));
 
   if (reward > 0) {
-    uint64_t block_num = mining_result.first.cur_period_end_block;
+    uint64_t period_end_block_num = mining_result.first.cur_period_end_block;
 
     // calculate miner reward
     u128 miner_reward = reward / 100 * current_miner.staker_reward_ratio;
     DEBUG("miner_reward: " + std::to_string(miner_reward));
-    reward_balance_map[current_miner.reward_address] += miner_reward;
+    miner_mining_reward_map[current_miner.reward_address] += miner_reward;
 
-    // calculate staker reward
+    // calculate staker's reward
     u128 staker_reward = reward - miner_reward;
     DEBUG("staker_reward: " + std::to_string(staker_reward));
-    u128 reward_for_each_token =
-        (staker_reward / current_miner.miner_staked_token) * kTokenUnit +
-        staker_reward % current_miner.miner_staked_token;
-    DEBUG("current_miner.miner_staked_token: " +
-          std::to_string(current_miner.miner_staked_token));
-    DEBUG("reward_for_each_token: " + std::to_string(reward_for_each_token));
 
+    // calculate staker's total staked token at that period
     auto vect_iter = stake_table.get_index<"enclave_public_key"_n>();
-
+    u128 unclaimed_stake_token = 0;
     for (auto itr = vect_iter.cbegin(enclave_public_key);
          itr != vect_iter.cend(enclave_public_key); itr++) {
       // ensure only valid staker is rewarded
-      if (itr->stake_block_num <= block_num) {
-        reward_balance_map[itr->from] += itr->amount / reward_for_each_token;
-        DEBUG("receiver: " + itr->from.toString() + " staked: " +
-              std::to_string(itr->amount / kTokenUnit) + " reward: " +
-              std::to_string(itr->amount / reward_for_each_token));
+      if (itr->stake_block_num <= period_end_block_num) {
+        unclaimed_stake_token += itr->amount;
       }
     }
+    DEBUG("unclaimed_stake_token: " + std::to_string(unclaimed_stake_token));
+
+    staker_mining_reward new_staker_mining_reward;
+    // total staker mining reward
+    new_staker_mining_reward.total_reward = staker_reward;
+    // total staked token
+    new_staker_mining_reward.unclaimed_stake_token = unclaimed_stake_token;
+    // reward for each staked token
+    new_staker_mining_reward.reward_for_each_token =
+        staker_reward / (unclaimed_stake_token / kTokenUnit);
+    // reward period end block num
+    new_staker_mining_reward.period_end_block =
+        mining_result.first.cur_period_end_block;
+
+    // push current reward period into staker_mining_reward_map
+    vector<staker_mining_reward> reward_vector;
+    if (staker_mining_reward_map.contains(enclave_public_key)) {
+      reward_vector = staker_mining_reward_map[enclave_public_key];
+    }
+    reward_vector.push_back(new_staker_mining_reward);
+    staker_mining_reward_map[enclave_public_key] = reward_vector;
   }
+
   PLATON_EMIT_EVENT0(SubmitStorageProof, enclave_public_key);
 }
 
@@ -502,9 +519,28 @@ Address verify::get_miner_reward_address(const string& enclave_public_key) {
 
 // DAT token holder stake token to miner
 void verify::stake_token(const string& enclave_public_key, const u128& amount) {
+  Address sender = platon_caller();
+
+  // query current staking record
+  auto vect_iter = stake_table.get_index<"from"_n>();
+
+  vector<staker_mining_reward> reward_vector;
+  // find all stake records
+  for (auto itr = vect_iter.cbegin(sender); itr != vect_iter.cend(sender);
+       itr++) {
+    // if from -> miner stake record is exists
+    if (itr->enclave_public_key == enclave_public_key) {
+      // claim stake reward and erase record
+      bool claim_result = verify::claim_stake_reward();
+      if (claim_result) {
+        vect_iter.erase(itr);
+      }
+    }
+  }
+
   // transfer register DAT from verify contract to sender
   Address self = platon_address();
-  Address sender = platon_caller();
+
   auto transfer_result = platon_call_with_return_value<bool>(
       token_contract.self(), uint32_t(0), uint32_t(0), "transferFrom", sender,
       self, amount);
@@ -586,33 +622,108 @@ void verify::unstake_token(const string& enclave_public_key,
   PLATON_EMIT_EVENT0(UnstakeToken, sender);
 }
 
-// DAT token holder claim stake reward
-void verify::claim_stake_reward() {
+// miner claim mining reward
+bool verify::claim_miner_reward() {
   Address sender = platon_caller();
-  if (!reward_balance_map.contains(sender)) {
-    return;
+  if (!miner_mining_reward_map.contains(sender)) {
+    return false;
   }
 
-  u128 reward_balance = reward_balance_map[sender];
+  u128 reward_balance = miner_mining_reward_map[sender];
   if (reward_balance == 0) {
-    return;
+    return false;
   }
 
-  auto transfer_result = platon_call_with_return_value<bool>(
-      token_contract.self(), uint32_t(0), uint32_t(0), "transfer", sender,
-      reward_balance);
+  DEBUG("miner stake reward: " + std::to_string(reward_balance));
 
-  // ensure cross contract called successfully
-  platon_assert(transfer_result.first && transfer_result.second,
-                "Claim stake reward failed");
+  // TODO
+  // auto transfer_result = platon_call_with_return_value<bool>(
+  //     token_contract.self(), uint32_t(0), uint32_t(0), "transfer", sender,
+  //     reward_balance);
 
-  reward_balance_map[sender] = 0;
+  // // ensure cross contract called successfully
+  // platon_assert(transfer_result.first && transfer_result.second,
+  //               "Claim miner mining reward failed");
 
-  DEBUG(sender.toString() + " claim stake reward " +
-        std::to_string(reward_balance));
+  miner_mining_reward_map[sender] = 0;
+
+  // DEBUG(sender.toString() + " claim miner mining reward " +
+  //       std::to_string(reward_balance));
 
   PLATON_EMIT_EVENT0(ClaimStakeReward, sender);
+  return true;
 }
+
+// DAT token holder claim stake reward
+bool verify::claim_stake_reward() {
+  // ensure stake_block_num < mining_period_end_block_num
+  Address sender = platon_caller();
+
+  // valid stake record
+  auto vect_iter = stake_table.get_index<"from"_n>();
+
+  vector<staker_mining_reward> reward_vector;
+  u128 total_stake_reward = 0;
+
+  // find all stake records
+  for (auto itr = vect_iter.cbegin(sender); itr != vect_iter.cend(sender);
+       itr++) {
+    // query staking record
+    auto enclave_public_key = itr->enclave_public_key;
+    auto stake_block_num = itr->stake_block_num;
+    auto stake_amount = itr->amount;
+
+    // ensure miner claimed mining reward
+    if (staker_mining_reward_map.contains(enclave_public_key)) {
+      reward_vector = staker_mining_reward_map[enclave_public_key];
+
+      auto staker_reward_itr = reward_vector.begin();
+      DEBUG("staker_mining_reward_map length: " +
+            std::to_string(reward_vector.size()));
+      // iterator mining reward for each period
+      while (staker_reward_itr != reward_vector.end()) {
+        if (stake_block_num <= staker_reward_itr->period_end_block) {
+          auto sender_reward = staker_reward_itr->reward_for_each_token *
+                               (stake_amount / kTokenUnit);
+          total_stake_reward += sender_reward;
+
+          DEBUG("receiver: " + sender.toString() +
+                " staked: " + std::to_string(stake_amount) + " reward: " +
+                std::to_string(sender_reward) + " reward_for_each_token: " +
+                std::to_string(staker_reward_itr->reward_for_each_token));
+
+          // update staker_reward_itr unclaimed_stake_token
+          staker_reward_itr->unclaimed_stake_token -= stake_amount;
+
+          // erase staker mining reward's record if unclaimed_stake_token = 0
+          if (staker_reward_itr->unclaimed_stake_token == 0) {
+            reward_vector.erase(staker_reward_itr);
+          }
+          staker_reward_itr++;
+        } else {
+          break;
+        }
+      }
+      DEBUG("staker_mining_reward_map length: " +
+            std::to_string(reward_vector.size()));
+      staker_mining_reward_map[enclave_public_key] = reward_vector;
+    }
+  }
+
+  DEBUG("total_stake_reward: " + std::to_string(total_stake_reward));
+  // TODO
+  // if (total_stake_reward > 0) {
+  //   auto transfer_result = platon_call_with_return_value<bool>(
+  //       token_contract.self(), uint32_t(0), uint32_t(0), "transfer", sender,
+  //       total_stake_reward);
+
+  //   // ensure cross contract called successfully
+  //   platon_assert(transfer_result.first && transfer_result.second,
+  //                 "Claim stake reward failed");
+  // }
+
+  return true;
+}  // namespace hackathon
 
 // Get stake record by from
 vector<stake> verify::get_stake_by_from(const Address& from,

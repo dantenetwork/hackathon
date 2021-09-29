@@ -1,1 +1,6 @@
-{"tokenContractAddress":"lat1npeyahnmfn7s0dwwsc0pywq6jduev7kjf2r5tx","marketContractAddress":"lat1j4jev3xlzq0a5jxeet82gjfz0rj6ut79xg9grs","verifyContractAddress":"lat1ansu803nd674r8u5tygcvs6vanzpwjxtv2nu98","miningContractAddress":"lat1p4demrrzzx6w4s3g44nm8n4kpxwjwsqm8r3l2x"}
+{
+  "tokenContractAddress": "lat142epzrcpcsdelvzmv3e05mzurj8jtx4mutqpw3",
+  "marketContractAddress": "lat193t8ekt34npkvgz62nzpgu0rf6n73xpglh2d9s",
+  "verifyContractAddress": "lat1m85ag5pzcahe2vamxsza24gep7hj2txvhkasq9",
+  "miningContractAddress": "lat12mytd6fw3gmx4sfuy0hg3rf4vvlgavncq9ghk5"
+}

@@ -21,13 +21,13 @@ module.exports = {
       //     await web3.platon.estimateGas({from: account, to, data});
       const gas = web3.utils.numberToHex(
           parseInt((await web3.platon.getBlock('latest')).gasLimit - 1));
-      const gasPrice = await web3.platon.getGasPrice();
+      // const gasPrice = await web3.platon.getGasPrice();
       // console.log('gas: '+gas);
       // console.log('gasPrice: '+gasPrice);
       // console.log('estimateGas: ' + estimateGas);
 
       // 准备交易数据
-      const tx = {account, to, chainId, data, nonce, gas, gasPrice};
+      const tx = {account, to, chainId, data, nonce, gas};
       // console.log(tx);
 
       // 签名交易

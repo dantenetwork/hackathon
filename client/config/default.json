@@ -3,10 +3,10 @@
     "chainId": 210309,
     "nodeAddress": "http://127.0.0.1:6789",
     "privateKey": "0x34382ebae7d7c628e13f14b4314c9b0149db7bbbc06428ae89de9883ffc7c341",
-    "tokenContractAddress": "lat1npeyahnmfn7s0dwwsc0pywq6jduev7kjf2r5tx",
-    "marketContractAddress": "lat1v6kz0qnkr54rjmgnggdpxvueahe5luqrg3ccxg",
-    "verifyContractAddress": "lat1l2xue9r8kdyyrv5httydpxurpmzlnz2qaxta92",
-    "miningContractAddress": "lat15rgru7frz4hcz2cqggjl87stpvauezh2v9p7at"
+    "tokenContractAddress": "lat142epzrcpcsdelvzmv3e05mzurj8jtx4mutqpw3",
+    "marketContractAddress": "lat193t8ekt34npkvgz62nzpgu0rf6n73xpglh2d9s",
+    "verifyContractAddress": "lat1m85ag5pzcahe2vamxsza24gep7hj2txvhkasq9",
+    "miningContractAddress": "lat12mytd6fw3gmx4sfuy0hg3rf4vvlgavncq9ghk5"
   },
   "IPFS": {
     "clientAddress": "http://47.241.69.26:5001"
