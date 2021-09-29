@@ -270,8 +270,8 @@ CONTRACT verify : public Contract {
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
    * @param enclave_idle_size - miner idle size
-   * @param added_files - file list which miner added
-   * @param deleted_files - file list which miner deleted
+   * @param added_files - added file list
+   * @param deleted_files - deleted file list
    * @param enclave_signature - SGX signature
    * @param enclave_lat_address - LAT address that the signature should be
    * matched
@@ -317,8 +317,8 @@ CONTRACT verify : public Contract {
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
    * @param enclave_idle_size - miner idle size
-   * @param added_files - file list which miner added
-   * @param deleted_files - file list which miner deleted
+   * @param added_files - added file list
+   * @param deleted_files - deleted file list
    * @param enclave_signature - SGX signature
    */
   ACTION void update_storage_proof(

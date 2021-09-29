@@ -68,7 +68,7 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 ```
 @action register_miner
 @param enclave_public_key - SGX enclave public key
-@param reward_address - miner address which receive rewards
+@param reward_address - address of miner receiving reward
 @param staker_reward_ratio - staker reward ratio(0 - 100)
 ```
 
@@ -91,17 +91,17 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @param enclave_public_key - SGX enclave public key
 @param enclave_timestamp - SGX timestamp
 @param enclave_idle_size - miner idle size
-@param added_files - file list which miner added
-@param deleted_files - file list which miner deleted
+@param added_files - added file list
+@param deleted_files - deleted file list
 @param enclave_signature - SGX signature
-@param enclave_lat_address - LAT address that the signature should be matched
+@param enclave_lat_address - LAT address that the signature should match
 ```
 
 #### Update miner
 ```
 @action update_miner
 @param enclave_public_key - SGX enclave public key
-@param reward_address - miner address which receive rewards
+@param reward_address - address of miner receiving reward
 @param staker_reward_ratio - staker reward ratio(0 - 100)
 ```
 
@@ -124,14 +124,15 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @param enclave_public_key - SGX enclave public key
 @param enclave_timestamp - SGX timestamp
 @param enclave_idle_size - miner idle size
-@param added_files - file list which miner added
-@param deleted_files - file list which miner deleted
+@param added_files - added file list
+@param deleted_files - deleted file list
 @param enclave_signature - SGX signature
 ```
 
 #### Query last enclave proof
 ```
 @action get_storage_proof
+@param enclave_public_key - SGX enclave public key
 ```
 
 #### Query miner info by enclave_public_key
