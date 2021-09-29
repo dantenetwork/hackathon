@@ -32,7 +32,6 @@ let miningContractAddress = config.get('miningContractAddress');
 let tokenContractAddress = config.get('tokenContractAddress');
 const tempTokenContractAddress = tokenContractAddress;
 
-const ONE_TOKEN = '1000000000000000000';
 const THOUSAND_TOKENS = '1000000000000000000000';
 const FIVE_HUNDRED_TOKENS = '500000000000000000000';
 
@@ -44,7 +43,7 @@ const cid = 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdb';
 const size = 1024 * 1024;
 const enclave_idle_size = 1024 * 1024 * 1024;
 const price = 1000000000000000;
-const duration = 500;
+const duration = 100;
 const provider_required = 1;
 const reward_address = testAccount;
 let added_files = [[cid, size]];
@@ -219,13 +218,12 @@ describe('dante market && verify unit test', function() {
       }
 
       // send transaction
-      const ret = await blockchain.sendTransaction(
+      await blockchain.sendTransaction(
           marketContract, 'add_deal', testAccountPrivateKey, dealInfo);
 
       // query deal info by cid
       onchainDealByCid = await blockchain.contractCall(
           marketContract, 'get_deal_by_cid', [cid]);
-      // console.log(onchainDealByCid);
 
       // expect onchain info = test data
       assert.isArray(onchainDealByCid);
@@ -249,47 +247,6 @@ describe('dante market && verify unit test', function() {
       console.error(e);
     }
   });
-
-  // renewal deal
-  it('verify renewal_deal', async function() {
-    try {
-      this.timeout(0);
-      // test data
-      dealInfo = [cid, duration];
-
-      const totalReward = price * duration * provider_required;
-
-      let onchainDealByCid = await blockchain.contractCall(
-          marketContract, 'get_deal_by_cid', [cid]);
-      const previousDuration = parseInt(onchainDealByCid[5]);
-      const previousTotalReward = parseInt(onchainDealByCid[9]);
-      const previousRewardBalance = parseInt(onchainDealByCid[10]);
-
-      // send transaction
-      const ret = await blockchain.sendTransaction(
-          marketContract, 'renewal_deal', testAccountPrivateKey, dealInfo);
-
-      // query deal info by cid
-      onchainDealByCid = await blockchain.contractCall(
-          marketContract, 'get_deal_by_cid', [cid]);
-      // console.log('deal info:');
-      // console.log(onchainDealByCid);
-
-      // expect onchain info = test data
-      assert.isArray(onchainDealByCid);
-      expect(onchainDealByCid[0]).to.equal(cid);
-      expect(onchainDealByCid[1]).to.equal(0);
-      expect(onchainDealByCid[5]).to.equal(previousDuration + duration + '');
-      expect(onchainDealByCid[7]).to.equal(testAccount);
-      expect(onchainDealByCid[9])
-          .to.equal(previousTotalReward + totalReward + '');
-      expect(onchainDealByCid[10])
-          .to.equal(previousRewardBalance + totalReward + '');
-    } catch (e) {
-      console.log(e);
-    }
-  });
-
 
   // update storage proof
   it('verify update_storage_proof', async function() {
@@ -327,8 +284,46 @@ describe('dante market && verify unit test', function() {
     }
   });
 
+  // renewal deal
+  it('verify renewal_deal', async function() {
+    try {
+      this.timeout(0);
+      // test data
+      dealInfo = [cid, duration];
+
+      const totalReward = price * duration * provider_required;
+
+      let onchainDealByCid = await blockchain.contractCall(
+          marketContract, 'get_deal_by_cid', [cid]);
+      const previousDuration = parseInt(onchainDealByCid[5]);
+      const previousTotalReward = parseInt(onchainDealByCid[9]);
+      const previousRewardBalance = parseInt(onchainDealByCid[10]);
+
+      // send transaction
+      const ret = await blockchain.sendTransaction(
+          marketContract, 'renewal_deal', testAccountPrivateKey, dealInfo);
+
+      // query deal info by cid
+      onchainDealByCid = await blockchain.contractCall(
+          marketContract, 'get_deal_by_cid', [cid]);
+
+      // expect onchain info = test data
+      assert.isArray(onchainDealByCid);
+      expect(onchainDealByCid[0]).to.equal(cid);
+      expect(onchainDealByCid[1]).to.equal(1);
+      expect(onchainDealByCid[5]).to.equal(previousDuration + duration + '');
+      expect(onchainDealByCid[7]).to.equal(testAccount);
+      expect(onchainDealByCid[9])
+          .to.equal(previousTotalReward + totalReward + '');
+      expect(onchainDealByCid[10])
+          .to.equal(previousRewardBalance + totalReward + '');
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
   // update storage proof
-  it('market claim_deal_reward', async function() {
+  it('claim reward', async function() {
     // 发送交易
     try {
       this.timeout(0);
@@ -338,12 +333,18 @@ describe('dante market && verify unit test', function() {
 
       await showDealInfo(cid);
 
+      await blockchain.sendTransaction(
+          verifyContract, 'claim_miner_reward', testAccountPrivateKey);
+
+      await blockchain.sendTransaction(
+          verifyContract, 'claim_stake_reward', testAccountPrivateKey);
+
     } catch (e) {
       console.log(e);
     }
   });
-  return;
 
+  return;
   // withdraw deal
   it('verify withdraw_deal & unpledge_miner', async function() {
     // 发送交易
@@ -372,7 +373,7 @@ describe('dante market && verify unit test', function() {
       console.log(e);
     }
   });
-
+  return;
 
   // update miner
   it('verify update_miner', async function() {

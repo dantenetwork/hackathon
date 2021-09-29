@@ -74,7 +74,7 @@ void market::add_deal(const string& cid,
                       const u128& size,
                       const u128& price,
                       const u128& duration,
-                      const uint8_t& miner_required) {
+                      const int& miner_required) {
   // check if cid is exists
   auto vect_iter = deal_table.find<"cid"_n>(cid);
   platon_assert(vect_iter == deal_table.cend(), "Cid is already exists");
@@ -430,12 +430,12 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
   require_miner_registered(enclave_public_key);
 
   // get target miner info
-  storage_proof miner = storage_proof_map[enclave_public_key];
-  vector<string> filled_deals = miner.filled_deals;
+  storage_proof current_miner = storage_proof_map[enclave_public_key];
+  vector<string> filled_deals = current_miner.filled_deals;
 
   // blocks gap between last_proof_block_num and last_claimed_block_num
   uint64_t reward_blocks =
-      miner.last_proof_block_num - miner.last_claimed_block_num;
+      current_miner.last_proof_block_num - current_miner.last_claimed_block_num;
 
   if (reward_blocks <= 0) {
     DEBUG("reward_blocks is 0, waiting for new proofs");
@@ -451,16 +451,20 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
     if (fresh_deal_map.contains(cid)) {
       DEBUG("cid " + cid + " exists in fresh_deal_map, filled_block_num: " +
             std::to_string(fresh_deal_map[cid]));
-      reward_blocks = miner.last_proof_block_num - fresh_deal_map[cid];
+      reward_blocks = current_miner.last_proof_block_num - fresh_deal_map[cid];
       fresh_deal_map.erase(cid);
     }
 
     DEBUG("reward_blocks: " + std::to_string(reward_blocks));
 
-    u128 current_deal_reward =
-        market::each_deal_reward(enclave_public_key, cid, reward_blocks);
+    u128 current_deal_reward = market::each_deal_reward(
+        enclave_public_key, cid, reward_blocks, filled_deals);
     total_reward += current_deal_reward;
   }
+
+  // update fill_deals
+  current_miner.filled_deals = filled_deals;
+  storage_proof_map[enclave_public_key] = current_miner;
 
   if (total_reward > 0) {
     DEBUG("total_reward: " + std::to_string(total_reward));
@@ -481,8 +485,8 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
                   "Transfer deal reward failed");
 
     // update last_claimed_block_num
-    miner.last_claimed_block_num = platon_block_number();
-    storage_proof_map[enclave_public_key] = miner;
+    current_miner.last_claimed_block_num = platon_block_number();
+    storage_proof_map[enclave_public_key] = current_miner;
 
     PLATON_EMIT_EVENT1(ClaimDealReward, platon_caller(), enclave_public_key);
     return true;
@@ -493,7 +497,8 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
 
 u128 market::each_deal_reward(const string& enclave_public_key,
                               const string& cid,
-                              uint64_t reward_blocks) {
+                              uint64_t& reward_blocks,
+                              vector<string>& filled_deals) {
   // Query deal info by cid
   auto current_deal = deal_table.find<"cid"_n>(cid);
 
@@ -524,8 +529,6 @@ u128 market::each_deal_reward(const string& enclave_public_key,
     auto reward_balance = current_deal->reward_balance;
 
     // if current_deal_reward larger than reward_balance, close deal
-    uint8_t deal_state = current_deal->state;
-
     if (current_deal_reward >= reward_balance &&
         platon_block_number() >= current_deal->end_block_num) {
       // erase deal
@@ -534,17 +537,14 @@ u128 market::each_deal_reward(const string& enclave_public_key,
 
       deal_count.self() -= 1;
 
-      // remove cid from miner_filled_deals
-      storage_proof miner_storage_proof = storage_proof_map[enclave_public_key];
-      vector<string> deals = miner_storage_proof.filled_deals;
-
-      std::vector<string>::iterator position =
-          std::find(deals.begin(), deals.end(), cid);
-      if (position != deals.end()) {
-        deals.erase(position);
-        miner_storage_proof.filled_deals = deals;
-        storage_proof_map[enclave_public_key] = miner_storage_proof;
+      // remove cid from miner's filled_deals
+      vector<string>::iterator deal_itr =
+          std::find(filled_deals.begin(), filled_deals.end(), cid);
+      if (deal_itr != filled_deals.end()) {
+        // update miner
+        filled_deals.erase(deal_itr);
       }
+
     } else {
       // update reward balance
       deal_table.modify(current_deal, [&](auto& deal) {

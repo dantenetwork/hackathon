@@ -32,7 +32,7 @@ struct deal {
   u128 duration;  // deal duration (blocks)
   uint64_t end_block_num;     // the block number that deal will be end
   Address sender;             // deal sender
-  uint8_t miner_required;     // the amount of miners required
+  int miner_required;         // the amount of miners required
   u128 total_reward;          // deal total rewards
   u128 reward_balance;        // reward balance after miner claimed
   vector<string> miner_list;  // miner list
@@ -167,7 +167,7 @@ CONTRACT market : public Contract {
    * @param miner_required - amount of miners required
    */
   ACTION void add_deal(const string& cid, const u128& size, const u128& price,
-                       const u128& duration, const uint8_t& miner_required);
+                       const u128& duration, const int& miner_required);
 
   /**
    * Renewal deal
@@ -234,7 +234,7 @@ CONTRACT market : public Contract {
    * @param reward_blocks - block number since last claimed
    */
   u128 each_deal_reward(const string& enclave_public_key, const string& cid,
-                        uint64_t reward_blocks);
+                        uint64_t& reward_blocks, vector<string>& filled_deals);
 
   /**
    * Get deal count

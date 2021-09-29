@@ -98,11 +98,31 @@ struct stake {
   PLATON_SERIALIZE(stake, (from)(enclave_public_key)(amount)(stake_block_num));
 };
 
+// result of mining contract's update_storage
 struct claim_info {
   u128 rewards;
   uint64_t cur_period_end_block;
 
   PLATON_SERIALIZE(claim_info, (rewards)(cur_period_end_block))
+};
+
+// staker mining reward for each period
+struct staker_mining_reward {
+  u128 total_reward;
+  u128 unclaimed_stake_token;
+  u128 reward_for_each_token;
+  uint64_t period_end_block;
+
+  PLATON_SERIALIZE(staker_mining_reward,
+                   (total_reward)(unclaimed_stake_token)(reward_for_each_token)(
+                       period_end_block))
+};
+
+struct stake_record {
+  Address from;
+  u128 amount;
+
+  PLATON_SERIALIZE(stake_record, (from)(amount));
 };
 
 CONTRACT verify : public Contract {
@@ -131,11 +151,17 @@ CONTRACT verify : public Contract {
   // miner info map
   platon::db::Map<"miner_info"_n, Address, miner_info> miner_info_map;
 
+  // staker mining reward list
+  platon::db::Map<"staker_mining_reward"_n, string,
+                  vector<staker_mining_reward>>
+      staker_mining_reward_map;
+
   // reward list
-  platon::db::Map<"reward_balance"_n, Address, u128> reward_balance_map;
+  platon::db::Map<"miner_mining_reward"_n, Address, u128>
+      miner_mining_reward_map;
 
   // Stake table
-  // UniqueIndex: from, NormalIndex: miner
+  // NormalIndex: from, NormalIndex: miner
   MultiIndex<
       "stake"_n, stake,
       IndexedBy<"from"_n, IndexMemberFun<stake, Address, &stake::by_from,
@@ -360,9 +386,14 @@ CONTRACT verify : public Contract {
                             const u128& amount);
 
   /**
+   * miner claim mining reward
+   */
+  ACTION bool claim_miner_reward();
+
+  /**
    * DAT token holder claim stake reward
    */
-  ACTION void claim_stake_reward();
+  ACTION bool claim_stake_reward();
 
   /**
    * Get stake record by from
@@ -390,5 +421,6 @@ PLATON_DISPATCH(
         withdraw_deal)(update_storage_proof)(get_storage_proof)(get_miner)(
         get_total_capacity)(get_miner_count)(submit_miner_info)(get_miner_info)(
         get_miner_reward_address)(stake_token)(unstake_token)(
-        claim_stake_reward)(get_stake_by_from)(get_stake_by_miner))
+        claim_miner_reward)(claim_stake_reward)(get_stake_by_from)(
+        get_stake_by_miner))
 }  // namespace hackathon

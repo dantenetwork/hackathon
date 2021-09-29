@@ -4,8 +4,8 @@ const web3 = new Web3('http://127.0.0.1:6789');
 const blockchain = require('./blockchain.js');
 
 const chainId = 210309;
-const tokenContractAddress = 'lat1npeyahnmfn7s0dwwsc0pywq6jduev7kjf2r5tx';
-const miningContractAddress = 'lat1p4demrrzzx6w4s3g44nm8n4kpxwjwsqm8r3l2x';
+const tokenContractAddress = 'lat142epzrcpcsdelvzmv3e05mzurj8jtx4mutqpw3';
+const miningContractAddress = 'lat12mytd6fw3gmx4sfuy0hg3rf4vvlgavncq9ghk5';
 
 // deploy market contract account address,
 // lat1qavfd7zwaknrxyx0drcmv0vr5zehgthhaqq6ul
