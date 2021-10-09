@@ -64,86 +64,15 @@
     "type": "Event"
   },
   {
-    "constant": false,
-    "input": [
-      {
-        "name": "cid",
-        "type": "string"
-      },
-      {
-        "name": "duration",
-        "type": "uint128"
-      }
-    ],
-    "name": "renewal_deal",
-    "output": "void",
-    "type": "Action"
-  },
-  {
-    "baseclass": [],
-    "fields": [
-      {
-        "name": "cid",
-        "type": "string"
-      },
-      {
-        "name": "state",
-        "type": "uint8"
-      },
-      {
-        "name": "slashed",
-        "type": "bool"
-      },
-      {
-        "name": "size",
-        "type": "uint128"
-      },
-      {
-        "name": "price",
-        "type": "uint128"
-      },
-      {
-        "name": "duration",
-        "type": "uint128"
-      },
-      {
-        "name": "end_block_num",
-        "type": "uint64"
-      },
-      {
-        "name": "sender",
-        "type": "FixedHash<20>"
-      },
-      {
-        "name": "miner_required",
-        "type": "uint8"
-      },
-      {
-        "name": "total_reward",
-        "type": "uint128"
-      },
-      {
-        "name": "reward_balance",
-        "type": "uint128"
-      },
-      {
-        "name": "miner_list",
-        "type": "string[]"
-      }
-    ],
-    "name": "deal",
-    "type": "struct"
-  },
-  {
     "constant": true,
     "input": [
       {
-        "name": "cid",
+        "name": "enclave_public_key",
         "type": "string"
       }
     ],
-    "name": "get_deal_by_cid",
-    "output": "deal",
+    "name": "get_deals_by_miner",
+    "output": "string[]",
     "type": "Action"
   },
   {
@@ -276,11 +205,94 @@
       },
       {
         "name": "miner_required",
-        "type": "uint8"
+        "type": "int32"
       }
     ],
     "name": "add_deal",
     "output": "void",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
+      {
+        "name": "cid",
+        "type": "string"
+      },
+      {
+        "name": "duration",
+        "type": "uint128"
+      }
+    ],
+    "name": "renewal_deal",
+    "output": "void",
+    "type": "Action"
+  },
+  {
+    "baseclass": [],
+    "fields": [
+      {
+        "name": "cid",
+        "type": "string"
+      },
+      {
+        "name": "state",
+        "type": "uint8"
+      },
+      {
+        "name": "slashed",
+        "type": "bool"
+      },
+      {
+        "name": "size",
+        "type": "uint128"
+      },
+      {
+        "name": "price",
+        "type": "uint128"
+      },
+      {
+        "name": "duration",
+        "type": "uint128"
+      },
+      {
+        "name": "end_block_num",
+        "type": "uint64"
+      },
+      {
+        "name": "sender",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "miner_required",
+        "type": "int32"
+      },
+      {
+        "name": "total_reward",
+        "type": "uint128"
+      },
+      {
+        "name": "reward_balance",
+        "type": "uint128"
+      },
+      {
+        "name": "miner_list",
+        "type": "string[]"
+      }
+    ],
+    "name": "deal",
+    "type": "struct"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "cid",
+        "type": "string"
+      }
+    ],
+    "name": "get_deal_by_cid",
+    "output": "deal",
     "type": "Action"
   },
   {
@@ -351,18 +363,6 @@
     "type": "Action"
   },
   {
-    "constant": false,
-    "input": [
-      {
-        "name": "enclave_public_key",
-        "type": "string"
-      }
-    ],
-    "name": "claim_deal_reward",
-    "output": "bool",
-    "type": "Action"
-  },
-  {
     "baseclass": [],
     "fields": [
       {
@@ -394,22 +394,22 @@
     "type": "Action"
   },
   {
-    "constant": true,
-    "input": [],
-    "name": "get_deal_count",
-    "output": "uint64",
-    "type": "Action"
-  },
-  {
-    "constant": true,
+    "constant": false,
     "input": [
       {
         "name": "enclave_public_key",
         "type": "string"
       }
     ],
-    "name": "get_deals_by_miner",
-    "output": "string[]",
+    "name": "claim_deal_reward",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [],
+    "name": "get_deal_count",
+    "output": "uint64",
     "type": "Action"
   },
   {

@@ -6,15 +6,15 @@ const Web3 = require('web3');
 const web3 = new Web3('http://127.0.0.1:6789');
 const blockchain = require('./blockchain.js');
 const config = require('config');
-const {parse} = require('path');
 
 // test account address, lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex
 // private key,Testnet only
 const testAccountPrivateKey =
-    '0x34382ebae7d7c628e13f14b4314c9b0149db7bbbc06428ae89de9883ffc7c341';
+    '0xdf08319532a92397ceb5b7fd0debe9195a0a79657127bb920ff258774e9f0d01';
 const testAccount =
     web3.platon.accounts.privateKeyToAccount(testAccountPrivateKey)
         .address;  // 私钥导出公钥
+console.log(testAccount);
 
 // market contract
 let marketContract;
@@ -23,10 +23,6 @@ let marketContractAddress = config.get('marketContractAddress');
 // verify contract
 let verifyContract;
 let verifyContractAddress = config.get('verifyContractAddress');
-
-// mining contract
-let miningContract;
-let miningContractAddress = config.get('miningContractAddress');
 
 // token contract
 let tokenContractAddress = config.get('tokenContractAddress');
@@ -45,7 +41,7 @@ const enclave_idle_size = 1024 * 1024 * 1024;
 const price = 1000000000000000;
 const duration = 100;
 const provider_required = 1;
-const reward_address = testAccount;
+const reward_address = 'lat14skle600x5wfekwg89k0r3hlukjqex3kcqsjrt';
 let added_files = [[cid, size]];
 
 // test case
@@ -174,7 +170,7 @@ describe('dante market && verify unit test', function() {
       console.error(e);
     }
   });
-
+  return;
 
   it('verify verify_signature', async function() {
     try {
