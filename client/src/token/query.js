@@ -28,13 +28,19 @@ module.exports = {
         web3.platon.accounts
             .privateKeyToAccount(config.get('Blockchain.privateKey'))
             .address;
-    const marketContractAddress =
-        config.get('Blockchain.marketContractAddress');
 
-    const allowance = await blockchain.contractCall(
-        'tokenContract', 'allowance', [account, marketContractAddress]);
+    let allowance = await blockchain.contractCall(
+        'tokenContract', 'allowance',
+        [account, config.get('Blockchain.marketContractAddress')]);
     console.log(
-        'allowance from ' + account + ' to ' + marketContractAddress + ' is ' +
+        'allowance from ' + account + ' to marketContractAddress is ' +
+        allowance / UNIT + ' DAT');
+
+    allowance = await blockchain.contractCall(
+        'tokenContract', 'allowance',
+        [account, config.get('Blockchain.verifyContractAddress')]);
+    console.log(
+        'allowance from ' + account + ' to verifyContractAddress is ' +
         allowance / UNIT + ' DAT');
     return allowance;
   }

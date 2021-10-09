@@ -11,3 +11,4 @@ Subcommands:
   allowance                   Query DAT allowance from current account to market contract
   getMiner                    Query storage provider info by enclavePublicKey
   getProof                    Query miner storage proof by enclavePublicKey
+  pledgeMiner                 Pledge DAT to miner

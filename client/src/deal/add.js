@@ -69,6 +69,13 @@ module.exports = {
 
         // console.log(dealInfo);
 
+        // approve token
+        await blockchain.sendTransaction(
+            'tokenContract', 'approve', config.get('Blockchain.privateKey'), [
+              config.get('Blockchain.marketContractAddress'),
+              price * duration * provider_required
+            ]);
+
         // send transaction
         const ret = await blockchain.sendTransaction(
             'marketContract', 'add_deal', config.get('Blockchain.privateKey'),

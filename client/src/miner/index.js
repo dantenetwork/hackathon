@@ -1,4 +1,5 @@
 const blockchain = new (require('../blockchain.js'))();
+const config = require('config');
 
 module.exports = {
   /**
@@ -31,5 +32,29 @@ module.exports = {
       console.log(table[i] + ': ' + minerInfo[i]);
     }
     return minerInfo;
+  },
+  /**
+   * pledge DAT to miner
+   */
+  async pledgeMiner(enclavePublicKey, amount) {
+    if (!enclavePublicKey || !amount) {
+      console.log(
+          '{dante-client pledgeMiner} expect [enclavePublicKey] [amount]');
+      return;
+    }
+
+    // approve token
+    await blockchain.sendTransaction(
+        'tokenContract', 'approve', config.get('Blockchain.privateKey'),
+        [config.get('Blockchain.verifyContractAddress'), amount]);
+
+    // pledge miner
+    const ret = await blockchain.sendTransaction(
+        'verifyContract', 'pledge_miner', config.get('Blockchain.privateKey'),
+        [enclavePublicKey, amount]);
+
+    if (ret) {
+      this.getMiner(enclavePublicKey);
+    }
   }
 }
