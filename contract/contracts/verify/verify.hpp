@@ -21,8 +21,8 @@ const u128 kTokenUnit = 1000000000000000000;  // DAT token decimal
 const u128 kBytesPerPledgedDAT =
     1024 * 1024 * 1024;  // storage space for each pledged DAT(1TB)
 const uint8_t kMaxHolderStakeToMinerRatio =
-    9;  // ensure total token amount that DAT holder stake to miner can't
-        // larger than miner_pledged_storage_size * 9
+    10;  // ensure total token amount that DAT holder stake to miner can't
+         // larger than miner_pledged_storage_size * 10
 
 struct miner {
  public:
@@ -323,8 +323,9 @@ CONTRACT verify : public Contract {
    */
   ACTION void update_storage_proof(
       const string& enclave_public_key, const uint64_t& enclave_timestamp,
-      const u128& enclave_idle_size, const vector<filled_deal> added_files,
-      const vector<filled_deal> deleted_files, const string& enclave_signature);
+      const u128& enclave_idle_size, const vector<filled_deal>& added_files,
+      const vector<filled_deal>& deleted_files,
+      const string& enclave_signature);
 
   /**
    * Query last enclave proof
