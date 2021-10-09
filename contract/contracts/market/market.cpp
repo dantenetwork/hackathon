@@ -190,7 +190,7 @@ bool market::withdraw_deal(const string& enclave_public_key,
     miner_list.erase(miner_itr);
     // update deal
     deal_table.modify(current_deal, [&](auto& deal) {
-      deal.miner_list = miner_list;
+      deal.miner_list = std::move(miner_list);
       deal.state = 0;
     });
   } else {
@@ -209,8 +209,8 @@ bool market::withdraw_deal(const string& enclave_public_key,
   if (deal_itr != deals.end()) {
     // update miner
     deals.erase(deal_itr);
-    current_miner.filled_deals = deals;
-    storage_proof_map[enclave_public_key] = current_miner;
+    current_miner.filled_deals = std::move(deals);
+    storage_proof_map[enclave_public_key] = std::move(current_miner);
   } else {
     DEBUG("withdraw_deal failed, deal is not exists in miner's filled_deal");
     return false;
@@ -390,22 +390,22 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
     std::vector<string>::iterator position =
         std::find(filled_deals.begin(), filled_deals.end(), itr->cid);
     if (position != filled_deals.end()) {
-      filled_deals.erase(position);
+      filled_deals.erase(std::move(position));
     }
     task_size_changed -= itr->size;
   }
 
   DEBUG("task_size_changed: " + std::to_string(task_size_changed));
-  proof.filled_deals = filled_deals;
-  proof.last_proof_block_num = current_block_num;
+  proof.filled_deals = std::move(filled_deals);
+  proof.last_proof_block_num = std::move(current_block_num);
 
   // check if storage proof info already exists
   if (storage_proof_map.contains(enclave_public_key)) {
-    storage_proof_map[enclave_public_key] = proof;
+    storage_proof_map[enclave_public_key] = std::move(proof);
   } else {
     // add new storage proof info
-    proof.last_claimed_block_num = current_block_num;
-    storage_proof_map.insert(enclave_public_key, proof);
+    proof.last_claimed_block_num = proof.last_proof_block_num;
+    storage_proof_map.insert(enclave_public_key, std::move(proof));
   }
 
   PLATON_EMIT_EVENT0(UpdateStorageProof, enclave_public_key);
@@ -463,7 +463,8 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
   }
 
   // update fill_deals
-  current_miner.filled_deals = filled_deals;
+  current_miner.filled_deals = std::move(filled_deals);
+
   storage_proof_map[enclave_public_key] = current_miner;
 
   if (total_reward > 0) {
@@ -486,7 +487,7 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
 
     // update last_claimed_block_num
     current_miner.last_claimed_block_num = platon_block_number();
-    storage_proof_map[enclave_public_key] = current_miner;
+    storage_proof_map[enclave_public_key] = std::move(current_miner);
 
     PLATON_EMIT_EVENT1(ClaimDealReward, platon_caller(), enclave_public_key);
     return true;
@@ -542,7 +543,7 @@ u128 market::each_deal_reward(const string& enclave_public_key,
           std::find(filled_deals.begin(), filled_deals.end(), cid);
       if (deal_itr != filled_deals.end()) {
         // update miner
-        filled_deals.erase(deal_itr);
+        filled_deals.erase(std::move(deal_itr));
       }
 
     } else {
