@@ -211,22 +211,6 @@
     "type": "Action"
   },
   {
-    "constant": false,
-    "input": [
-      {
-        "name": "enclave_public_key",
-        "type": "string"
-      },
-      {
-        "name": "amount",
-        "type": "uint128"
-      }
-    ],
-    "name": "unstake_token",
-    "output": "void",
-    "type": "Action"
-  },
-  {
     "constant": true,
     "input": [],
     "name": "get_owner",
@@ -631,9 +615,32 @@
   },
   {
     "constant": false,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      },
+      {
+        "name": "amount",
+        "type": "uint128"
+      }
+    ],
+    "name": "unstake_token",
+    "output": "void",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [],
+    "name": "claim_miner_reward",
+    "output": "bool",
+    "type": "Action"
+  },
+  {
+    "constant": false,
     "input": [],
     "name": "claim_stake_reward",
-    "output": "void",
+    "output": "bool",
     "type": "Action"
   },
   {

@@ -57,8 +57,8 @@ module.exports = {
         // check account balance and allowance
         console.log('-------------------------------');
         console.log('Token Info:');
-        const balance = await token.getBalance();
-        const allowance = await token.getAllowance();
+        await token.getBalance();
+        await token.getAllowance();
 
         const size = stats.size;
         const price = cliParams[2];
@@ -67,15 +67,18 @@ module.exports = {
 
         const dealInfo = [cid, size, price, duration, provider_required];
 
+        // console.log(dealInfo);
+
         // send transaction
         const ret = await blockchain.sendTransaction(
             'marketContract', 'add_deal', config.get('Blockchain.privateKey'),
             dealInfo);
         // console.log(ret);
-        // console.log(ret.logs);
 
         // query deal info by cid
-        dealStatus(cid);
+        if (ret) {
+          dealStatus(cid);
+        }
       });
     } catch (err) {
       console.error(err);

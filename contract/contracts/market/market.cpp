@@ -81,7 +81,7 @@ void market::add_deal(const string& cid,
 
   Address sender = platon_caller();
   auto count = deal_table.count<"sender"_n>(sender);
-  platon_assert(count < kMaxDealEachSender,
+  platon_assert(count <= kMaxDealEachSender,
                 "Total deal count of sender can't larger than " +
                     std::to_string(kMaxDealEachSender));
 

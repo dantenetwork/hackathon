@@ -91,6 +91,7 @@ void verify::register_miner(const string& enclave_public_key,
   }
   auto public_key_sha3 = platon_sha3(public_key_bytes);
   auto enclave_lat_address = Address(public_key_sha3.begin() + 12, 20);
+  DEBUG("enclave_public_key address: " + enclave_public_key);
   DEBUG("enclave_public_key lat address: " + enclave_lat_address.toString());
 
   platon_assert(staker_reward_ratio <= 100,

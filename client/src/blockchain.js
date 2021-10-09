@@ -10,18 +10,20 @@ module.exports = class smartContract {
     let marketRawData = fs.readFileSync('abi/market.abi.json');
     let marketAbi = JSON.parse(marketRawData);
     // Contract.setProvider('ws://localhost:8546');
-    this.marketContract = new web3.platon.Contract(marketAbi, config.get("Blockchain.marketContractAddress"), { vmType: 1 });
+    this.marketContract = new web3.platon.Contract(
+        marketAbi, config.get('Blockchain.marketContractAddress'), {vmType: 1});
 
     // verify contract abi
     let verifyRawData = fs.readFileSync('abi/verify.abi.json');
     let verifyAbi = JSON.parse(verifyRawData);
-    this.verifyContract = new web3.platon.Contract(verifyAbi, config.get("Blockchain.verifyContractAddress"), { vmType: 1 });
+    this.verifyContract = new web3.platon.Contract(
+        verifyAbi, config.get('Blockchain.verifyContractAddress'), {vmType: 1});
 
     // token contract abi
     let tokenRawData = fs.readFileSync('abi/token.abi.json');
     let tokenAbi = JSON.parse(tokenRawData);
-    this.tokenContract = new web3.platon.Contract(tokenAbi, config.get("Blockchain.tokenContractAddress"), { vmType: 1 });
-
+    this.tokenContract = new web3.platon.Contract(
+        tokenAbi, config.get('Blockchain.tokenContractAddress'), {vmType: 1});
   }
 
   /**
@@ -40,18 +42,28 @@ module.exports = class smartContract {
 
     try {
       const chainId = config.get('Blockchain.chainId');
-      const gas = web3.utils.numberToHex(parseInt((await web3.platon.getBlock("latest")).gasLimit - 1));
-      const account = web3.platon.accounts.privateKeyToAccount(accountPrivateKey).address; // 私钥导出公钥
+      const gas = web3.utils.numberToHex(
+          parseInt((await web3.platon.getBlock('latest')).gasLimit - 1));
+      const account =
+          web3.platon.accounts.privateKeyToAccount(accountPrivateKey)
+              .address;  // 私钥导出公钥
       const to = smartContract.options.address;
-      const nonce = web3.utils.numberToHex(await web3.platon.getTransactionCount(account)); // 获取生成 nonce
-      const data = smartContract.methods[method].apply(smartContract.methods, params).encodeABI(); // encode ABI
+      const nonce = web3.utils.numberToHex(
+          await web3.platon.getTransactionCount(account));  // 获取生成 nonce
+      const data = smartContract.methods[method]
+                       .apply(smartContract.methods, params)
+                       .encodeABI();  // encode ABI
+
+      // const estimateGas =
+      //     await web3.platon.estimateGas({from: account, to, data});
 
       // 准备交易数据
-      const tx = { account, to, chainId, data, nonce, gas };
+      const tx = {account, to, chainId, data, nonce, gas};
       // console.log(tx);
 
       // 签名交易
-      let signTx = await web3.platon.accounts.signTransaction(tx, accountPrivateKey);
+      let signTx =
+          await web3.platon.accounts.signTransaction(tx, accountPrivateKey);
       let ret = await web3.platon.sendSignedTransaction(signTx.rawTransaction);
       // console.log(ret);
       return ret;
@@ -73,7 +85,8 @@ module.exports = class smartContract {
       return;
     }
 
-    let methodObj = smartContract.methods[method].apply(smartContract.methods, params);
+    let methodObj =
+        smartContract.methods[method].apply(smartContract.methods, params);
     let ret = await methodObj.call({});
     // console.log(ret);
     return ret;
