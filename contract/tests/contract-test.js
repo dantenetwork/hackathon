@@ -117,17 +117,23 @@ describe('dante market && verify unit test', function() {
       let ret = await blockchain.contractCall(
           verifyContract, 'get_miner', [enclave_public_key]);
 
+
       if (ret[0] == enclave_public_key) {
         console.log('the miner ' + enclave_public_key + ' is already exists');
       } else {
+        // current miner count
+        const currentMinerCount =
+            await blockchain.contractCall(verifyContract, 'get_miner_count');
+
+        // register miner
         await blockchain.sendTransaction(
             verifyContract, 'register_miner', testAccountPrivateKey, miner);
-      }
 
-      // expect miner count = 1
-      const minerCount =
-          await blockchain.contractCall(verifyContract, 'get_miner_count');
-      expect(parseInt(minerCount)).to.equal(1);
+        // expect minerCount = currentMinerCount + 1
+        const minerCount =
+            await blockchain.contractCall(verifyContract, 'get_miner_count');
+        expect(parseInt(minerCount)).to.equal(parseInt(currentMinerCount) + 1);
+      }
 
       // query miner info
       let minerInfo = await blockchain.contractCall(
@@ -170,7 +176,7 @@ describe('dante market && verify unit test', function() {
       console.error(e);
     }
   });
-  return;
+
 
   it('verify verify_signature', async function() {
     try {
@@ -213,6 +219,9 @@ describe('dante market && verify unit test', function() {
         return;
       }
 
+      const currentDealCount =
+          await blockchain.contractCall(marketContract, 'get_deal_count');
+
       // send transaction
       await blockchain.sendTransaction(
           marketContract, 'add_deal', testAccountPrivateKey, dealInfo);
@@ -234,10 +243,10 @@ describe('dante market && verify unit test', function() {
       expect(parseInt(onchainDealByCid[9])).to.equal(totalReward);
       expect(parseInt(onchainDealByCid[10])).to.equal(totalReward);
 
-      // ensure deal count = 1
-      const minerCount =
+      // ensure dealCount = currentDealCount + 1
+      const dealCount =
           await blockchain.contractCall(marketContract, 'get_deal_count');
-      expect(parseInt(minerCount)).to.equal(1);
+      expect(parseInt(dealCount)).to.equal(parseInt(currentDealCount) + 1);
 
     } catch (e) {
       console.error(e);
