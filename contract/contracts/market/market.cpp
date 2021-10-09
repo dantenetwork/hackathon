@@ -106,7 +106,7 @@ void market::add_deal(const string& cid,
   deal_table.emplace([&](auto& deal) {
     deal.cid = cid;
     deal.state = 0;
-    deal.slashed = false;
+    deal.slashed = 0;
     deal.size = size;
     deal.price = price;
     deal.duration = duration;
