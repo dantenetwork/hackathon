@@ -64,18 +64,6 @@
     "type": "Event"
   },
   {
-    "constant": true,
-    "input": [
-      {
-        "name": "enclave_public_key",
-        "type": "string"
-      }
-    ],
-    "name": "get_deals_by_miner",
-    "output": "string[]",
-    "type": "Action"
-  },
-  {
     "anonymous": false,
     "input": [
       {
@@ -229,6 +217,18 @@
     "type": "Action"
   },
   {
+    "constant": true,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      }
+    ],
+    "name": "get_deals_by_miner",
+    "output": "string[]",
+    "type": "Action"
+  },
+  {
     "baseclass": [],
     "fields": [
       {
@@ -241,7 +241,7 @@
       },
       {
         "name": "slashed",
-        "type": "bool"
+        "type": "uint8"
       },
       {
         "name": "size",

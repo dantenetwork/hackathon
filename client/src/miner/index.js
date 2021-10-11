@@ -11,10 +11,12 @@ module.exports = {
       return;
     }
     console.log(enclavePublicKey);
+
+    // query miner info
     const minerInfo = await blockchain.contractCall(
         'verifyContract', 'get_miner', [enclavePublicKey]);
 
-    const table = [
+    let table = [
       'enclave_public_key', 'enclave_lat_address', 'reward_address', 'sender',
       'miner_pledged_token', 'miner_pledged_storage_size', 'miner_staked_token',
       'miner_staked_storage_size', 'staker_reward_ratio'
@@ -31,7 +33,35 @@ module.exports = {
     for (let i = 0; i < minerInfo.length; i++) {
       console.log(table[i] + ': ' + minerInfo[i]);
     }
-    return minerInfo;
+
+    // query miner storage proof in verify contract
+
+    const verifyStorageProof = await blockchain.contractCall(
+        'verifyContract', 'get_storage_proof', [enclavePublicKey]);
+
+    table = [
+      'enclave_timestamp', 'enclave_idle_size', 'enclave_task_size',
+      'enclave_signature'
+    ];
+
+    console.log('-------------------------------');
+    console.log('Verify Storage Proof:');
+    for (let i = 0; i < verifyStorageProof.length; i++) {
+      console.log(table[i] + ': ' + verifyStorageProof[i]);
+    }
+
+    // query miner storage proof in market contract
+
+    const marketStorageProof = await blockchain.contractCall(
+        'marketContract', 'get_storage_proof', [enclavePublicKey]);
+
+    table = ['last_proof_block_num', 'last_claimed_block_num', 'filled_deals'];
+
+    console.log('-------------------------------');
+    console.log('Market Storage Proof:');
+    for (let i = 0; i < marketStorageProof.length; i++) {
+      console.log(table[i] + ': ' + marketStorageProof[i]);
+    }
   },
   /**
    * pledge DAT to miner
@@ -55,6 +85,24 @@ module.exports = {
 
     if (ret) {
       this.getMiner(enclavePublicKey);
+    }
+  },
+  /**
+   * claim deal reward & stake reward & miner reward
+   */
+  async claimReward(enclavePublicKey) {
+    await blockchain.sendTransaction(
+        'verifyContract', 'claim_stake_reward',
+        config.get('Blockchain.privateKey'));
+
+    await blockchain.sendTransaction(
+        'verifyContract', 'claim_miner_reward',
+        config.get('Blockchain.privateKey'));
+
+    if (enclavePublicKey) {
+      await blockchain.sendTransaction(
+          'marketContract', 'claim_deal_reward',
+          config.get('Blockchain.privateKey'), [enclavePublicKey]);
     }
   }
 }
