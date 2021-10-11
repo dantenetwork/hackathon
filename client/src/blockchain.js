@@ -65,6 +65,7 @@ module.exports = class smartContract {
       let signTx =
           await web3.platon.accounts.signTransaction(tx, accountPrivateKey);
       let ret = await web3.platon.sendSignedTransaction(signTx.rawTransaction);
+      console.log('gasUsed: ' + method + ' ' + ret.gasUsed);
       // console.log(ret);
       return ret;
     } catch (e) {

@@ -26,10 +26,10 @@ struct deal {
   uint8_t state;  // current deal state, 0 = deal opened, 1= filled, 2 = closed,
                   // 3 = invalid (miner reported file size is larger
                   // than size of deal) , default as 0
-  bool slashed;   // is slashed, default as false
-  u128 size;      // deal files size
-  u128 price;     // deal price per block
-  u128 duration;  // deal duration (blocks)
+  uint8_t slashed;            // is slashed, default as 0
+  u128 size;                  // deal files size
+  u128 price;                 // deal price per block
+  u128 duration;              // deal duration (blocks)
   uint64_t end_block_num;     // the block number that deal will be end
   Address sender;             // deal sender
   int miner_required;         // number of miners required

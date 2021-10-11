@@ -42,8 +42,10 @@ module.exports = {
         }
 
         // upload data to IPFS network
-        const cid = await client.add(fs.createReadStream(cliParams[1]));
+        const result = await client.add(fs.createReadStream(cliParams[1]));
+        const cid = result.name;
         console.log('cid: ', cid);
+
 
         // add deal to PlatON network
         let onchainDealByCid = await blockchain.contractCall(
@@ -60,7 +62,7 @@ module.exports = {
         await token.getBalance();
         await token.getAllowance();
 
-        const size = stats.size;
+        const size = result.size;
         const price = cliParams[2];
         const duration = cliParams[3];
         const provider_required = cliParams[4];

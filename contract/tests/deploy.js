@@ -5,7 +5,7 @@ const blockchain = require('./blockchain.js');
 
 const chainId = 210309;
 const tokenContractAddress = 'lat142epzrcpcsdelvzmv3e05mzurj8jtx4mutqpw3';
-const miningContractAddress = 'lat12mytd6fw3gmx4sfuy0hg3rf4vvlgavncq9ghk5';
+const miningContractAddress = 'lat1480mdhch9cgkfpua7skn4vq7feyu8h8vyy3404';
 
 // deploy market contract account address,
 // lat1qavfd7zwaknrxyx0drcmv0vr5zehgthhaqq6ul

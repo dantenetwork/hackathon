@@ -106,7 +106,7 @@ void market::add_deal(const string& cid,
   deal_table.emplace([&](auto& deal) {
     deal.cid = cid;
     deal.state = 0;
-    deal.slashed = false;
+    deal.slashed = 0;
     deal.size = size;
     deal.price = price;
     deal.duration = duration;
@@ -293,6 +293,7 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
   uint64_t current_block_num = platon_block_number();
   DEBUG(enclave_public_key + " update storage proof at " +
         std::to_string(current_block_num));
+  DEBUG("miner_remaining_quota: " + std::to_string(miner_remaining_quota));
   int64_t task_size_changed = 0;
 
   //////////////////////////////////////////////
@@ -311,7 +312,8 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
         // change deal state to 3(invalid)
         deal_table.modify(current_deal, [&](auto& deal) { deal.state = 3; });
       } else {
-        // ensure deal is opened && deal size is less than miner remaining quota
+        // ensure deal is opened && deal size is smaller than miner remaining
+        // quota
         if (current_deal->state == 0 &&
             current_deal->size <= miner_remaining_quota) {
           // ensure current miner is not in the list
@@ -356,7 +358,8 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
             DEBUG("miner is already in the list");
           }
         } else {
-          DEBUG("deal " + itr->cid + " is filled");
+          DEBUG("deal " + itr->cid +
+                " is closed or miner_remaining_quota is not enough");
         }
       }
     } else {
@@ -485,6 +488,7 @@ bool market::claim_deal_reward(const string& enclave_public_key) {
     platon_assert(transfer_result.first && transfer_result.second,
                   "Transfer deal reward failed");
 
+    DEBUG("miner claim deal reward " + std::to_string(total_reward));
     // update last_claimed_block_num
     current_miner.last_claimed_block_num = platon_block_number();
     storage_proof_map[enclave_public_key] = std::move(current_miner);

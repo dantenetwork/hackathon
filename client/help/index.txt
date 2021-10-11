@@ -12,3 +12,6 @@ Subcommands:
   getMiner                    Query storage provider info by enclavePublicKey
   getProof                    Query miner storage proof by enclavePublicKey
   pledgeMiner                 Pledge DAT to miner
+  claimReward                 claim stake reward & deal reward & miner reward
+  stake                       stake DAT to miner
+  unstake                     unstake DAT from miner

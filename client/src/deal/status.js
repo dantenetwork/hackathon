@@ -13,7 +13,6 @@ module.exports = {
     let dealStatus = await blockchain.contractCall(
         'marketContract', 'get_deal_by_cid', [cid]);
 
-    console.log(cid);
     const table = [
       'cid', 'state', 'slashed', 'size', 'price', 'duration', 'end_block_num',
       'sender', 'miner_required', 'total_reward', 'reward_balance', 'miner_list'
