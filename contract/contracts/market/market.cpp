@@ -415,10 +415,7 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
   return task_size_changed;
 }
 
-/**
- * get miner last proof
- * @param enclave_public_key - SGX enclave public key
- */
+// get miner last proof
 storage_proof market::get_storage_proof(const string& enclave_public_key) {
   return storage_proof_map[enclave_public_key];
 }

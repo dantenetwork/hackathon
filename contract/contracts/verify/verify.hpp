@@ -2,6 +2,8 @@
 
 #include <platon/platon.hpp>
 
+#include "../math.hpp"
+
 using namespace platon;
 using namespace platon::db;
 using std::map;

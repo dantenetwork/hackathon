@@ -149,7 +149,8 @@ void verify::pledge_miner(const string& enclave_public_key,
   platon_assert(transfer_result.first && transfer_result.second,
                 "Pledge miner failed");
 
-  auto storage_size = (amount / kTokenUnit) * kBytesPerPledgedDAT;
+  auto storage_size =
+      hackathon::safeMul(amount / kTokenUnit, kBytesPerPledgedDAT);
 
   DEBUG("pledge miner " + enclave_public_key + " " + std::to_string(amount));
   DEBUG("storage_size " + std::to_string(storage_size));
@@ -379,10 +380,11 @@ void verify::update_storage_proof(const string& enclave_public_key,
       proof.enclave_task_size, current_miner.miner_pledged_storage_size);
 
   // ensure pledged_staked_capacity is less than miner_pledged_storage_size * 10
-  u128 pledged_staked_capacity = std::min(
-      current_miner.miner_pledged_storage_size +
-          current_miner.miner_staked_storage_size,
-      current_miner.miner_pledged_storage_size * kMaxHolderStakeToMinerRatio);
+  u128 pledged_staked_capacity =
+      std::min(current_miner.miner_pledged_storage_size +
+                   current_miner.miner_staked_storage_size,
+               hackathon::safeMul(current_miner.miner_pledged_storage_size,
+                                  kMaxHolderStakeToMinerRatio));
 
   // ensure miner_reward_capacity is less than pledged_staked_capacity
   // if miner pledge token is 0 after unpledged, then miner staked size is 0
@@ -428,7 +430,8 @@ void verify::update_storage_proof(const string& enclave_public_key,
       DEBUG("miner_reward: " + std::to_string(miner_reward));
       miner_mining_reward_map[current_miner.sender] += miner_reward;
     } else {
-      miner_reward = reward / 100 * current_miner.staker_reward_ratio;
+      miner_reward =
+          hackathon::safeMul(reward / 100, current_miner.staker_reward_ratio);
       DEBUG("miner_reward: " + std::to_string(miner_reward));
       miner_mining_reward_map[current_miner.sender] += miner_reward;
 
@@ -569,14 +572,14 @@ void verify::stake_token(const string& enclave_public_key, const u128& amount) {
   miner current_miner = miner_map[enclave_public_key];
 
   // update miner staked token & miner staked storage size
-  platon_assert(
-      current_miner.miner_staked_token + amount <=
-          current_miner.miner_pledged_token * kMaxHolderStakeToMinerRatio,
-      "Stake token can't larger than miner_pledged_token * 9");
+  platon_assert(current_miner.miner_staked_token + amount <=
+                    hackathon::safeMul(current_miner.miner_pledged_token,
+                                       kMaxHolderStakeToMinerRatio),
+                "Stake token can't larger than miner_pledged_token * 10");
 
   current_miner.miner_staked_token += amount;
   current_miner.miner_staked_storage_size +=
-      (amount / kTokenUnit) * kBytesPerPledgedDAT;
+      hackathon::safeMul(amount / kTokenUnit, kBytesPerPledgedDAT);
 
   miner_map[enclave_public_key] = std::move(current_miner);
   PLATON_EMIT_EVENT0(StakeToken, sender);
@@ -630,7 +633,7 @@ void verify::unstake_token(const string& enclave_public_key,
   miner current_miner = miner_map[enclave_public_key];
   current_miner.miner_staked_token -= amount;
   current_miner.miner_staked_storage_size -=
-      (amount / kTokenUnit) * kBytesPerPledgedDAT;
+      hackathon::safeMul(amount / kTokenUnit, kBytesPerPledgedDAT);
 
   miner_map[enclave_public_key] = std::move(current_miner);
 
@@ -700,8 +703,9 @@ bool verify::claim_stake_reward() {
         // ensure stake block num <= mining period end block num
 
         if (stake_block_num <= staker_reward_itr->period_end_block) {
-          auto stake_reward = staker_reward_itr->reward_for_each_token *
-                              (stake_amount / kTokenUnit);
+          auto stake_reward =
+              hackathon::safeMul(staker_reward_itr->reward_for_each_token,
+                                 (stake_amount / kTokenUnit));
           total_stake_reward += stake_reward;
 
           DEBUG("staker claim mining reward, receiver: " + sender.toString() +
