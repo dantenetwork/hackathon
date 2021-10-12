@@ -56,18 +56,10 @@ module.exports = {
           return;
         }
 
-        // check account balance and allowance
-        console.log('-------------------------------');
-        console.log('Token Info:');
-        await token.getBalance();
-        await token.getAllowance();
-
         const size = result.size;
         const price = cliParams[2];
         const duration = cliParams[3];
         const provider_required = cliParams[4];
-
-        const dealInfo = [cid, size, price, duration, provider_required];
 
         // console.log(dealInfo);
 
@@ -78,6 +70,13 @@ module.exports = {
               price * duration * provider_required
             ]);
 
+        // check account balance and allowance
+        console.log('-------------------------------');
+        console.log('Token Info:');
+        await token.getBalance();
+        await token.getAllowance();
+
+        const dealInfo = [cid, size, price, duration, provider_required];
         // send transaction
         const ret = await blockchain.sendTransaction(
             'marketContract', 'add_deal', config.get('Blockchain.privateKey'),

@@ -101,6 +101,7 @@ lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 @param enclave_public_key - SGX enclave public key
 @param added_files - added file list
 @param deleted_files - deleted file list
+@param miner_remaining_quota - miner remaining quota to fill deal
 ```
 
 #### Get miner last proof

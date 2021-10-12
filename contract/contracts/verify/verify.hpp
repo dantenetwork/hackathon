@@ -26,6 +26,11 @@ const uint8_t kMaxHolderStakeToMinerRatio =
     10;  // ensure total token amount that DAT holder stake to miner can't
          // larger than miner_pledged_storage_size * 10
 
+const uint8_t kMaxProofDelayedPeriods =
+    3;  // miner update storage proof delayed times
+
+const uint8_t kForfeiture = 1;  // the forfeiture rate
+
 struct miner {
  public:
   string enclave_public_key;  // SGX enclave public key
@@ -59,13 +64,14 @@ struct filled_deal {
 struct storage_proof {
  public:
   uint64_t enclave_timestamp = 0;  // SGX enclave timestamp
-  u128 enclave_idle_size = 0;      // SGX enclave idle size
   u128 enclave_task_size = 0;      // SGX enclave file task size
+  u128 enclave_idle_size = 0;      // SGX enclave idle size
+  uint64_t last_proof_block_num;   // last storage proof when miner submitted
   string enclave_signature;        // SGX enclave signature
 
   PLATON_SERIALIZE(storage_proof,
-                   (enclave_timestamp)(enclave_idle_size)(enclave_task_size)(
-                       enclave_signature))
+                   (enclave_timestamp)(enclave_task_size)(enclave_idle_size)(
+                       last_proof_block_num)(enclave_signature))
 };
 
 /**
@@ -104,8 +110,9 @@ struct stake {
 struct claim_info {
   u128 rewards;
   uint64_t cur_period_end_block;
+  uint64_t delayed_periods;
 
-  PLATON_SERIALIZE(claim_info, (rewards)(cur_period_end_block))
+  PLATON_SERIALIZE(claim_info, (rewards)(cur_period_end_block)(delayed_periods))
 };
 
 // staker mining reward for each period
@@ -138,8 +145,14 @@ CONTRACT verify : public Contract {
   // dante mining contract
   StorageType<"mining_contract"_n, Address> mining_contract;
 
+  // DANTE forfeiture contract
+  StorageType<"forfeiture_contract"_n, Address> forfeiture_contract;
+
   // network total capacity
   StorageType<"total_capacity"_n, u128> total_capacity;
+
+  // each period blocks
+  StorageType<"each_period_blocks"_n, uint64_t> each_period_blocks;
 
   // miner table
   platon::db::Map<"miner"_n, string, miner> miner_map;
@@ -161,6 +174,10 @@ CONTRACT verify : public Contract {
   // reward list
   platon::db::Map<"miner_mining_reward"_n, Address, u128>
       miner_mining_reward_map;
+
+  // storage proof delayed times
+  platon::db::Map<"storage_proof_delayed_periods"_n, string, uint8_t>
+      storage_proof_delayed_periods;
 
   // Stake table
   // NormalIndex: from, NormalIndex: miner
@@ -194,10 +211,12 @@ CONTRACT verify : public Contract {
    * @param token_contract_address - DAT PRC20 token contract address
    * @param market_contract_address - DAT market contract address
    * @param mining_contract_address - mining contract address
+   * @param forfeiture_contract_address - forfeiture contract address
    */
   ACTION void init(const Address& token_contract_address,
                    const Address& market_contract_address,
-                   const Address& mining_contract_address);
+                   const Address& mining_contract_address,
+                   const Address& forfeiture_contract_address);
 
   /**
    * Change contract owner
@@ -244,6 +263,17 @@ CONTRACT verify : public Contract {
   CONST string get_mining_contract();
 
   /**
+   * Change forfeiture contract
+   * @param address - Change DAT forfeiture contract address
+   */
+  ACTION bool set_forfeiture_contract(const Address& address);
+
+  /**
+   * Query forfeiture contract
+   */
+  CONST string get_forfeiture_contract();
+
+  /**
    * Register miner by enclave_public_key
    * @param enclave_public_key - SGX enclave public key
    * @param reward_address - miner address which receive rewards
@@ -280,7 +310,8 @@ CONTRACT verify : public Contract {
    */
   ACTION bool verify_signature(
       const string& enclave_public_key, const uint64_t& enclave_timestamp,
-      const u128& enclave_idle_size, const vector<filled_deal> added_files,
+      const u128& enclave_task_size, const u128& enclave_idle_size,
+      const vector<filled_deal> added_files,
       const vector<filled_deal> deleted_files, const string& enclave_signature,
       const Address& enclave_lat_address);
 
@@ -318,6 +349,7 @@ CONTRACT verify : public Contract {
    * Update enclave storage proof
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
+   * @param enclave_task_size - miner task size
    * @param enclave_idle_size - miner idle size
    * @param added_files - added file list
    * @param deleted_files - deleted file list
@@ -325,7 +357,8 @@ CONTRACT verify : public Contract {
    */
   ACTION void update_storage_proof(
       const string& enclave_public_key, const uint64_t& enclave_timestamp,
-      const u128& enclave_idle_size, const vector<filled_deal>& added_files,
+      const u128& enclave_task_size, const u128& enclave_idle_size,
+      const vector<filled_deal>& added_files,
       const vector<filled_deal>& deleted_files,
       const string& enclave_signature);
 
@@ -419,10 +452,11 @@ PLATON_DISPATCH(
     verify,
     (init)(set_owner)(get_owner)(set_token_contract)(get_token_contract)(
         set_market_contract)(get_market_contract)(set_mining_contract)(
-        get_mining_contract)(register_miner)(pledge_miner)(unpledge_miner)(
-        update_miner)(unregister_miner)(is_registered)(verify_signature)(
-        withdraw_deal)(update_storage_proof)(get_storage_proof)(get_miner)(
-        get_total_capacity)(get_miner_count)(submit_miner_info)(get_miner_info)(
+        get_mining_contract)(set_forfeiture_contract)(get_forfeiture_contract)(
+        register_miner)(pledge_miner)(unpledge_miner)(update_miner)(
+        unregister_miner)(is_registered)(verify_signature)(withdraw_deal)(
+        update_storage_proof)(get_storage_proof)(get_miner)(get_total_capacity)(
+        get_miner_count)(submit_miner_info)(get_miner_info)(
         get_miner_reward_address)(stake_token)(unstake_token)(
         claim_miner_reward)(claim_stake_reward)(get_stake_by_from)(
         get_stake_by_miner))

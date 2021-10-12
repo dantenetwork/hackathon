@@ -123,6 +123,7 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @action update_storage_proof
 @param enclave_public_key - SGX enclave public key
 @param enclave_timestamp - SGX timestamp
+@param enclave_task_size - miner task size
 @param enclave_idle_size - miner idle size
 @param added_files - added file list
 @param deleted_files - deleted file list

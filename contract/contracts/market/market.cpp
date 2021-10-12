@@ -278,10 +278,12 @@ vector<string> market::get_opened_deal(const uint8_t& skip) {
 }
 
 // update miner proof
-int64_t market::update_storage_proof(const string& enclave_public_key,
-                                     const vector<filled_deal>& added_files,
-                                     const vector<filled_deal>& deleted_files,
-                                     u128& miner_remaining_quota) {
+u128 market::update_storage_proof(const string& enclave_public_key,
+                                  const u128& enclave_task_size,
+                                  const vector<filled_deal>& added_files,
+                                  const vector<filled_deal>& deleted_files,
+                                  u128& miner_remaining_quota,
+                                  const u128& miner_pledged_token) {
   // only verify contract allows call this function
   require_verify_contract_auth();
   vector<string> filled_deals;
@@ -294,7 +296,6 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
   DEBUG(enclave_public_key + " update storage proof at " +
         std::to_string(current_block_num));
   DEBUG("miner_remaining_quota: " + std::to_string(miner_remaining_quota));
-  int64_t task_size_changed = 0;
 
   //////////////////////////////////////////////
   //                 add file                 //
@@ -322,9 +323,6 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
               miner_list.begin(), miner_list.end(), enclave_public_key);
 
           if (miner_itr == miner_list.end()) {
-            // update task size
-            task_size_changed += itr->size;
-
             // update miner remaining_quota
             miner_remaining_quota -= itr->size;
 
@@ -371,6 +369,7 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
   //                delete file               //
   //////////////////////////////////////////////
 
+  u128 total_forfeiture_token = 0;
   for (itr = deleted_files.begin(); itr != deleted_files.end(); ++itr) {
     // Query deal info by cid
     auto current_deal = deal_table.find<"cid"_n>(itr->cid);
@@ -379,26 +378,39 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
     if (current_deal != deal_table.cend()) {
       vector<string> miner_list = current_deal->miner_list;
 
+      // detect if miner is storage provider of the deal
       vector<string>::iterator miner_itr =
           std::find(miner_list.begin(), miner_list.end(), enclave_public_key);
 
-      // if miner is storage provider of that deal
+      // if deal is not closed
       if (miner_itr != miner_list.end()) {
-        DEBUG("miner " + enclave_public_key + " delete file maliciously");
-        // TODO, forfeiture miner
+        DEBUG("miner " + enclave_public_key +
+              " delete file maliciously, cid: " + itr->cid);
+        // forfeiture miner
+        u128 forfeiture_token =
+            safeMul(std::min(enclave_task_size / kBytesPerPledgedDAT,
+                             miner_pledged_token),
+                    safeMul((itr->size / enclave_task_size), kForfeiture));
+
+        if (forfeiture_token == 0) {
+          forfeiture_token = miner_pledged_token * 5 / 100;
+        }
+
+        DEBUG("miner forfeiture token amount: " +
+              std::to_string(forfeiture_token));
+
+        total_forfeiture_token += forfeiture_token;
       }
     }
 
-    // remove deal cid from filled_deal
+    // remove deal cid from filled_deals
     std::vector<string>::iterator position =
         std::find(filled_deals.begin(), filled_deals.end(), itr->cid);
     if (position != filled_deals.end()) {
       filled_deals.erase(std::move(position));
     }
-    task_size_changed -= itr->size;
   }
 
-  DEBUG("task_size_changed: " + std::to_string(task_size_changed));
   proof.filled_deals = std::move(filled_deals);
   proof.last_proof_block_num = std::move(current_block_num);
 
@@ -412,8 +424,8 @@ int64_t market::update_storage_proof(const string& enclave_public_key,
   }
 
   PLATON_EMIT_EVENT0(UpdateStorageProof, enclave_public_key);
-  return task_size_changed;
-}
+  return total_forfeiture_token;
+}  // namespace hackathon
 
 // get miner last proof
 storage_proof market::get_storage_proof(const string& enclave_public_key) {

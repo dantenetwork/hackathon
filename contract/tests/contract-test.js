@@ -37,6 +37,7 @@ const enclave_public_key =
 const enclave_lat_address = 'lat10e0525sfrf53yh2aljmm3sn9jq5njk7lrkx9a3';
 const cid = 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdb';
 const size = 1024 * 1024;
+const enclave_task_size = size;
 const enclave_idle_size = 1024 * 1024 * 1024;
 const price = 1000000000000000;
 const duration = 100;
@@ -66,6 +67,47 @@ describe('dante market && verify unit test', function() {
     tokenContract =
         new web3.platon.Contract(tokenAbi, tokenContractAddress, {vmType: 1});
   });
+
+  // // update storage proof
+  // it('verify update_storage_proof', async function() {
+  //   // 发送交易
+  //   try {
+  //     this.timeout(0);
+  //     const enclave_timestamp = new Date().getTime();
+  //     const deleted_files = [];
+  //     const enclave_signature =
+  //         '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
+
+  //     const param = [
+  //       enclave_public_key, enclave_timestamp, enclave_task_size,
+  //       enclave_idle_size, [], deleted_files, enclave_signature
+  //     ];
+
+  //     // expect total capacity = previous + added_files' size
+  //     let totalCapacity = parseInt(
+  //         await blockchain.contractCall(verifyContract,
+  //         'get_total_capacity'));
+
+  //     await blockchain.sendTransaction(
+  //         verifyContract, 'update_storage_proof', testAccountPrivateKey,
+  //         param);
+
+  //     newTotalCapacity =
+  //         await blockchain.contractCall(verifyContract,
+  //         'get_total_capacity');
+
+  //     if (totalCapacity == 0) {
+  //       expect(newTotalCapacity).to.equal(enclave_idle_size + size + '');
+  //     }
+
+  //     await showStorageProof(enclave_public_key);
+
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  // });
+  // return;
+
 
 
   it('approve token', async function() {
@@ -178,32 +220,6 @@ describe('dante market && verify unit test', function() {
   });
 
 
-  it('verify verify_signature', async function() {
-    try {
-      this.timeout(0);
-
-      const enclave_public_key =
-          '0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8';
-      const enclave_timestamp = '1632303751';
-      const enclave_idle_size = 109951162777600;
-      const added_files =
-          [['QmdHUb7ttiCvFGqf8D3L5PH7iomPx86ZAarH8xKrjwgqZT', 123456]];
-      const deleted_files =
-          [['QmRDgkoY5w9ot2qpe2NN1KCqJNwGJihZpb95hhXNNgKRAv', 654321]];
-      const enclave_signature =
-          '9011e60df9828abbc22a5d179889693d1f1af3651087ef16f837d233a68b271839f2feb57844359f7ccefce234f6b1098e29fbd4e651e3031afc46706deb866101';
-
-      await blockchain.sendTransaction(
-          verifyContract, 'verify_signature', testAccountPrivateKey, [
-            enclave_public_key, enclave_timestamp, enclave_idle_size,
-            added_files, deleted_files, enclave_signature, enclave_lat_address
-          ]);
-    } catch (e) {
-      console.log(e);
-    }
-  });
-
-
   it('market add_deal', async function() {
     try {
       this.timeout(0);
@@ -264,8 +280,8 @@ describe('dante market && verify unit test', function() {
           '0x6218ff2883e9ee97e29da6a3d6fe0f59081c2de9143b8dee336059c67fc249d965dbc3e5f6d3f0ae598d6be97c39a7a204d0636e50b0d56677eec7d84267c92801';
 
       const param = [
-        enclave_public_key, enclave_timestamp, enclave_idle_size, added_files,
-        deleted_files, enclave_signature
+        enclave_public_key, enclave_timestamp, enclave_task_size,
+        enclave_idle_size, added_files, deleted_files, enclave_signature
       ];
 
       // expect total capacity = previous + added_files' size
@@ -288,6 +304,7 @@ describe('dante market && verify unit test', function() {
       console.log(e);
     }
   });
+  return;
 
   // renewal deal
   it('verify renewal_deal', async function() {
@@ -569,7 +586,7 @@ async function showDealInfo(cid) {
 async function showStorageProof(enclave_public_key) {
   const verify_storage_proof_formate = [
     'enclave_timestamp', 'enclave_idle_size', 'enclave_task_size',
-    'enclave_signature'
+    'last_proof_block_num', 'enclave_signature'
   ];
   const market_storage_proof_formate =
       ['last_proof_block_num', 'last_claimed_block_num', 'filled_deals'];

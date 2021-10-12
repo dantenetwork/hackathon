@@ -5,7 +5,8 @@ const blockchain = require('./blockchain.js');
 
 const chainId = 210309;
 const tokenContractAddress = 'lat142epzrcpcsdelvzmv3e05mzurj8jtx4mutqpw3';
-const miningContractAddress = 'lat1480mdhch9cgkfpua7skn4vq7feyu8h8vyy3404';
+const forfeitureContractAddress = 'lat16g2sw38essqxqjat6729ntehp4yyvr09xjjv8s';
+const miningContractAddress = 'lat1q0u3dn2h07n90tr9laxrf6s2ddnhjwv3jhs5ru';
 
 // deploy market contract account address,
 // lat1qavfd7zwaknrxyx0drcmv0vr5zehgthhaqq6ul
@@ -75,7 +76,8 @@ let gas;
     'tokenContractAddress': tokenContractAddress,
     'marketContractAddress': marketContractAddress,
     'verifyContractAddress': verifyContractAddress,
-    'miningContractAddress': miningContractAddress
+    'miningContractAddress': miningContractAddress,
+    'forfeitureContractAddress': forfeitureContractAddress
   };
   fs.writeFileSync(contractAddressFile, JSON.stringify(contractAddress));
   console.log('contract address is updated.');
@@ -147,15 +149,15 @@ async function deployVerifyContract() {
   let nonce = web3.utils.numberToHex(
       await web3.platon.getTransactionCount(contractAccount));
   // deploy param
-  let data =
-      verifyContract
-          .deploy({
-            data: bin,
-            arguments: [
-              tokenContractAddress, tokenContractAddress, miningContractAddress
-            ]
-          })
-          .encodeABI();
+  let data = verifyContract
+                 .deploy({
+                   data: bin,
+                   arguments: [
+                     tokenContractAddress, tokenContractAddress,
+                     miningContractAddress, forfeitureContractAddress
+                   ]
+                 })
+                 .encodeABI();
 
   // transaction param
   let tx = {gasPrice, gas, nonce, chainId, data};

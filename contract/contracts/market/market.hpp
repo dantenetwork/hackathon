@@ -20,6 +20,11 @@ namespace hackathon {
 
 const uint8_t kMaxDealEachSender = 10;  // max deal count for each sender
 
+const u128 kBytesPerPledgedDAT =
+    1024 * 1024 * 1024;  // storage space for each pledged DAT(1TB)
+
+const uint8_t kForfeiture = 1;  // the forfeiture rate
+
 struct deal {
  public:
   string cid;     // deal cid of IPFS network
@@ -208,12 +213,17 @@ CONTRACT market : public Contract {
    * miner update storage proof and ensure signature is verified by
    * verify_contract
    * @param enclave_public_key - SGX enclave public key
+   * @param enclave_task_size - enclave task size
    * @param added_files - deals which miner added
    * @param deleted_files - deals which miner deleted
+   * @param miner_remaining_quota - miner remaining quota to fill deal
+   * @param miner_pledged_token - miner pledged token
    */
-  ACTION int64_t update_storage_proof(
-      const string& enclave_public_key, const vector<filled_deal>& added_files,
-      const vector<filled_deal>& deleted_files, u128& miner_remaining_quota);
+  ACTION u128 update_storage_proof(
+      const string& enclave_public_key, const u128& enclave_task_size,
+      const vector<filled_deal>& added_files,
+      const vector<filled_deal>& deleted_files, u128& miner_remaining_quota,
+      const u128& miner_pledged_token);
 
   /**
    * Get miner last proof
