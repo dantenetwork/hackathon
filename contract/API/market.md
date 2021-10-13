@@ -99,9 +99,11 @@ lat13vzcph47kceqvxcu8urq22c7usuncaskymg4d0
 ```
 @action update_storage_proof
 @param enclave_public_key - SGX enclave public key
-@param added_files - added file list
-@param deleted_files - deleted file list
+@param enclave_task_size - enclave task size
+@param added_files - deals which miner added
+@param deleted_files - deals which miner deleted
 @param miner_remaining_quota - miner remaining quota to fill deal
+@param miner_pledged_token - miner pledged token
 ```
 
 #### Get miner last proof

@@ -242,7 +242,7 @@ CONTRACT verify : public Contract {
 
   /**
    * Change market contract
-   * @param address - Change DAT market contract address
+   * @param address - Change market contract address
    */
   ACTION bool set_market_contract(const Address& address);
 
@@ -253,7 +253,7 @@ CONTRACT verify : public Contract {
 
   /**
    * Change mining contract
-   * @param address - Change DAT mining contract address
+   * @param address - Change mining contract address
    */
   ACTION bool set_mining_contract(const Address& address);
 
@@ -264,7 +264,7 @@ CONTRACT verify : public Contract {
 
   /**
    * Change forfeiture contract
-   * @param address - Change DAT forfeiture contract address
+   * @param address - Change forfeiture contract address
    */
   ACTION bool set_forfeiture_contract(const Address& address);
 
@@ -301,6 +301,7 @@ CONTRACT verify : public Contract {
    * Verify SGX signature
    * @param enclave_public_key - SGX enclave public key
    * @param enclave_timestamp - SGX timestamp
+   * @param enclave_task_size - miner task size
    * @param enclave_idle_size - miner idle size
    * @param added_files - added file list
    * @param deleted_files - deleted file list

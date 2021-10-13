@@ -18,6 +18,7 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @param token_contract_address - PRC20 token contract address
 @param market_contract_address - market contract address
 @param mining_contract_address - mining contract address
+@param forfeiture_contract_address - forfeiture contract address
 ```
 
 #### Change contract owner
@@ -64,6 +65,18 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @action get_mining_contract
 ```
 
+#### Change forfeiture contract
+```
+@action set_forfeiture_contract
+@param address - Change forfeiture contract address
+```
+
+#### Query forfeiture contract
+```
+@action get_forfeiture_contract
+```
+
+
 #### Register miner by enclave_public_key
 ```
 @action register_miner
@@ -90,6 +103,7 @@ lat1kfnefgxrvn3c8wn5p2mat2j2mvqsq2g2vs5cfs
 @action verify_signature
 @param enclave_public_key - SGX enclave public key
 @param enclave_timestamp - SGX timestamp
+@param enclave_task_size - miner task size
 @param enclave_idle_size - miner idle size
 @param added_files - added file list
 @param deleted_files - deleted file list

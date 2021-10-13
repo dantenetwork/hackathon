@@ -15,4 +15,4 @@ Subcommands:
   claimReward                 Claim stake reward & deal reward & miner reward
   stake                       Stake DAT to miner
   unstake                     Unstake DAT from miner
-  setMinerInfo                set miner info (name, peerId, countryCode, url)
+  setMinerInfo                Set miner info (name, peerId, countryCode, url)
