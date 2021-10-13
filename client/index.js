@@ -54,9 +54,13 @@ switch (subCommand) {
   case 'getMiner':
     miner.getMiner(cliParams[1]);
     break;
-  // dante-client pledgeMiner
-  case 'pledgeMiner':
-    miner.pledgeMiner(cliParams[1], cliParams[2]);
+  // dante-client pledge
+  case 'pledge':
+    miner.pledge(cliParams[1], cliParams[2]);
+    break;
+  // dante-client unpledge
+  case 'unpledge':
+    miner.unpledge(cliParams[1], cliParams[2]);
     break;
   // dante-client getProof
   case 'getProof':

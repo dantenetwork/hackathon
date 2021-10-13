@@ -64,9 +64,9 @@ module.exports = {
     }
   },
   /**
-   * pledge DAT to miner
+   * miner pledge DAT
    */
-  async pledgeMiner(enclavePublicKey, amount) {
+  async pledge(enclavePublicKey, amount) {
     if (!enclavePublicKey || !amount) {
       console.log(
           '{dante-client pledgeMiner} expect [enclavePublicKey] [amount]');
@@ -82,6 +82,24 @@ module.exports = {
     const ret = await blockchain.sendTransaction(
         'verifyContract', 'pledge_miner', config.get('Blockchain.privateKey'),
         [enclavePublicKey, amount]);
+
+    if (ret) {
+      this.getMiner(enclavePublicKey);
+    }
+  },
+  /**
+   * miner unpledge DAT
+   */
+  async unpledge(enclavePublicKey) {
+    if (!enclavePublicKey) {
+      console.log('{dante-client pledgeMiner} expect [enclavePublicKey]');
+      return;
+    }
+
+    // pledge miner
+    const ret = await blockchain.sendTransaction(
+        'verifyContract', 'unpledge_miner', config.get('Blockchain.privateKey'),
+        [enclavePublicKey]);
 
     if (ret) {
       this.getMiner(enclavePublicKey);
