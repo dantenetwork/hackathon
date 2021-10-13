@@ -74,10 +74,11 @@ switch (subCommand) {
   case 'unstake':
     token.unStakeToken(cliParams[1], cliParams[2]);
     break;
-  // dante-client
-  case 'unstake':
-    token.unStakeToken(cliParams[1], cliParams[2]);
+  // dante-client setMinerInfo
+  case 'setMinerInfo':
+    miner.setMinerInfo(cliParams[1], cliParams[2], cliParams[3], cliParams[4]);
     break;
+
   default:
     console.log('dante-client ' + subCommand + ' is not supported');
     help.show();
