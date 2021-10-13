@@ -5,7 +5,8 @@ namespace hackathon {
 
 void verify::init(const Address& token_contract_address,
                   const Address& market_contract_address,
-                  const Address& mining_contract_address) {
+                  const Address& mining_contract_address,
+                  const Address& forfeiture_contract_address) {
   // set owner
   platon::set_owner();
 
@@ -18,11 +19,24 @@ void verify::init(const Address& token_contract_address,
   // set mining contract
   mining_contract.self() = mining_contract_address;
 
+  // set forfeiture contract address
+  forfeiture_contract.self() = forfeiture_contract_address;
+
   // set total capacity
   total_capacity.self() = 0;
 
   // set miner count
   miner_count.self() = 0;
+
+  // query mining period blocks
+  auto query_result = platon_call_with_return_value<uint64_t>(
+      mining_contract.self(), uint32_t(0), uint32_t(0),
+      "get_blocks_per_period");
+
+  // ensure cross contract called successfully
+  platon_assert(query_result.second,
+                "Query each period blocks of mining contract failed");
+  each_period_blocks.self() = query_result.first;
 }
 
 // Change contract owner
@@ -73,6 +87,20 @@ bool verify::set_mining_contract(const Address& address) {
 // Query mining contract
 string verify::get_mining_contract() {
   return mining_contract.self().toString();
+}
+
+// Change forfeiture contract
+bool verify::set_forfeiture_contract(const Address& address) {
+  platon_assert(platon::is_owner(),
+                "Only owner can change forfeiture contract");
+  forfeiture_contract.self() = address;
+
+  return true;
+}
+
+// Query forfeiture contract
+string verify::get_forfeiture_contract() {
+  return forfeiture_contract.self().toString();
 }
 
 // Register miner by enclave_public_key
@@ -204,6 +232,7 @@ void verify::unpledge_miner(const string& enclave_public_key) {
 // verify intel SGX signature
 bool verify::verify_signature(const string& enclave_public_key,
                               const uint64_t& enclave_timestamp,
+                              const u128& enclave_task_size,
                               const u128& enclave_idle_size,
                               const vector<filled_deal> added_files,
                               const vector<filled_deal> deleted_files,
@@ -211,6 +240,7 @@ bool verify::verify_signature(const string& enclave_public_key,
                               const Address& enclave_lat_address) {
   // fill param
   string param = enclave_public_key + std::to_string(enclave_timestamp) +
+                 std::to_string(enclave_task_size) +
                  std::to_string(enclave_idle_size);
 
   for (vector<filled_deal>::const_iterator added_itr = added_files.begin();
@@ -316,6 +346,7 @@ void verify::withdraw_deal(const string& enclave_public_key,
 // Update enclave proof
 void verify::update_storage_proof(const string& enclave_public_key,
                                   const uint64_t& enclave_timestamp,
+                                  const u128& enclave_task_size,
                                   const u128& enclave_idle_size,
                                   const vector<filled_deal>& added_files,
                                   const vector<filled_deal>& deleted_files,
@@ -328,13 +359,14 @@ void verify::update_storage_proof(const string& enclave_public_key,
   platon_assert(sender == current_miner.sender,
                 "Only original sender of miner can update storage proof");
 
-  verify_signature(enclave_public_key, enclave_timestamp, enclave_idle_size,
-                   added_files, deleted_files, enclave_signature,
-                   current_miner.enclave_lat_address);
+  verify_signature(enclave_public_key, enclave_timestamp, enclave_task_size,
+                   enclave_idle_size, added_files, deleted_files,
+                   enclave_signature, current_miner.enclave_lat_address);
 
   // update miner proof
   u128 miner_previous_size = 0;
   storage_proof proof;
+  uint64_t current_block_num = platon_block_number();
 
   // if previous storage_proof exists
   if (storage_proof_map.contains(enclave_public_key)) {
@@ -348,9 +380,6 @@ void verify::update_storage_proof(const string& enclave_public_key,
   // minus previous miner size
   DEBUG("miner_previous_size: " + std::to_string(miner_previous_size));
   total_capacity.self() -= miner_previous_size;
-  proof.enclave_timestamp = enclave_timestamp;
-  // proof.enclave_task_size = enclave_task_size;
-  proof.enclave_signature = enclave_signature;
 
   //////////////////////////////////////////////
   // submit storage proof to market contract  //
@@ -359,23 +388,41 @@ void verify::update_storage_proof(const string& enclave_public_key,
   // ensure task size is less than miner_remaining_quota
   u128 miner_remaining_quota =
       current_miner.miner_pledged_storage_size - proof.enclave_task_size;
+
   // call update_storage_proof of market.cpp
-  auto market_result = platon_call_with_return_value<int64_t>(
+  auto market_result = platon_call_with_return_value<u128>(
       market_contract.self(), uint32_t(0), uint32_t(0), "update_storage_proof",
-      enclave_public_key, added_files, deleted_files, miner_remaining_quota);
+      enclave_public_key, enclave_task_size, added_files, deleted_files,
+      miner_remaining_quota, current_miner.miner_pledged_token);
 
-  platon_assert(market_result.second, "Update storage proof failed");
+  platon_assert(market_result.second, "Update market storage proof failed");
 
-  int64_t task_size_changed = market_result.first;
+  // transfer token to forfeiture contract
+  if (market_result.first > 0) {
+    u128 forfeiture_token = market_result.first;
+    DEBUG("transfer forfeiture token " + std::to_string(forfeiture_token));
+    auto transfer_result = platon_call_with_return_value<bool>(
+        token_contract.self(), uint32_t(0), uint32_t(0), "transfer",
+        forfeiture_contract.self(), forfeiture_token);
 
-  platon_assert(task_size_changed <= miner_remaining_quota,
-                "market contract calculate miner_remaining_quota failed");
+    platon_assert(transfer_result.first && transfer_result.second,
+                  "Transfer forfeiture token failed");
+
+    // update miner pledged token
+    current_miner.miner_pledged_token -= forfeiture_token;
+    current_miner.miner_pledged_storage_size -=
+        hackathon::safeMul(forfeiture_token / kTokenUnit, kBytesPerPledgedDAT);
+  }
 
   // update miner task size & idle size
-  proof.enclave_task_size += task_size_changed;
+  proof.enclave_task_size = enclave_task_size;
   proof.enclave_idle_size = enclave_idle_size;
+  proof.enclave_timestamp = enclave_timestamp;
+  proof.enclave_signature = enclave_signature;
+  proof.last_proof_block_num = current_block_num;
 
-  // ensure miner_task_reward_capacity is less than miner_pledged_storage_size
+  // ensure miner_task_reward_capacity is less than
+  // miner_pledged_storage_size
   u128 miner_task_reward_capacity = std::min(
       proof.enclave_task_size, current_miner.miner_pledged_storage_size);
 
@@ -413,6 +460,74 @@ void verify::update_storage_proof(const string& enclave_public_key,
 
   Energon contract_balance = platon_balance(platon_address());
   DEBUG("verify_contract balance: " + std::to_string(contract_balance.Get()));
+
+  //////////////////////////////////////////////
+  // detect if miner storage proof delayed   ///
+  //////////////////////////////////////////////
+
+  // check deal count filled by miner
+  auto count_result = platon_call_with_return_value<uint32_t>(
+      market_contract.self(), uint32_t(0), uint32_t(0),
+      "get_deal_count_by_miner", enclave_public_key);
+
+  // ensure cross contract called successfully
+  platon_assert(count_result.second,
+                "Get deal count by enclave_public_key failed");
+
+  DEBUG("deal count: " + std::to_string(count_result.first));
+  DEBUG("delayed periods: " +
+        std::to_string(mining_result.first.delayed_periods));
+  // miner filled_deal > 0 & delayed_periods > 0
+  if (count_result.first > 0 && mining_result.first.delayed_periods > 0) {
+    // ensure current block - last_proof_block_num <= each_period_blocks
+    u128 delayed_periods = mining_result.first.delayed_periods;
+
+    DEBUG("miner storage proof delayed, delayed_periods: " +
+          std::to_string(delayed_periods));
+    // storage proof delayed
+    uint8_t total_delayed_periods = delayed_periods;
+    if (storage_proof_delayed_periods.contains(enclave_public_key)) {
+      total_delayed_periods +=
+          storage_proof_delayed_periods[enclave_public_key];
+    }
+
+    DEBUG("total delayed periods: " + std::to_string(total_delayed_periods));
+    // if delayed_times reach kMaxProofDelayedPeriods
+    if (total_delayed_periods >= kMaxProofDelayedPeriods) {
+      // forfeiture miner
+      DEBUG(
+          "miner storage proof delayed periods reach kMaxProofDelayedPeriods");
+      u128 forfeiture_token =
+          safeMul(std::min(enclave_task_size / kBytesPerPledgedDAT,
+                           current_miner.miner_pledged_token),
+                  kForfeiture);
+
+      if (forfeiture_token == 0) {
+        forfeiture_token = current_miner.miner_pledged_token * 5 / 100;
+      }
+
+      DEBUG("miner forfeiture token amount: " +
+            std::to_string(forfeiture_token));
+
+      // transfer forfeiture_token to forfeiture_contract
+      auto transfer_result = platon_call_with_return_value<bool>(
+          token_contract.self(), uint32_t(0), uint32_t(0), "transfer",
+          forfeiture_contract.self(), forfeiture_token);
+
+      platon_assert(transfer_result.first && transfer_result.second,
+                    "Transfer forfeiture token failed");
+      storage_proof_delayed_periods[enclave_public_key] = 0;
+
+      // update miner pledged token
+      current_miner.miner_pledged_token -= forfeiture_token;
+      current_miner.miner_pledged_storage_size -= hackathon::safeMul(
+          forfeiture_token / kTokenUnit, kBytesPerPledgedDAT);
+    } else {
+      storage_proof_delayed_periods[enclave_public_key] = total_delayed_periods;
+    }
+  }
+
+  miner_map[enclave_public_key] = current_miner;
 
   // //////////////////////////////////////////////
   // //          calculate staking reward        //

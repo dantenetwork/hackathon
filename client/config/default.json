@@ -4,9 +4,10 @@
     "nodeAddress": "http://127.0.0.1:6789",
     "privateKey": "0xdf08319532a92397ceb5b7fd0debe9195a0a79657127bb920ff258774e9f0d01",
     "tokenContractAddress": "lat142epzrcpcsdelvzmv3e05mzurj8jtx4mutqpw3",
-    "marketContractAddress": "lat1gguadlz9r5jfg5aer0jn2mez2rsvraa8wsj9c2",
-    "verifyContractAddress": "lat18jassv8572493z9hujskkr7h4mtwkmdejnsvs5",
-    "miningContractAddress": "lat1480mdhch9cgkfpua7skn4vq7feyu8h8vyy3404"
+    "marketContractAddress": "lat1n7lgf54tdc6c2kpwyc3pzhdtwmhmxclvjf4087",
+    "verifyContractAddress": "lat19ety3ww23rzle0f4jn0c9sxqh6a70x3kh9jnqc",
+    "miningContractAddress": "lat1q0u3dn2h07n90tr9laxrf6s2ddnhjwv3jhs5ru",
+    "forfeitureContractAddress": "lat16g2sw38essqxqjat6729ntehp4yyvr09xjjv8s"
   },
   "IPFS": {
     "clientAddress": "http://47.241.69.26:5001"

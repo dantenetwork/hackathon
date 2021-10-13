@@ -40,8 +40,8 @@ module.exports = {
         'verifyContract', 'get_storage_proof', [enclavePublicKey]);
 
     table = [
-      'enclave_timestamp', 'enclave_idle_size', 'enclave_task_size',
-      'enclave_signature'
+      'enclave_timestamp', 'enclave_task_size', 'enclave_idle_size',
+      'last_proof_block_num', 'enclave_signature'
     ];
 
     console.log('-------------------------------');
