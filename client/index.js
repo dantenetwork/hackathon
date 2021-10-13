@@ -62,10 +62,6 @@ switch (subCommand) {
   case 'unpledge':
     miner.unpledge(cliParams[1], cliParams[2]);
     break;
-  // dante-client getProof
-  case 'getProof':
-    deal.getProof(cliParams[1]);
-    break;
   // dante-client claimReward
   case 'claimReward':
     miner.claimReward(cliParams[1]);
@@ -75,6 +71,10 @@ switch (subCommand) {
     token.stakeToken(cliParams[1], cliParams[2]);
     break;
   // dante-client unstake
+  case 'unstake':
+    token.unStakeToken(cliParams[1], cliParams[2]);
+    break;
+  // dante-client
   case 'unstake':
     token.unStakeToken(cliParams[1], cliParams[2]);
     break;

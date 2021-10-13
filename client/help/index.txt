@@ -10,7 +10,6 @@ Subcommands:
   balance                     Query DAT balance of current account
   allowance                   Query DAT allowance from current account to market contract
   getMiner                    Query storage provider info by enclavePublicKey
-  getProof                    Query miner storage proof by enclavePublicKey
   pledge                      Miner pledge DAT
   unpledge                    Miner unpledge DAT
   claimReward                 Claim stake reward & deal reward & miner reward

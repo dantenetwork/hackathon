@@ -5,6 +5,5 @@ const status = require('./status.js');
 module.exports = {
   add: add,
   list: list,
-  status: status.status,
-  getProof: status.getProof
+  status: status.status
 }
