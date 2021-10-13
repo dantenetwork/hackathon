@@ -54,13 +54,13 @@ switch (subCommand) {
   case 'getMiner':
     miner.getMiner(cliParams[1]);
     break;
-  // dante-client pledgeMiner
-  case 'pledgeMiner':
-    miner.pledgeMiner(cliParams[1], cliParams[2]);
+  // dante-client pledge
+  case 'pledge':
+    miner.pledge(cliParams[1], cliParams[2]);
     break;
-  // dante-client getProof
-  case 'getProof':
-    deal.getProof(cliParams[1]);
+  // dante-client unpledge
+  case 'unpledge':
+    miner.unpledge(cliParams[1], cliParams[2]);
     break;
   // dante-client claimReward
   case 'claimReward':
@@ -74,6 +74,11 @@ switch (subCommand) {
   case 'unstake':
     token.unStakeToken(cliParams[1], cliParams[2]);
     break;
+  // dante-client setMinerInfo
+  case 'setMinerInfo':
+    miner.setMinerInfo(cliParams[1], cliParams[2], cliParams[3], cliParams[4]);
+    break;
+
   default:
     console.log('dante-client ' + subCommand + ' is not supported');
     help.show();
