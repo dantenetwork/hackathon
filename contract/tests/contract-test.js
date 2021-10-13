@@ -7,7 +7,7 @@ const web3 = new Web3('http://127.0.0.1:6789');
 const blockchain = require('./blockchain.js');
 const config = require('config');
 
-// test account address, lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex
+// test account address, lat15nqll7dfn4km00lz6nd4ahxya5gals9d2f7sn8
 // private key,Testnet only
 const testAccountPrivateKey =
     '0xdf08319532a92397ceb5b7fd0debe9195a0a79657127bb920ff258774e9f0d01';
@@ -33,8 +33,8 @@ const FIVE_HUNDRED_TOKENS = '500000000000000000000';
 
 // test deal info
 const enclave_public_key =
-    '041938deab65419a1309902c96e301e6e3128c83a8c066aee4f838340720c7118fb3bd6336dcdd1e16144bb8e7b2466478dad5bc260eb1c694b58bffc39d8d1257';
-const enclave_lat_address = 'lat10e0525sfrf53yh2aljmm3sn9jq5njk7lrkx9a3';
+    '0474c4ecda8d528a5adf2810b27c174be17c86e263a0998f380a42f4a2eb350fc54fb341146a6305ba436bc933402f9868d01338acc7abd81854c28b14781b78a1';
+const enclave_lat_address = 'lat1fs9m6p59antawy7u2g5kx4xkaup78m0m2pu27y';
 const cid = 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdb';
 const size = 1024 * 1024;
 const enclave_task_size = size;
@@ -42,7 +42,7 @@ const enclave_idle_size = 1024 * 1024 * 1024;
 const price = 1000000000000000;
 const duration = 100;
 const provider_required = 1;
-const reward_address = 'lat14skle600x5wfekwg89k0r3hlukjqex3kcqsjrt';
+const reward_address = 'lat1fs9m6p59antawy7u2g5kx4xkaup78m0m2pu27y';
 let added_files = [[cid, size]];
 
 // test case
@@ -218,7 +218,7 @@ describe('dante market && verify unit test', function() {
       console.error(e);
     }
   });
-
+  return;
 
   it('market add_deal', async function() {
     try {

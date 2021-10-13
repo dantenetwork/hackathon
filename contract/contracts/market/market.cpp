@@ -304,6 +304,7 @@ u128 market::update_storage_proof(const string& enclave_public_key,
   vector<filled_deal>::const_iterator itr;
   for (itr = added_files.begin(); itr != added_files.end(); ++itr) {
     // Query deal info by cid
+    DEBUG("added file, cid: " + itr->cid);
     auto current_deal = deal_table.find<"cid"_n>(itr->cid);
 
     // ensure deal cid is exists
@@ -372,6 +373,7 @@ u128 market::update_storage_proof(const string& enclave_public_key,
   u128 total_forfeiture_token = 0;
   for (itr = deleted_files.begin(); itr != deleted_files.end(); ++itr) {
     // Query deal info by cid
+    DEBUG("deleted file, cid: " + itr->cid);
     auto current_deal = deal_table.find<"cid"_n>(itr->cid);
 
     // deal is not closed
@@ -400,6 +402,15 @@ u128 market::update_storage_proof(const string& enclave_public_key,
               std::to_string(forfeiture_token));
 
         total_forfeiture_token += forfeiture_token;
+
+        // remove miner from deal miner_list
+        miner_list.erase(miner_itr);
+        // update deal
+        deal_table.modify(current_deal, [&](auto& deal) {
+          deal.miner_list = std::move(miner_list);
+          deal.state = 0;
+          deal.slashed = 1;
+        });
       }
     }
 

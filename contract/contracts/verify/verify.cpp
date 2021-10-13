@@ -407,6 +407,11 @@ void verify::update_storage_proof(const string& enclave_public_key,
 
     platon_assert(transfer_result.first && transfer_result.second,
                   "Transfer forfeiture token failed");
+
+    // update miner pledged token
+    current_miner.miner_pledged_token -= forfeiture_token;
+    current_miner.miner_pledged_storage_size -=
+        hackathon::safeMul(forfeiture_token / kTokenUnit, kBytesPerPledgedDAT);
   }
 
   // update miner task size & idle size
@@ -459,6 +464,7 @@ void verify::update_storage_proof(const string& enclave_public_key,
   //////////////////////////////////////////////
   // detect if miner storage proof delayed   ///
   //////////////////////////////////////////////
+
   // check deal count filled by miner
   auto count_result = platon_call_with_return_value<uint32_t>(
       market_contract.self(), uint32_t(0), uint32_t(0),
@@ -476,7 +482,7 @@ void verify::update_storage_proof(const string& enclave_public_key,
     // ensure current block - last_proof_block_num <= each_period_blocks
     u128 delayed_periods = mining_result.first.delayed_periods;
 
-    DEBUG("miner storage proof dalayed, delayed_periods: " +
+    DEBUG("miner storage proof delayed, delayed_periods: " +
           std::to_string(delayed_periods));
     // storage proof delayed
     uint8_t total_delayed_periods = delayed_periods;
@@ -511,10 +517,17 @@ void verify::update_storage_proof(const string& enclave_public_key,
       platon_assert(transfer_result.first && transfer_result.second,
                     "Transfer forfeiture token failed");
       storage_proof_delayed_periods[enclave_public_key] = 0;
+
+      // update miner pledged token
+      current_miner.miner_pledged_token -= forfeiture_token;
+      current_miner.miner_pledged_storage_size -= hackathon::safeMul(
+          forfeiture_token / kTokenUnit, kBytesPerPledgedDAT);
     } else {
       storage_proof_delayed_periods[enclave_public_key] = total_delayed_periods;
     }
   }
+
+  miner_map[enclave_public_key] = current_miner;
 
   // //////////////////////////////////////////////
   // //          calculate staking reward        //

@@ -1,38 +1,41 @@
 [
   {
-    "anonymous": false,
+    "constant": false,
     "input": [
       {
-        "name": "arg1",
+        "name": "address",
         "type": "FixedHash<20>"
       }
     ],
-    "name": "StakeToken",
-    "topic": 0,
-    "type": "Event"
+    "name": "set_mining_contract",
+    "output": "bool",
+    "type": "Action"
   },
   {
-    "baseclass": [],
-    "fields": [
+    "constant": true,
+    "input": [],
+    "name": "get_mining_contract",
+    "output": "string",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [],
+    "name": "get_forfeiture_contract",
+    "output": "string",
+    "type": "Action"
+  },
+  {
+    "constant": false,
+    "input": [
       {
-        "name": "enclave_timestamp",
-        "type": "uint64"
-      },
-      {
-        "name": "enclave_idle_size",
-        "type": "uint128"
-      },
-      {
-        "name": "enclave_task_size",
-        "type": "uint128"
-      },
-      {
-        "name": "enclave_signature",
-        "type": "string"
+        "name": "address",
+        "type": "FixedHash<20>"
       }
     ],
-    "name": "storage_proof",
-    "type": "struct"
+    "name": "set_forfeiture_contract",
+    "output": "bool",
+    "type": "Action"
   },
   {
     "constant": true,
@@ -42,8 +45,8 @@
         "type": "string"
       }
     ],
-    "name": "get_storage_proof",
-    "output": "storage_proof",
+    "name": "is_registered",
+    "output": "bool",
     "type": "Action"
   },
   {
@@ -162,6 +165,18 @@
         "type": "FixedHash<20>"
       }
     ],
+    "name": "StakeToken",
+    "topic": 0,
+    "type": "Event"
+  },
+  {
+    "anonymous": false,
+    "input": [
+      {
+        "name": "arg1",
+        "type": "FixedHash<20>"
+      }
+    ],
     "name": "UnstakeToken",
     "topic": 0,
     "type": "Event"
@@ -191,6 +206,10 @@
       },
       {
         "name": "mining_contract_address",
+        "type": "FixedHash<20>"
+      },
+      {
+        "name": "forfeiture_contract_address",
         "type": "FixedHash<20>"
       }
     ],
@@ -252,25 +271,6 @@
     "constant": true,
     "input": [],
     "name": "get_market_contract",
-    "output": "string",
-    "type": "Action"
-  },
-  {
-    "constant": false,
-    "input": [
-      {
-        "name": "address",
-        "type": "FixedHash<20>"
-      }
-    ],
-    "name": "set_mining_contract",
-    "output": "bool",
-    "type": "Action"
-  },
-  {
-    "constant": true,
-    "input": [],
-    "name": "get_mining_contract",
     "output": "string",
     "type": "Action"
   },
@@ -349,6 +349,10 @@
         "type": "uint64"
       },
       {
+        "name": "enclave_task_size",
+        "type": "uint128"
+      },
+      {
         "name": "enclave_idle_size",
         "type": "uint128"
       },
@@ -406,18 +410,6 @@
     "type": "Action"
   },
   {
-    "constant": true,
-    "input": [
-      {
-        "name": "enclave_public_key",
-        "type": "string"
-      }
-    ],
-    "name": "is_registered",
-    "output": "bool",
-    "type": "Action"
-  },
-  {
     "constant": false,
     "input": [
       {
@@ -445,6 +437,10 @@
         "type": "uint64"
       },
       {
+        "name": "enclave_task_size",
+        "type": "uint128"
+      },
+      {
         "name": "enclave_idle_size",
         "type": "uint128"
       },
@@ -463,6 +459,45 @@
     ],
     "name": "update_storage_proof",
     "output": "void",
+    "type": "Action"
+  },
+  {
+    "baseclass": [],
+    "fields": [
+      {
+        "name": "enclave_timestamp",
+        "type": "uint64"
+      },
+      {
+        "name": "enclave_task_size",
+        "type": "uint128"
+      },
+      {
+        "name": "enclave_idle_size",
+        "type": "uint128"
+      },
+      {
+        "name": "last_proof_block_num",
+        "type": "uint64"
+      },
+      {
+        "name": "enclave_signature",
+        "type": "string"
+      }
+    ],
+    "name": "storage_proof",
+    "type": "struct"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      }
+    ],
+    "name": "get_storage_proof",
+    "output": "storage_proof",
     "type": "Action"
   },
   {

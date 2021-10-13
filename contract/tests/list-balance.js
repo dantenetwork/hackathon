@@ -22,6 +22,16 @@ const UNIT = 1000000000000000000;
 
     balance = await balanceOf(forfeitureContractAddress);
     console.log('forfeitureContractAddress balance : ' + balance + ' DAT');
+
+    balance = await balanceOf('lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex');
+    console.log(
+        'lat120swfan2f50myx2g5kux4t8la9ypsz94dhh5ex balance: ' + balance +
+        ' DAT');
+
+    balance = await balanceOf('lat15nqll7dfn4km00lz6nd4ahxya5gals9d2f7sn8');
+    console.log(
+        'lat15nqll7dfn4km00lz6nd4ahxya5gals9d2f7sn8 balance: ' + balance +
+        ' DAT');
   } catch (e) {
     console.log(e);
   }

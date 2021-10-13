@@ -217,18 +217,6 @@
     "type": "Action"
   },
   {
-    "constant": true,
-    "input": [
-      {
-        "name": "enclave_public_key",
-        "type": "string"
-      }
-    ],
-    "name": "get_deals_by_miner",
-    "output": "string[]",
-    "type": "Action"
-  },
-  {
     "baseclass": [],
     "fields": [
       {
@@ -346,6 +334,10 @@
         "type": "string"
       },
       {
+        "name": "enclave_task_size",
+        "type": "uint128"
+      },
+      {
         "name": "added_files",
         "type": "filled_deal[]"
       },
@@ -356,10 +348,14 @@
       {
         "name": "miner_remaining_quota",
         "type": "uint128"
+      },
+      {
+        "name": "miner_pledged_token",
+        "type": "uint128"
       }
     ],
     "name": "update_storage_proof",
-    "output": "int64",
+    "output": "uint128",
     "type": "Action"
   },
   {
@@ -410,6 +406,18 @@
     "input": [],
     "name": "get_deal_count",
     "output": "uint64",
+    "type": "Action"
+  },
+  {
+    "constant": true,
+    "input": [
+      {
+        "name": "enclave_public_key",
+        "type": "string"
+      }
+    ],
+    "name": "get_deals_by_miner",
+    "output": "string[]",
     "type": "Action"
   },
   {
