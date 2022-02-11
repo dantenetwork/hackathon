@@ -9,4 +9,6 @@ This repository is source code of minimum viable product of dante network.
 
 [Dante Storage](./storage-server/README.md)
 
+[Metamask shows DAT-Test](./Metamask-shows-DAT-Test.md)
+
 [Tell me more about this project.](https://hackerlink.io/buidl/1092?roundProj=804)
