@@ -10,20 +10,23 @@ You can find tutorial [here](https://forum.latticex.foundation/t/topic/5862)
 
 ## Import your private key
 
-<center class="half">
-  <img src="./images/ImportAccount.png" width=300"/><img src="./images/EnterPrivateKey.png" width="300"/>
-</center>
+<p float="left">
+  <img src="./images/ImportAccount.png"/>
+  <img src="./images/EnterPrivateKey.png"/>
+</p>
 
 ## Import DAT-Test Token
 
 DAT-Test contract address `0x4a23ca00871cf9e40c9214e7c648e9cba6c09729`
 
-<center class="half">
-  <img src="./images/ImportToken1.png" width="300"/><img src="./images/ImportToken2.png" width="300"/>
-</center>
+<p float="left">
+  <img src="./images/ImportToken1.png"/>
+  <img src="./images/ImportToken2.png"/>
+</p>
 
-<center class="half">
-  <img src="./images/ImportToken3.png" width="300"/><img src="./images/ImportToken4.png" width="300"/>
-</center>
+<p float="left">
+  <img src="./images/ImportToken3.png"/>
+  <img src="./images/ImportToken4.png"/>
+</p>
 
 Now you can see the balance of DAT-Test.
