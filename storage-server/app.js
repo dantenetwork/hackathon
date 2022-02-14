@@ -12,11 +12,12 @@ var moment = require('moment');
 var cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
-process.env.NODE_ENV = process.env.NODE_ENV || 'dev';
+process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 // 自动将body请求数据格式转成json
 // parse application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: false }))
 // parse application/json
+app.use(express.text());
 app.use(express.json());
 
 app.use(function (req, res, next) {
@@ -26,6 +27,7 @@ app.use(function (req, res, next) {
   next();
 });
 
+// global.EnclavePublicKey = '';
 require('./router/subscription');
 require('./router/verify')(app);
 
